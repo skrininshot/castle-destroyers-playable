@@ -390,16 +390,6 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void TerrainProfileIsLeftToRight()
-        {
-            Vector2[] profile = config.terrainProfile;
-            for (int i = 1; i < profile.Length; i++)
-            {
-                Assert.GreaterOrEqual(profile[i].x, profile[i - 1].x, "point " + i);
-            }
-        }
-
-        [Test]
         public void FrameWidthsFollowCameraSpec()
         {
             Assert.Greater(config.centerFrameWidth, config.targetFrameWidth);

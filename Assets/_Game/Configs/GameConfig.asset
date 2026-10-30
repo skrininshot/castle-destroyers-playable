@@ -81,15 +81,47 @@ MonoBehaviour:
   boosterSpreadDeg: 12
   boosterSpawnStagger: 0.04
   boosterPulse: 0.03
+  terrainMask: {fileID: 11400000, guid: f07d6423099f0bf4f97e65071c67d9ae, type: 2}
+  terrainMaskOrigin: {x: -35.71875, y: -3.5}
   maskTexelsPerMeter: 16
   maskTileSize: 128
   maxTileUploadsPerFrame: 4
   craterRadiusGround: 1.2
   rimWidth: 0.3
   rimScallop: 0
+  rimScallopTeeth: 14
+  rimScallopDepth: 0.12
+  maskEdgeSoftness: 0.15
   connectivityInterval: 0.1
   connectivityCellTexels: 4
   minChunkCells: 6
+  maxIslandsPerSolve: 16
+  chunkSlots: 6
+  chunkTextureSize: 256
+  chunkGravity: 14
+  chunkMaxDrift: 1.2
+  chunkMaxSpinDeg: 35
+  decorMaxSpinDeg: 220
+  decorAnchorDepth: 0.15
+  waterWaveAmplitude: 0.09
+  waterWaveFrequency: 0.9
+  waterWaveSpeed: 1.6
+  waterWaveStep: 0.5
+  waterRimThickness: 0.22
+  fxParticleCapacity: 512
+  craterDustPuffs: 6
+  dustMaxPuffs: 16
+  dustSize: 0.6
+  dustSpeed: 2.2
+  dustLife: 0.6
+  dustGravity: 12
+  splashDrops: 8
+  splashDropsPerMeter: 3
+  splashDropSize: 0.34
+  splashSpeed: 7
+  splashSpread: 1.6
+  splashLife: 0.8
+  splashGravity: 18
   explosionPoolSize: 128
   explosionMergeRadius: 0.5
   shakeMax: 0.6
@@ -100,46 +132,6 @@ MonoBehaviour:
   levelWidth: 60
   waterLevel: 0
   levelBottom: -40
-  terrainProfile:
-  - {x: -62, y: 1.2}
-  - {x: -34, y: 1.4}
-  - {x: -28, y: 1.8}
-  - {x: -17, y: 1.8}
-  - {x: -13.6, y: 1}
-  - {x: -11, y: 0.7}
-  - {x: -9, y: 1}
-  - {x: -7.5, y: 1.9}
-  - {x: -6.1, y: 3.4}
-  - {x: -5, y: 5.2}
-  - {x: -4, y: 7.2}
-  - {x: -3.1, y: 9}
-  - {x: -2.2, y: 10.5}
-  - {x: -1.5, y: 11.35}
-  - {x: -1.05, y: 11.6}
-  - {x: -0.82, y: 11.2}
-  - {x: -0.72, y: 9.6}
-  - {x: -0.66, y: 4}
-  - {x: -0.62, y: -3}
-  - {x: 0.62, y: -3}
-  - {x: 0.66, y: 4}
-  - {x: 0.72, y: 9.6}
-  - {x: 0.82, y: 11.2}
-  - {x: 1.05, y: 11.6}
-  - {x: 1.5, y: 11.35}
-  - {x: 2.2, y: 10.5}
-  - {x: 3.1, y: 9}
-  - {x: 4, y: 7.2}
-  - {x: 5, y: 5.2}
-  - {x: 6.1, y: 3.4}
-  - {x: 7.5, y: 1.9}
-  - {x: 9, y: 1}
-  - {x: 11, y: 0.7}
-  - {x: 13.6, y: 1}
-  - {x: 17, y: 1.8}
-  - {x: 28, y: 1.8}
-  - {x: 34, y: 1.4}
-  - {x: 62, y: 1.2}
-  groundRimThickness: 0.4
   playerCastleX: -22
   enemyCastleX: 23
   trackHeight: 1.2
@@ -158,3 +150,11 @@ MonoBehaviour:
   showPersistentCta: 0
   debugSlowScale: 0.25
   debugHudRefresh: 0.25
+  debugBlastRadii:
+  - 1.2
+  - 2.4
+  - 4
+  - 0.6
+  debugBlastHoldInterval: 0.08
+  debugBlastUiBand: 0.22
+  debugOverviewWidth: 74

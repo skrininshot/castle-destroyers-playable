@@ -27,6 +27,12 @@ namespace CastleDestroyers.CameraRig
         private float velocityY;
         private float velocitySize;
 
+#if GAME_DEBUG
+        /// <summary>Debug-камера: 0 — по состояниям, дальше MTN, BLUE, RED, ALL. Нужна, чтобы взрывать землю без переездов.</summary>
+        public int DebugView { get; set; }
+        public const int DebugFrames = 5;
+#endif
+
         public void Init(Camera camera, GameConfig gameConfig, GreyboxLevel greyboxLevel, SessionFlow sessionFlow)
         {
             cam = camera;
@@ -65,6 +71,13 @@ namespace CastleDestroyers.CameraRig
         /// <summary>Кадр для текущего состояния сессии: на своём замке, в центре уровня или на замке-цели.</summary>
         public void SelectFrame(CameraFrame frame)
         {
+#if GAME_DEBUG
+            if (DebugView != 0)
+            {
+                SelectDebugFrame(frame);
+                return;
+            }
+#endif
             Side active = flow.ActiveSide;
             switch (flow.State)
             {
@@ -109,6 +122,27 @@ namespace CastleDestroyers.CameraRig
                     break;
             }
         }
+
+#if GAME_DEBUG
+        private void SelectDebugFrame(CameraFrame frame)
+        {
+            switch (DebugView)
+            {
+                case 1:
+                    SetCenterFrame(frame);
+                    break;
+                case 2:
+                    SetTargetFrame(frame, Side.Player);
+                    break;
+                case 3:
+                    SetTargetFrame(frame, Side.Enemy);
+                    break;
+                default:
+                    frame.Set(config.centerFocus.x, config.centerFocus.y, config.debugOverviewWidth);
+                    break;
+            }
+        }
+#endif
 
         private static Side Opposite(Side side)
         {

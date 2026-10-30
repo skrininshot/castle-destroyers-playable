@@ -1,56 +1,33 @@
 using System.IO;
 using CastleDestroyers.Core;
-using CastleDestroyers.Flow;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using SessionState = CastleDestroyers.Flow.SessionState;
 
 namespace CastleDestroyers.EditorTools
 {
     /// <summary>
-    /// Снимает кадры greybox-сцены для отчёта: прогоняет FSM до нужного состояния и рендерит камеру в PNG.
+    /// Снимает кадры сцены для отчёта: разрушает ландшафт по сценарию и рендерит камеру в PNG.
     /// Запуск без -nographics: <c>-executeMethod CastleDestroyers.EditorTools.GameCapture.CaptureAll</c>.
     /// </summary>
     public static class GameCapture
     {
         private const string OutputDir = "docs/reports/img";
+        private const string FilePrefix = "stage02_";
         private const int PortraitWidth = 720;
         private const int PortraitHeight = 1280;
         private const int LandscapeWidth = 1280;
         private const int LandscapeHeight = 720;
         private const int DepthBits = 24;
         private const float StepSeconds = 0.02f;
-        private const int MaxSteps = 20000;
-        private const float SettleSeconds = 0.5f;
 
-        private sealed class Shot
-        {
-            public string name;
-            public SessionState state;
-            public Side side;
-            public float dwell;
-            public bool landscape;
-            public ThemePreset preset;
-            public int turn;
-            public bool stress;
-            public bool clean;
+        // Кадры debug-камеры (CameraDirector.DebugView).
+        private const int ViewMountain = 1;
+        private const int ViewBlue = 2;
+        private const int ViewRed = 3;
+        private const int ViewAll = 4;
 
-            public Shot(string name, SessionState state, Side side, float dwell, bool landscape, ThemePreset preset, int turn, bool stress, bool clean = false)
-            {
-                this.clean = clean;
-                this.name = name;
-                this.state = state;
-                this.side = side;
-                this.dwell = dwell;
-                this.landscape = landscape;
-                this.preset = preset;
-                this.turn = turn;
-                this.stress = stress;
-            }
-        }
-
-        [MenuItem("Tools/Castle Destroyers/Capture Greybox Screenshots")]
+        [MenuItem("Tools/Castle Destroyers/Capture Stage Screenshots")]
         public static void CaptureAll()
         {
             EditorSceneManager.OpenScene(GameSceneBuilder.ScenePath, OpenSceneMode.Single);
@@ -58,78 +35,100 @@ namespace CastleDestroyers.EditorTools
             game.Boot();
             Directory.CreateDirectory(OutputDir);
 
-            Shot[] shots =
-            {
-                new Shot("01_intro_portrait", SessionState.Intro, Side.Player, 0.8f, false, ThemePreset.Night, 0, false),
-                new Shot("02_player_aim_portrait", SessionState.Aim, Side.Player, 1.0f, false, ThemePreset.Night, 1, false),
-                new Shot("03_flight_center_portrait", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Night, 1, true),
-                new Shot("04_flight_target_portrait", SessionState.Flight, Side.Player, 2.4f, false, ThemePreset.Night, 1, false),
-                new Shot("05_resolve_enemy_portrait", SessionState.Resolve, Side.Player, 0.5f, false, ThemePreset.Night, 1, false),
-                new Shot("06_enemy_aim_portrait", SessionState.Aim, Side.Enemy, 1.0f, false, ThemePreset.Night, 1, false),
-                new Shot("07_victory_loser_portrait", SessionState.Victory, Side.Player, 0.5f, false, ThemePreset.Night, 3, false),
-                new Shot("08_victory_winner_portrait", SessionState.Victory, Side.Player, 1.8f, false, ThemePreset.Night, 3, false),
-                new Shot("09_flight_center_landscape", SessionState.Flight, Side.Player, 0.6f, true, ThemePreset.Night, 1, true),
-                new Shot("10_player_aim_landscape", SessionState.Aim, Side.Player, 1.0f, true, ThemePreset.Night, 1, false),
-                new Shot("11_player_aim_sunset", SessionState.Aim, Side.Player, 1.0f, false, ThemePreset.Sunset, 1, false),
-                new Shot("12_flight_center_sunset", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Sunset, 1, true),
-                new Shot("13_clean_player_castle", SessionState.Aim, Side.Player, 1.0f, false, ThemePreset.Night, 1, false, true),
-                new Shot("14_clean_mountain", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Night, 1, false, true),
-                new Shot("15_clean_enemy_castle", SessionState.Resolve, Side.Player, 0.1f, false, ThemePreset.Night, 1, false, true),
-                new Shot("16_clean_mountain_sunset", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Sunset, 1, false, true),
-                new Shot("17_clean_mountain_landscape", SessionState.Flight, Side.Player, 0.6f, true, ThemePreset.Night, 1, false, true)
-            };
+            Shoot(game, "01_mountain_pristine", ViewMountain, false, ThemePreset.Night, true);
+            Shoot(game, "02_overview_pristine", ViewAll, true, ThemePreset.Night, true);
+            Shoot(game, "03_blue_hill", ViewBlue, false, ThemePreset.Night, true);
 
-            for (int i = 0; i < shots.Length; i++)
-            {
-                Capture(game, shots[i]);
-            }
+            Fresh(game, ThemePreset.Night);
+            Craters(game);
+            Shoot(game, "04_mountain_craters", ViewMountain, false, ThemePreset.Night, true);
+
+            Fresh(game, ThemePreset.Night);
+            Tunnel(game);
+            Settle(game, 0.3f);
+            Shoot(game, "05_mountain_tunnel", ViewMountain, false, ThemePreset.Night, true);
+
+            Fresh(game, ThemePreset.Night);
+            SlicePeak(game);
+            Settle(game, 0.35f);
+            Shoot(game, "06_chunk_falling", ViewMountain, false, ThemePreset.Night, true);
+            Settle(game, 0.55f);
+            Shoot(game, "07_chunk_splash", ViewMountain, false, ThemePreset.Night, true);
+            Settle(game, 2.5f);
+            Shoot(game, "08_after_chunk", ViewMountain, false, ThemePreset.Night, false);
+
+            Fresh(game, ThemePreset.Sunset);
+            Craters(game);
+            Tunnel(game);
+            Settle(game, 0.3f);
+            Shoot(game, "09_sunset", ViewMountain, false, ThemePreset.Sunset, true);
+
+            Fresh(game, ThemePreset.Night);
+            Craters(game);
+            SlicePeak(game);
+            Settle(game, 0.35f);
+            Shoot(game, "10_landscape", ViewMountain, true, ThemePreset.Night, true);
+
+            Fresh(game, ThemePreset.Night);
+            game.Terrain.Explode(game.config.enemyCastleX - 7f, 1.5f, 2.4f);
+            game.Terrain.Explode(game.config.enemyCastleX - 9.5f, 1f, 1.2f);
+            Settle(game, 0.3f);
+            Shoot(game, "11_red_hill_craters", ViewRed, false, ThemePreset.Night, true);
         }
 
-        private static void Capture(GameBootstrap game, Shot shot)
+        private static void Fresh(GameBootstrap game, ThemePreset preset)
         {
-            game.SetPreset(shot.preset);
+            game.SetPreset(preset);
             game.Restart();
             game.Loop.TimeScale = 1f;
-
-            bool reached = RunUntil(game, shot);
-            if (!reached)
-            {
-                Debug.LogError("[GameCapture] state not reached for " + shot.name);
-                return;
-            }
-            if (shot.stress)
-            {
-                SpawnStress(game);
-            }
-            game.CameraDirector.Snap();
-            Render(game, shot);
         }
 
-        private static bool RunUntil(GameBootstrap game, Shot shot)
+        private static void Settle(GameBootstrap game, float seconds)
         {
-            for (int step = 0; step < MaxSteps; step++)
+            int steps = Mathf.RoundToInt(seconds / StepSeconds);
+            for (int i = 0; i < steps; i++)
             {
-                SessionFlow flow = game.Flow;
-                bool match = flow.State == shot.state && flow.ActiveSide == shot.side
-                    && flow.StateTime >= shot.dwell && (shot.turn == 0 || flow.PlayerTurn == shot.turn || shot.state == SessionState.Victory);
-                if (match)
-                {
-                    return true;
-                }
                 game.Loop.Tick(StepSeconds);
             }
-            return false;
         }
 
-        private static void SpawnStress(GameBootstrap game)
+        /// <summary>Отдельные кратеры на склонах, вершине и у воды.</summary>
+        private static void Craters(GameBootstrap game)
+        {
+            game.Terrain.Explode(-5.4f, 4.6f, 1.2f);
+            game.Terrain.Explode(-3.2f, 8.6f, 1.2f);
+            game.Terrain.Explode(4.6f, 6.2f, 1.2f);
+            game.Terrain.Explode(6.6f, 1.4f, 2.4f);
+            game.Terrain.Explode(-1.1f, 3.4f, 0.6f);
+            Settle(game, 0.3f);
+        }
+
+        /// <summary>Поток взрывов сквозь левую половину горы к расщелине.</summary>
+        private static void Tunnel(GameBootstrap game)
+        {
+            for (float x = -8f; x <= 0f; x += 0.4f)
+            {
+                game.Terrain.Explode(x, 2.2f + (x + 8f) * 0.1f, 0.9f);
+            }
+        }
+
+        /// <summary>Сквозной пропил отделяет вершину левой половины горы.</summary>
+        private static void SlicePeak(GameBootstrap game)
+        {
+            for (float x = -7f; x <= 0f; x += 0.4f)
+            {
+                game.Terrain.Explode(x, 6f, 0.8f);
+            }
+        }
+
+        private static void Shoot(GameBootstrap game, string name, int view, bool landscape, ThemePreset preset, bool clean)
         {
 #if GAME_DEBUG
-            game.Stress.Spawn(game.config.stressRocketCount, game.Flow.ActiveSide, game.Palette);
-            for (int i = 0; i < Mathf.RoundToInt(SettleSeconds / StepSeconds); i++)
-            {
-                game.Loop.Tick(StepSeconds);
-            }
+            game.CameraDirector.DebugView = view;
 #endif
+            game.CameraDirector.Snap();
+            Render(game, name, landscape, clean);
+            Debug.Log("[GameCapture] " + name + " preset " + preset);
         }
 
         /// <summary>Переключает debug-канвас на камеру, чтобы он попал в кадр (Overlay-канвас камера не рисует).</summary>
@@ -148,15 +147,15 @@ namespace CastleDestroyers.EditorTools
 #endif
         }
 
-        private static void Render(GameBootstrap game, Shot shot)
+        private static void Render(GameBootstrap game, string name, bool landscape, bool clean)
         {
-            int width = shot.landscape ? LandscapeWidth : PortraitWidth;
-            int height = shot.landscape ? LandscapeHeight : PortraitHeight;
+            int width = landscape ? LandscapeWidth : PortraitWidth;
+            int height = landscape ? LandscapeHeight : PortraitHeight;
             RenderTexture target = new RenderTexture(width, height, DepthBits, RenderTextureFormat.ARGB32);
             Camera camera = game.mainCamera;
             camera.targetTexture = target;
             camera.aspect = (float)width / height;
-            Canvas canvas = shot.clean ? null : AttachDebugCanvas(game, camera);
+            Canvas canvas = clean ? null : AttachDebugCanvas(game, camera);
             game.CameraDirector.Snap();
             camera.Render();
 
@@ -173,7 +172,7 @@ namespace CastleDestroyers.EditorTools
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             }
 
-            string path = Path.Combine(OutputDir, "stage01_" + shot.name + ".png");
+            string path = Path.Combine(OutputDir, FilePrefix + name + ".png");
             File.WriteAllBytes(path, image.EncodeToPNG());
             Object.DestroyImmediate(image);
             target.Release();

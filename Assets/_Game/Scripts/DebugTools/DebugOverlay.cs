@@ -1,5 +1,6 @@
 #if GAME_DEBUG
 using System.Text;
+using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
 using UnityEngine;
@@ -9,11 +10,11 @@ namespace CastleDestroyers.DebugTools
 {
     /// <summary>
     /// Debug-оверлей: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
-    /// 1000 ракет, смена темы, рестарт). Целиком вырезается из сборки без GAME_DEBUG.
+    /// 1000 ракет, смена темы, рестарт, радиус взрыва, камера). Целиком вырезается из сборки без GAME_DEBUG.
     /// </summary>
     public sealed class DebugOverlay : MonoBehaviour, ITickable
     {
-        private const int HudTextCapacity = 384;
+        private const int HudTextCapacity = 448;
         private const float PortraitMatch = 0f;
         private const float LandscapeMatch = 1f;
 
@@ -24,6 +25,10 @@ namespace CastleDestroyers.DebugTools
         public Button rocketsButton;
         public Button themeButton;
         public Button restartButton;
+        public Button blastButton;
+        public Button cameraButton;
+        public Text blastLabel;
+        public Text cameraLabel;
 
         private GameBootstrap game;
         private StringBuilder text;
@@ -33,6 +38,7 @@ namespace CastleDestroyers.DebugTools
         private float windowTime;
         private float windowMaxDelta;
         private bool slow;
+        private static readonly string[] CameraNames = { "CAM AUTO", "CAM MTN", "CAM BLUE", "CAM RED", "CAM ALL" };
 
         public void Init(GameBootstrap bootstrap)
         {
@@ -43,6 +49,9 @@ namespace CastleDestroyers.DebugTools
             rocketsButton.onClick.AddListener(OnSpawnRockets);
             themeButton.onClick.AddListener(OnToggleTheme);
             restartButton.onClick.AddListener(OnRestart);
+            blastButton.onClick.AddListener(OnNextBlast);
+            cameraButton.onClick.AddListener(OnNextCamera);
+            UpdateBlastLabel();
         }
 
         public void Tick(float dt)
@@ -115,6 +124,10 @@ namespace CastleDestroyers.DebugTools
             text.Append("session ").Append(flow.SessionTime.ToString("0.0")).Append('/').Append(config.maxSessionSeconds.ToString("0"));
             text.Append("  end ").Append(flow.EndReason.ToString()).Append('\n');
 
+            text.Append("tiles ").Append(game.Terrain.LastUploads).Append(" queue ").Append(game.Terrain.Mask.DirtyCount);
+            text.Append("  chunks ").Append(game.Terrain.ChunksActive);
+            text.Append("  fx ").Append(game.Particles.ActiveCount).Append('\n');
+
             text.Append("rockets ").Append(game.Stress.ActiveCount);
             text.Append("  theme ").Append(game.ActivePreset.ToString());
             text.Append("  ").Append(screenWidth).Append('x').Append(screenHeight);
@@ -149,6 +162,23 @@ namespace CastleDestroyers.DebugTools
         private void OnRestart()
         {
             game.Restart();
+        }
+
+        private void OnNextBlast()
+        {
+            game.Blaster.NextRadius();
+            UpdateBlastLabel();
+        }
+
+        private void UpdateBlastLabel()
+        {
+            blastLabel.text = "BLAST " + game.Blaster.Radius.ToString("0.0");
+        }
+
+        private void OnNextCamera()
+        {
+            game.CameraDirector.DebugView = (game.CameraDirector.DebugView + 1) % CameraDirector.DebugFrames;
+            cameraLabel.text = CameraNames[game.CameraDirector.DebugView];
         }
     }
 }

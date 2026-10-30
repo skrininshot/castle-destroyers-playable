@@ -1,3 +1,4 @@
+using CastleDestroyers.Destruction;
 using UnityEngine;
 
 namespace CastleDestroyers.Core
@@ -166,6 +167,10 @@ namespace CastleDestroyers.Core
         public float boosterPulse = 0.03f;
 
         [Header("Разрушаемость (ТЗ §3.6, §5.3)")]
+        [Tooltip("Запечённая маска ландшафта. Создаётся из Level1_TerrainMask.png.")]
+        public TerrainMaskData terrainMask;
+        [Tooltip("Мировая точка нижнего левого текселя маски, метры.")]
+        public Vector2 terrainMaskOrigin = new Vector2(-35.71875f, -3.5f);
         [Range(4, 32)]
         [Tooltip("Разрешение масок, тексели на метр.")]
         public int maskTexelsPerMeter = 16;
@@ -182,6 +187,15 @@ namespace CastleDestroyers.Core
         public float rimWidth = 0.3f;
         [Tooltip("Фестонная кромка у кратеров земли.")]
         public bool rimScallop;
+        [Range(4, 40)]
+        [Tooltip("Зубцов фестона на полный круг кратера.")]
+        public int rimScallopTeeth = 14;
+        [Range(0.02f, 0.5f)]
+        [Tooltip("Глубина фестона, метры.")]
+        public float rimScallopDepth = 0.12f;
+        [Range(0.02f, 0.5f)]
+        [Tooltip("Сглаживание внешнего края земли, доля значения маски. Меньше — резче.")]
+        public float maskEdgeSoftness = 0.15f;
         [Range(0.02f, 0.5f)]
         [Tooltip("Минимальный интервал между проверками связности, секунды.")]
         public float connectivityInterval = 0.1f;
@@ -191,6 +205,88 @@ namespace CastleDestroyers.Core
         [Range(1, 64)]
         [Tooltip("Островки меньше этого числа ячеек исчезают с пылью, а не падают обломком.")]
         public int minChunkCells = 6;
+        [Range(1, 64)]
+        [Tooltip("Сколько островов обрабатывается за одну проверку связности. Остаток — на следующей.")]
+        public int maxIslandsPerSolve = 16;
+        [Range(1, 16)]
+        [Tooltip("Обломков одновременно. Сверх лимита остров исчезает с пылью.")]
+        public int chunkSlots = 6;
+        [Tooltip("Размер текстуры обломка, степень двойки. Большой остров снимается с пониженным разрешением.")]
+        public int chunkTextureSize = 256;
+        [Range(1f, 40f)]
+        [Tooltip("Ускорение падения обломков и декора, м/с².")]
+        public float chunkGravity = 14f;
+        [Range(0f, 6f)]
+        [Tooltip("Максимальная скорость обломка вбок, м/с.")]
+        public float chunkMaxDrift = 1.2f;
+        [Range(0f, 180f)]
+        [Tooltip("Максимальная скорость вращения обломка, градусов в секунду.")]
+        public float chunkMaxSpinDeg = 35f;
+        [Range(0f, 720f)]
+        [Tooltip("Максимальная скорость вращения падающего дерева, градусов в секунду.")]
+        public float decorMaxSpinDeg = 220f;
+        [Range(0f, 1f)]
+        [Tooltip("На какой глубине под основанием дерева проверяется опора, метры.")]
+        public float decorAnchorDepth = 0.15f;
+
+        [Header("Вода и частицы (ТЗ §3.8, §4.1)")]
+        [Range(0f, 0.5f)]
+        [Tooltip("Амплитуда волны на кромке воды, метры.")]
+        public float waterWaveAmplitude = 0.09f;
+        [Range(0.1f, 4f)]
+        [Tooltip("Пространственная частота волны, рад/м.")]
+        public float waterWaveFrequency = 0.9f;
+        [Range(0f, 8f)]
+        [Tooltip("Скорость бега волны, рад/с.")]
+        public float waterWaveSpeed = 1.6f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Шаг вершин волны, метры.")]
+        public float waterWaveStep = 0.5f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Толщина светлой кромки воды, метры.")]
+        public float waterRimThickness = 0.22f;
+        [Range(64, 2048)]
+        [Tooltip("Лимит плоских частиц (пыль, всплески).")]
+        public int fxParticleCapacity = 512;
+        [Range(0, 32)]
+        [Tooltip("Частиц пыли на один кратер.")]
+        public int craterDustPuffs = 6;
+        [Range(1, 64)]
+        [Tooltip("Максимум частиц пыли на исчезнувший островок.")]
+        public int dustMaxPuffs = 16;
+        [Range(0.1f, 2f)]
+        [Tooltip("Размер частицы пыли, метры.")]
+        public float dustSize = 0.6f;
+        [Range(0f, 8f)]
+        [Tooltip("Скорость разлёта пыли, м/с.")]
+        public float dustSpeed = 2.2f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Время жизни пыли, секунды.")]
+        public float dustLife = 0.6f;
+        [Range(0f, 30f)]
+        [Tooltip("Гравитация для комьев земли, м/с².")]
+        public float dustGravity = 12f;
+        [Range(1, 64)]
+        [Tooltip("Базовое число капель всплеска.")]
+        public int splashDrops = 8;
+        [Range(0f, 8f)]
+        [Tooltip("Дополнительных капель на метр ширины падающего предмета.")]
+        public float splashDropsPerMeter = 3f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Размер капли, метры.")]
+        public float splashDropSize = 0.34f;
+        [Range(1f, 20f)]
+        [Tooltip("Начальная скорость капли вверх, м/с.")]
+        public float splashSpeed = 7f;
+        [Range(0f, 6f)]
+        [Tooltip("Разлёт капель вбок, м/с.")]
+        public float splashSpread = 1.6f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Время жизни капли, секунды.")]
+        public float splashLife = 0.8f;
+        [Range(0f, 40f)]
+        [Tooltip("Гравитация капель, м/с².")]
+        public float splashGravity = 18f;
 
         [Header("Взрывы, дым, замки (ТЗ §3.7, §5.4)")]
         [Range(16, 256)]
@@ -220,23 +316,6 @@ namespace CastleDestroyers.Core
         public float waterLevel;
         [Tooltip("Нижний край ландшафта и воды по Y, метры.")]
         public float levelBottom = -40f;
-        [Tooltip("Опорные точки контура слева направо: x от центра уровня, y над водой. Между ними контур сглаживается. Вертикальные участки задаются двумя точками с одним x.")]
-        public Vector2[] terrainProfile =
-        {
-            new Vector2(-62f, 1.2f), new Vector2(-34f, 1.4f), new Vector2(-28f, 1.8f), new Vector2(-17f, 1.8f),
-            new Vector2(-13.6f, 1f), new Vector2(-11f, 0.7f), new Vector2(-9f, 1f),
-            new Vector2(-7.5f, 1.9f), new Vector2(-6.1f, 3.4f), new Vector2(-5f, 5.2f), new Vector2(-4f, 7.2f),
-            new Vector2(-3.1f, 9f), new Vector2(-2.2f, 10.5f), new Vector2(-1.5f, 11.35f), new Vector2(-1.05f, 11.6f),
-            new Vector2(-0.82f, 11.2f), new Vector2(-0.72f, 9.6f), new Vector2(-0.66f, 4f), new Vector2(-0.62f, -3f),
-            new Vector2(0.62f, -3f), new Vector2(0.66f, 4f), new Vector2(0.72f, 9.6f), new Vector2(0.82f, 11.2f),
-            new Vector2(1.05f, 11.6f), new Vector2(1.5f, 11.35f), new Vector2(2.2f, 10.5f), new Vector2(3.1f, 9f),
-            new Vector2(4f, 7.2f), new Vector2(5f, 5.2f), new Vector2(6.1f, 3.4f), new Vector2(7.5f, 1.9f),
-            new Vector2(9f, 1f), new Vector2(11f, 0.7f), new Vector2(13.6f, 1f),
-            new Vector2(17f, 1.8f), new Vector2(28f, 1.8f), new Vector2(34f, 1.4f), new Vector2(62f, 1.2f)
-        };
-        [Range(0.1f, 1f)]
-        [Tooltip("Толщина цветной кромки по верху земли, метры.")]
-        public float groundRimThickness = 0.4f;
         [Tooltip("X центра синего замка, метры.")]
         public float playerCastleX = -22f;
         [Tooltip("X центра красного замка, метры.")]
@@ -291,6 +370,17 @@ namespace CastleDestroyers.Core
         [Range(0.05f, 1f)]
         [Tooltip("Период обновления текста debug-оверлея, секунды.")]
         public float debugHudRefresh = 0.25f;
+        [Tooltip("Радиусы debug-взрыва, метры. Кнопка BLAST перебирает их по кругу.")]
+        public float[] debugBlastRadii = { 1.2f, 2.4f, 4f, 0.6f };
+        [Range(0.02f, 0.5f)]
+        [Tooltip("Период повторения взрыва при удержании пальца, секунды.")]
+        public float debugBlastHoldInterval = 0.08f;
+        [Range(0f, 0.5f)]
+        [Tooltip("Нижняя доля экрана, где тапы не взрывают: там кнопки debug-панели.")]
+        public float debugBlastUiBand = 0.22f;
+        [Range(20f, 120f)]
+        [Tooltip("Ширина кадра ALL на debug-камере, метры.")]
+        public float debugOverviewWidth = 74f;
 
         /// <summary>Подсказка для хода игрока (индекс с нуля); за пределами массива — последняя.</summary>
         public TurnHint GetHint(int turnIndex)

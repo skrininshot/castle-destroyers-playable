@@ -19,6 +19,21 @@ namespace CastleDestroyers.EditorTools
         private const string ThemePath = "Assets/_Game/Configs/ThemePalette.asset";
         private const string MaterialPath = "Assets/_Game/Art/Mat_FlatColor.mat";
         private const string ShaderName = "Game/FlatColor";
+        private const string TerrainMaterialPath = "Assets/_Game/Art/Mat_Terrain.mat";
+        private const string TerrainShaderName = "Game/Terrain";
+        private const string ParticleMaterialPath = "Assets/_Game/Art/Mat_FlatParticle.mat";
+        private const string ParticleShaderName = "Game/FlatParticle";
+
+        // Порядок отрисовки: фон, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, чит-ракеты.
+        private const int OrderBack = 0;
+        private const int OrderDecor = 1;
+        private const int OrderTerrain = 2;
+        private const int OrderChunks = 3;
+        private const int OrderFront = 4;
+        private const int OrderWave = 5;
+        private const int OrderCannons = 6;
+        private const int OrderParticles = 7;
+        private const int OrderStress = 8;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
@@ -28,12 +43,12 @@ namespace CastleDestroyers.EditorTools
         private const int ButtonFontSize = 15;
         private const float CameraStartSize = 8f;
         private const float StatsWidth = 380f;
-        private const float StatsHeight = 136f;
+        private const float StatsHeight = 160f;
         private const float StatsAlpha = 0.4f;
         private const int ButtonWidth = 128;
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
-        private const int ButtonRows = 1;
+        private const int ButtonRows = 2;
 
         [MenuItem("Tools/Castle Destroyers/Build Game Scene")]
         public static void Build()
@@ -47,20 +62,39 @@ namespace CastleDestroyers.EditorTools
                 config.theme = theme;
                 EditorUtility.SetDirty(config);
             }
-            Material material = LoadOrCreateMaterial();
+            if (config.terrainMask == null)
+            {
+                config.terrainMask = TerrainMaskBaker.Bake();
+                EditorUtility.SetDirty(config);
+            }
+            Material material = LoadOrCreateMaterial(MaterialPath, ShaderName);
+            Material terrainMaterial = LoadOrCreateMaterial(TerrainMaterialPath, TerrainShaderName);
+            Material particleMaterial = LoadOrCreateMaterial(ParticleMaterialPath, ParticleShaderName);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Camera camera = CreateCamera();
-            MeshFilter level = CreateBatch("Level", material, 0);
-            MeshFilter cannons = CreateBatch("Cannons", material, 1);
-            MeshFilter stress = CreateBatch("StressRockets", material, 2);
+            MeshFilter back = CreateBatch("LevelBack", material, OrderBack);
+            MeshFilter decor = CreateBatch("SurfaceDecor", material, OrderDecor);
+            MeshFilter front = CreateBatch("LevelFront", material, OrderFront);
+            MeshFilter wave = CreateBatch("WaterStrip", material, OrderWave);
+            MeshFilter cannons = CreateBatch("Cannons", material, OrderCannons);
+            MeshFilter particles = CreateBatch("Particles", particleMaterial, OrderParticles);
+            MeshFilter stress = CreateBatch("StressRockets", material, OrderStress);
 
             GameBootstrap bootstrap = new GameObject("GameBootstrap").AddComponent<GameBootstrap>();
             bootstrap.config = config;
             bootstrap.mainCamera = camera;
-            bootstrap.levelFilter = level;
+            bootstrap.backFilter = back;
+            bootstrap.decorFilter = decor;
+            bootstrap.frontFilter = front;
+            bootstrap.waveFilter = wave;
             bootstrap.cannonsFilter = cannons;
+            bootstrap.particlesFilter = particles;
             bootstrap.stressFilter = stress;
+            bootstrap.terrainRoot = new GameObject("Terrain").transform;
+            bootstrap.terrainMaterial = terrainMaterial;
+            bootstrap.terrainSortingOrder = OrderTerrain;
+            bootstrap.chunkSortingOrder = OrderChunks;
 #if GAME_DEBUG
             CreateDebugUi(bootstrap);
 #endif
@@ -91,13 +125,13 @@ namespace CastleDestroyers.EditorTools
             return asset;
         }
 
-        private static Material LoadOrCreateMaterial()
+        private static Material LoadOrCreateMaterial(string path, string shaderName)
         {
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
-                material = new Material(Shader.Find(ShaderName));
-                AssetDatabase.CreateAsset(material, MaterialPath);
+                material = new Material(Shader.Find(shaderName));
+                AssetDatabase.CreateAsset(material, path);
             }
             return material;
         }
@@ -148,6 +182,10 @@ namespace CastleDestroyers.EditorTools
             overlay.rocketsButton = CreateButton(panel, "+1000 ROCKETS", font);
             overlay.themeButton = CreateButton(panel, "THEME", font);
             overlay.restartButton = CreateButton(panel, "RESTART", font);
+            overlay.blastButton = CreateButton(panel, "BLAST", font);
+            overlay.blastLabel = overlay.blastButton.GetComponentInChildren<Text>();
+            overlay.cameraButton = CreateButton(panel, "CAM AUTO", font);
+            overlay.cameraLabel = overlay.cameraButton.GetComponentInChildren<Text>();
 
             bootstrap.debugRoot = canvasObject;
             bootstrap.debugOverlay = overlay;

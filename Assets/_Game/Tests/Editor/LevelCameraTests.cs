@@ -1,5 +1,6 @@
 using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
+using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
 using CastleDestroyers.Level;
 using NUnit.Framework;
@@ -7,113 +8,6 @@ using UnityEngine;
 
 namespace CastleDestroyers.Tests
 {
-    public sealed class TerrainProfileTests
-    {
-        [Test]
-        public void InterpolatesLinearlyBetweenPoints()
-        {
-            Vector2[] profile = { new Vector2(0f, 0f), new Vector2(10f, 10f) };
-            Assert.AreEqual(5f, TerrainProfile.HeightAt(profile, 5f), 1e-5f);
-        }
-
-        [Test]
-        public void ClampsOutsideProfileToEdgeHeights()
-        {
-            Vector2[] profile = { new Vector2(0f, 2f), new Vector2(10f, 6f) };
-            Assert.AreEqual(2f, TerrainProfile.HeightAt(profile, -5f));
-            Assert.AreEqual(6f, TerrainProfile.HeightAt(profile, 50f));
-        }
-
-        [Test]
-        public void VerticalStepReturnsUpperHeight()
-        {
-            Vector2[] profile = { new Vector2(0f, 0f), new Vector2(5f, 0f), new Vector2(5f, 4f), new Vector2(10f, 4f) };
-            Assert.AreEqual(4f, TerrainProfile.HeightAt(profile, 5f));
-            Assert.AreEqual(0f, TerrainProfile.HeightAt(profile, 4.9f), 1e-5f);
-            Assert.AreEqual(4f, TerrainProfile.HeightAt(profile, 5.1f), 1e-5f);
-        }
-
-        [Test]
-        public void EmptyProfileIsFlatAtZero()
-        {
-            Assert.AreEqual(0f, TerrainProfile.HeightAt(null, 3f));
-            Assert.AreEqual(0f, TerrainProfile.HeightAt(new Vector2[0], 3f));
-        }
-
-        [Test]
-        public void DefaultLevelHasMountainWithCrevasseAndHills()
-        {
-            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
-            Vector2[] profile = config.terrainProfile;
-            Assert.AreEqual(1.8f, TerrainProfile.HeightAt(profile, config.playerCastleX), 1e-4f);
-            Assert.AreEqual(1.8f, TerrainProfile.HeightAt(profile, config.enemyCastleX), 1e-4f);
-            Assert.AreEqual(11.6f, TerrainProfile.HeightAt(profile, -1.05f), 1e-4f);
-            Assert.AreEqual(11.6f, TerrainProfile.HeightAt(profile, 1.05f), 1e-4f);
-            Assert.Less(TerrainProfile.HeightAt(profile, 0f), config.waterLevel, "crevasse goes down to the water");
-            Object.DestroyImmediate(config);
-        }
-
-        [Test]
-        public void SmoothPassesThroughControlPoints()
-        {
-            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
-            Vector2[] dense = TerrainProfile.Smooth(config.terrainProfile, 0.14f);
-            for (int i = 0; i < config.terrainProfile.Length; i++)
-            {
-                Vector2 point = config.terrainProfile[i];
-                bool found = false;
-                for (int k = 0; k < dense.Length && !found; k++)
-                {
-                    found = (dense[k] - point).sqrMagnitude < 1e-6f;
-                }
-                Assert.IsTrue(found, "control point " + i);
-            }
-            Object.DestroyImmediate(config);
-        }
-
-        [Test]
-        public void SmoothDoesNotOvershootAndKeepsXOrder()
-        {
-            Vector2[] control = { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(2f, 5f), new Vector2(3f, 5f), new Vector2(4f, 1f) };
-            Vector2[] dense = TerrainProfile.Smooth(control, 0.1f);
-            for (int i = 0; i < dense.Length; i++)
-            {
-                Assert.GreaterOrEqual(dense[i].y, -1e-4f);
-                Assert.LessOrEqual(dense[i].y, 5f + 1e-4f);
-                if (i > 0)
-                {
-                    Assert.GreaterOrEqual(dense[i].x, dense[i - 1].x);
-                }
-            }
-        }
-
-        [Test]
-        public void SmoothKeepsVerticalStepSharp()
-        {
-            Vector2[] control = { new Vector2(0f, 4f), new Vector2(2f, 4f), new Vector2(2f, -1f), new Vector2(4f, -1f) };
-            Vector2[] dense = TerrainProfile.Smooth(control, 0.1f);
-            Assert.AreEqual(4f, TerrainProfile.HeightAt(dense, 1.95f), 1e-4f);
-            Assert.AreEqual(-1f, TerrainProfile.HeightAt(dense, 2.05f), 1e-4f);
-        }
-
-        [Test]
-        public void MountainMatchesLevelSpec()
-        {
-            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
-            Vector2[] dense = TerrainProfile.Smooth(config.terrainProfile, 0.14f);
-            float top = float.NegativeInfinity;
-            for (int i = 0; i < dense.Length; i++)
-            {
-                top = Mathf.Max(top, dense[i].y);
-            }
-            Assert.GreaterOrEqual(top, 11f);
-            Assert.LessOrEqual(top, 12f);
-            Assert.Greater(TerrainProfile.HeightAt(dense, -0.7f), config.waterLevel, "wall of the crevasse is above water");
-            Assert.Less(TerrainProfile.HeightAt(dense, 0f), config.waterLevel);
-            Object.DestroyImmediate(config);
-        }
-    }
-
     public sealed class FlatMeshBuilderTests
     {
         [Test]
@@ -193,15 +87,16 @@ namespace CastleDestroyers.Tests
         [SetUp]
         public void SetUp()
         {
-            config = ScriptableObject.CreateInstance<GameConfig>();
+            config = MaskFixture.LevelConfig();
             level = new GreyboxLevel();
-            level.Init(config);
+            level.Init(config, DestructibleMask.CreateTerrain(config));
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(level.Mesh);
+            Object.DestroyImmediate(level.BackMesh);
+            Object.DestroyImmediate(level.FrontMesh);
             Object.DestroyImmediate(config);
         }
 
@@ -247,26 +142,32 @@ namespace CastleDestroyers.Tests
         public void BuildProducesGeometryForBothThemes()
         {
             level.Build(ThemePalette.CreateNight());
-            int nightVertices = level.Mesh.vertexCount;
-            Assert.Greater(nightVertices, 0);
+            int nightBack = level.BackMesh.vertexCount;
+            int nightFront = level.FrontMesh.vertexCount;
+            Assert.Greater(nightBack, 0);
+            Assert.Greater(nightFront, 0);
             level.Build(ThemePalette.CreateSunset());
-            Assert.AreEqual(nightVertices, level.Mesh.vertexCount);
+            Assert.AreEqual(nightBack, level.BackMesh.vertexCount);
+            Assert.AreEqual(nightFront, level.FrontMesh.vertexCount);
         }
 
         [Test]
         public void MeshFitsSixteenBitIndices()
         {
             level.Build(ThemePalette.CreateNight());
-            Assert.Less(level.Mesh.vertexCount, 65535);
+            Assert.Less(level.BackMesh.vertexCount, 65535);
+            Assert.Less(level.FrontMesh.vertexCount, 65535);
         }
 
         [Test]
         public void RebuildIsDeterministic()
         {
             level.Build(ThemePalette.CreateNight());
-            Vector3[] first = level.Mesh.vertices;
+            Vector3[] back = level.BackMesh.vertices;
+            Vector3[] front = level.FrontMesh.vertices;
             level.Build(ThemePalette.CreateNight());
-            CollectionAssert.AreEqual(first, level.Mesh.vertices);
+            CollectionAssert.AreEqual(back, level.BackMesh.vertices);
+            CollectionAssert.AreEqual(front, level.FrontMesh.vertices);
         }
 
         [Test]
@@ -313,7 +214,7 @@ namespace CastleDestroyers.Tests
         [SetUp]
         public void SetUp()
         {
-            config = ScriptableObject.CreateInstance<GameConfig>();
+            config = MaskFixture.LevelConfig();
             config.bootDuration = 1f;
             config.introDuration = 1f;
             config.playerAimDuration = 1f;
@@ -328,7 +229,7 @@ namespace CastleDestroyers.Tests
             flow = new SessionFlow();
             flow.Init(config, match);
             level = new GreyboxLevel();
-            level.Init(config);
+            level.Init(config, DestructibleMask.CreateTerrain(config));
             cameraObject = new GameObject("TestCamera", typeof(Camera));
             director = new CameraDirector();
             director.Init(cameraObject.GetComponent<Camera>(), config, level, flow);
@@ -338,7 +239,8 @@ namespace CastleDestroyers.Tests
         public void TearDown()
         {
             Object.DestroyImmediate(cameraObject);
-            Object.DestroyImmediate(level.Mesh);
+            Object.DestroyImmediate(level.BackMesh);
+            Object.DestroyImmediate(level.FrontMesh);
             Object.DestroyImmediate(config);
         }
 

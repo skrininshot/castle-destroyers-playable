@@ -26,6 +26,7 @@ namespace CastleDestroyers.Core
         public Color32 ground;
         public Color32 groundShade;
         public Color32 groundRim;
+        public Color32 groundCrater;
         public Color32 treeLight;
         public Color32 treeShade;
         public Color32 water;
@@ -123,6 +124,7 @@ namespace CastleDestroyers.Core
             set.ground = Hex(0x1F6E4C);
             set.groundShade = Hex(0x1A5E41);
             set.groundRim = Hex(0x3FE07A);
+            set.groundCrater = Hex(0x144A36);
             set.treeLight = Hex(0x2C9C6B);
             set.treeShade = Hex(0x1F7A55);
             set.water = Hex(0x2AA7A8);
@@ -152,6 +154,7 @@ namespace CastleDestroyers.Core
             set.ground = Hex(0xB8303A);
             set.groundShade = Hex(0xA32832);
             set.groundRim = Hex(0xFF6B57);
+            set.groundCrater = Hex(0x7E1D27);
             set.treeLight = Hex(0x8FB04E);
             set.treeShade = Hex(0x6C8C3A);
             set.water = Hex(0x2E70D8);

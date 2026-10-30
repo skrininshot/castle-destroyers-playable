@@ -44,6 +44,9 @@ MonoBehaviour:
     groundRim:
       serializedVersion: 2
       rgba: 4286242879
+    groundCrater:
+      serializedVersion: 2
+      rgba: 4281747988
     treeLight:
       serializedVersion: 2
       rgba: 4285242412
@@ -180,6 +183,9 @@ MonoBehaviour:
     groundRim:
       serializedVersion: 2
       rgba: 4283919359
+    groundCrater:
+      serializedVersion: 2
+      rgba: 4280753534
     treeLight:
       serializedVersion: 2
       rgba: 4283347087
