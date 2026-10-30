@@ -1,4 +1,5 @@
 using CastleDestroyers.CameraRig;
+using CastleDestroyers.Combat;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
@@ -173,10 +174,17 @@ namespace CastleDestroyers.Tests
         public void RebuildIsDeterministic()
         {
             level.Build(ThemePalette.CreateNight());
-            Vector3[] back = level.BackLayers[3].vertices;
+            Vector3[][] back = new Vector3[level.BackLayers.Length][];
+            for (int i = 0; i < back.Length; i++)
+            {
+                back[i] = level.BackLayers[i].vertices;
+            }
             Vector3[] front = level.FrontMesh.vertices;
             level.Build(ThemePalette.CreateNight());
-            CollectionAssert.AreEqual(back, level.BackLayers[3].vertices);
+            for (int i = 0; i < back.Length; i++)
+            {
+                CollectionAssert.AreEqual(back[i], level.BackLayers[i].vertices, "layer " + i);
+            }
             CollectionAssert.AreEqual(front, level.FrontMesh.vertices);
         }
 
@@ -209,6 +217,42 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(config.enemyCastleX, level.EnemyFocusX);
             Assert.Greater(level.PlayerFocusY, level.GroundHeight(config.playerCastleX));
             Assert.Greater(level.EnemyFocusY, level.GroundHeight(config.enemyCastleX));
+        }
+    }
+
+    public sealed class RocketPathTests
+    {
+        [Test]
+        public void ArcLengthMatchesNumericIntegration()
+        {
+            const float velX = 18f;
+            const float velY = 20f;
+            const float gravity = 14f;
+            const int steps = 20000;
+            float time = 3f;
+            double sum = 0d;
+            for (int i = 0; i < steps; i++)
+            {
+                double u = velY - gravity * (i + 0.5d) * time / steps;
+                sum += System.Math.Sqrt(velX * velX + u * u) * time / steps;
+            }
+            Assert.AreEqual((float)sum, RocketPath.ArcLength(velX, velY, gravity, time), 0.02f);
+        }
+
+        [Test]
+        public void ArcLengthGrowsPastTheApex()
+        {
+            float apex = RocketPath.ArcLength(18f, 20f, 14f, 20f / 14f);
+            Assert.Greater(RocketPath.ArcLength(18f, 20f, 14f, 2.5f), apex);
+            Assert.AreEqual(0f, RocketPath.ArcLength(18f, 20f, 14f, 0f), 1e-3f);
+        }
+
+        [Test]
+        public void VerticalShotDoesNotBreak()
+        {
+            float length = RocketPath.ArcLength(0f, 20f, 14f, 1f);
+            Assert.IsFalse(float.IsNaN(length) || float.IsInfinity(length));
+            Assert.Greater(length, 0f);
         }
     }
 
@@ -331,6 +375,45 @@ namespace CastleDestroyers.Tests
             stress.Tick(interval);
             Assert.AreEqual(firstX, stress.Mesh.vertices[4].x - level.PlayerMountX[1], 1e-2f);
             Assert.AreEqual(firstY, stress.Mesh.vertices[4].y - level.PlayerMountY[1], 1e-2f);
+        }
+
+        [Test]
+        public void WavesAreEvenlySpacedAlongTheArc()
+        {
+            const float step = 0.004f;
+            const int steps = 625;
+            float angle = config.stressRocketAngleDeg * Mathf.Deg2Rad;
+            float velX = config.stressRocketSpeed * Mathf.Cos(angle);
+            float velY = config.stressRocketSpeed * Mathf.Sin(angle);
+            float[] crossings = new float[64];
+            int count = 0;
+            float previous = 0f;
+
+            stress.Spawn(1, Side.Player, ThemePalette.CreateNight(), Cannons);
+            for (int i = 1; i <= steps; i++)
+            {
+                stress.Tick(step);
+                float t = i * step;
+                Vector3[] vertices = stress.Mesh.vertices;
+                float centerX = (vertices[0].x + vertices[1].x + vertices[2].x + vertices[3].x) * 0.25f;
+                float centerY = (vertices[0].y + vertices[1].y + vertices[2].y + vertices[3].y) * 0.25f;
+                float baseX = level.PlayerMountX[0] + velX * t;
+                float baseY = level.PlayerMountY[0] + velY * t - 0.5f * config.gravity * t * t;
+                float tangentY = velY - config.gravity * t;
+                float deviation = (centerY - baseY) * velX - (centerX - baseX) * tangentY;
+                if (i > 1 && previous * deviation < 0f)
+                {
+                    crossings[count] = RocketPath.ArcLength(velX, velY, config.gravity, t);
+                    count++;
+                }
+                previous = deviation;
+            }
+
+            Assert.GreaterOrEqual(count, 4);
+            for (int i = 1; i < count; i++)
+            {
+                Assert.AreEqual(config.waveLength * 0.5f, crossings[i] - crossings[i - 1], 0.1f, "half wave " + i);
+            }
         }
 
         [Test]

@@ -127,10 +127,10 @@ namespace CastleDestroyers.Core
         public int stressRocketCount = 1000;
         [Range(0f, 1f)]
         [Tooltip("Амплитуда синусоиды «змейки», метры.")]
-        public float waveAmplitude = 0.35f;
-        [Range(1f, 20f)]
-        [Tooltip("Частота синусоиды, рад/с.")]
-        public float waveFrequency = 9f;
+        public float waveAmplitude = 0.25f;
+        [Range(1f, 30f)]
+        [Tooltip("Длина волны синусоиды вдоль пути ракеты, метры.")]
+        public float waveLength = 8f;
         [Range(0f, 3f)]
         [Tooltip("Сдвиг фазы синусоиды между пушками, рад. 0 — все потоки идут одинаковой дугой (D-031).")]
         public float wavePhaseStep;

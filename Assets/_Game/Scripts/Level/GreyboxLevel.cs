@@ -113,6 +113,7 @@ namespace CastleDestroyers.Level
         {
             float extent = config.levelWidth;
             decorRng.Reset(DecorSeed);
+            builder.Clear();
             AddStars(palette, extent);
             ApplyLayer(0);
             AddMoon(palette);
