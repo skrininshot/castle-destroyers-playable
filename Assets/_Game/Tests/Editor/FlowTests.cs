@@ -345,6 +345,49 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void FlightWaitsWhileRocketsAreBusy()
+        {
+            while (flow.State != SessionState.Flight)
+            {
+                flow.Skip();
+            }
+            flow.FlightBusy = true;
+            flow.Tick(config.flightDuration + 1f);
+            Assert.AreEqual(SessionState.Flight, flow.State);
+            flow.FlightBusy = false;
+            flow.Tick(0.01f);
+            Assert.AreEqual(SessionState.Resolve, flow.State);
+            Assert.Less(flow.StateTime, 0.01f, "waiting does not eat Resolve time");
+        }
+
+        [Test]
+        public void FlightLimitReleasesStuckTurn()
+        {
+            while (flow.State != SessionState.Flight)
+            {
+                flow.Skip();
+            }
+            flow.FlightBusy = true;
+            flow.Tick(config.flightMaxDuration + 0.1f);
+            Assert.AreEqual(SessionState.Resolve, flow.State);
+        }
+
+        [Test]
+        public void KeepAimingRestartsIdleTimer()
+        {
+            while (flow.State != SessionState.Aim)
+            {
+                flow.Skip();
+            }
+            flow.Tick(0.9f);
+            flow.KeepAiming();
+            flow.Tick(0.9f);
+            Assert.AreEqual(SessionState.Aim, flow.State);
+            flow.Tick(0.2f);
+            Assert.AreEqual(SessionState.Fire, flow.State);
+        }
+
+        [Test]
         public void DurationsAreReadFromConfig()
         {
             config.playerAimDuration = 2.5f;

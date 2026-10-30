@@ -31,30 +31,33 @@ namespace CastleDestroyers.Core
         [Tooltip("Подсказки к ходам игрока по порядку. Если ходов больше, чем подсказок, используется последняя.")]
         public TurnHint[] turnHints =
         {
-            new TurnHint("x20 lob", 20, true, 55f, 0.75f),
+            new TurnHint("x20 lob", 20, true, 45f, 0.37f),
             new TurnHint("x50 straight shot", 50, true, 20f, 0.9f),
             new TurnHint("free shot", 0, false, 40f, 0.85f)
         };
 
-        [Header("Тайминги состояний (заглушки до этапов 3 и 6)")]
+        [Header("Тайминги состояний")]
         [Range(0f, 2f)]
         [Tooltip("Boot: пауза перед интро, секунды.")]
         public float bootDuration = 0.2f;
         [Range(0.2f, 5f)]
         [Tooltip("Intro: камера на замке игрока, секунды.")]
         public float introDuration = 1.5f;
-        [Range(0.2f, 10f)]
-        [Tooltip("Aim игрока: ожидание прицеливания до автоперехода, секунды. На этапе 3 уступает место жесту.")]
-        public float playerAimDuration = 2.5f;
+        [Range(0.2f, 30f)]
+        [Tooltip("Aim игрока: простой до автовыстрела по подсказке хода, секунды (ТЗ §3.2). Жест останавливает отсчёт.")]
+        public float playerAimDuration = 10f;
         [Range(0.2f, 5f)]
         [Tooltip("Aim ИИ: «раздумье» с поворотом пушек, секунды.")]
         public float aiAimDuration = 1.5f;
         [Range(0.1f, 3f)]
         [Tooltip("Fire: пауза на замке во время залпа, секунды (ТЗ §3.9: ~0.3 с до переезда).")]
         public float fireDuration = 0.6f;
-        [Range(0.5f, 10f)]
-        [Tooltip("Flight: полёт ракет, секунды. На этапе 3 заканчивается, когда ракет не осталось.")]
-        public float flightDuration = 3f;
+        [Range(0.1f, 10f)]
+        [Tooltip("Flight: минимальная длительность, секунды. Дальше состояние держится, пока ракеты в воздухе.")]
+        public float flightDuration = 1f;
+        [Range(2f, 30f)]
+        [Tooltip("Flight: предел ожидания ракет, секунды. Страховка от зависшего хода.")]
+        public float flightMaxDuration = 12f;
         [Range(0.1f, 3f)]
         [Tooltip("Resolve: задержка на разрушениях, секунды (ТЗ §3.9: ~0.7 с).")]
         public float resolveDuration = 0.7f;
@@ -68,13 +71,19 @@ namespace CastleDestroyers.Core
         [Tooltip("Defeat: от поражения до EndCard, секунды.")]
         public float defeatDuration = 2f;
 
-        [Header("Заглушка боя (до этапа 3)")]
+        [Header("Заглушки боя (потери до этапа 5, выстрел ИИ до этапа 6)")]
         [Range(0, 14)]
         [Tooltip("Сколько пушек ИИ теряет за залп игрока.")]
         public int stubEnemyLossPerPlayerTurn = 4;
         [Range(0, 14)]
         [Tooltip("Сколько пушек игрок теряет за залп ИИ.")]
         public int stubPlayerLossPerAiTurn = 1;
+        [Range(0f, 90f)]
+        [Tooltip("Угол выстрела ИИ, градусы.")]
+        public float stubAiAngleDeg = 50f;
+        [Range(0f, 1f)]
+        [Tooltip("Сила выстрела ИИ, доля от максимума.")]
+        public float stubAiPower = 0.62f;
 
         [Header("Прицел (ТЗ §3.2)")]
         [Range(0f, 90f)]
@@ -93,6 +102,25 @@ namespace CastleDestroyers.Core
         [Range(0.1f, 1f)]
         [Tooltip("Какая доля траектории показывается пунктиром.")]
         public float aimPreviewFraction = 0.3f;
+        [Range(2, 32)]
+        [Tooltip("Точек в пунктире.")]
+        public int aimDotCount = 12;
+        [Range(0.05f, 1f)]
+        [Tooltip("Диаметр первой точки пунктира, метры.")]
+        public float aimDotSizeStart = 0.36f;
+        [Range(0.02f, 1f)]
+        [Tooltip("Диаметр последней точки пунктира, метры.")]
+        public float aimDotSizeEnd = 0.14f;
+        [Range(0, 255)]
+        [Tooltip("Непрозрачность последней точки пунктира, 0..255.")]
+        public int aimDotAlphaEnd = 90;
+        [Tooltip("Плашка POWER / ANGLE: смещение от центра замка игрока, метры.")]
+        public Vector2 aimPanelOffset = new Vector2(5f, 6.5f);
+        [Tooltip("Режим «направление на палец» вместо «оттянуть»: сила постоянная (D-017).")]
+        public bool aimPointAtFinger;
+        [Range(0f, 1f)]
+        [Tooltip("Сила в режиме «направление на палец», доля от максимума.")]
+        public float aimPointPower = 0.6f;
         [Range(1f, 60f)]
         [Tooltip("Скорость ракеты при минимальной силе, м/с.")]
         public float launchSpeedMin = 12f;
@@ -131,15 +159,33 @@ namespace CastleDestroyers.Core
         [Range(0.05f, 1f)]
         [Tooltip("Ширина квада ракеты, метры.")]
         public float rocketWidth = 0.34f;
-        [Range(1f, 10f)]
-        [Tooltip("Время жизни ракеты в стресс-тесте, секунды.")]
-        public float stressRocketLifetime = 4f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Шаг проверки столкновений вдоль пути за кадр, метры. Меньше — точнее и дороже.")]
+        public float rocketCollisionStep = 0.25f;
+        [Range(0.2f, 4f)]
+        [Tooltip("Ширина всплеска от ракеты, метры.")]
+        public float rocketSplashWidth = 0.8f;
+        [Range(0f, 1f)]
+        [Tooltip("Откат ствола при выстреле, метры.")]
+        public float recoilDistance = 0.3f;
+        [Range(0.5f, 10f)]
+        [Tooltip("Скорость возврата ствола, м/с.")]
+        public float recoilReturnSpeed = 3f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Размер вспышки у дула, метры.")]
+        public float muzzleFlashSize = 0.8f;
+        [Range(0.02f, 0.5f)]
+        [Tooltip("Длительность вспышки у дула, секунды.")]
+        public float muzzleFlashLife = 0.1f;
         [Range(5f, 85f)]
-        [Tooltip("Угол выстрела в стресс-тесте, градусы. Все ракеты летят по одной дуге.")]
-        public float stressRocketAngleDeg = 48f;
+        [Tooltip("Угол выстрела в стресс-режиме, градусы. Все ракеты летят по одной дуге в гору.")]
+        public float stressRocketAngleDeg = 20f;
         [Range(1f, 60f)]
-        [Tooltip("Скорость ракеты в стресс-тесте, м/с.")]
+        [Tooltip("Скорость ракеты в стресс-режиме, м/с.")]
         public float stressRocketSpeed = 27f;
+        [Range(1, 100)]
+        [Tooltip("Сколько ракет стресс-режим выпускает за кадр, пока не заполнен буфер.")]
+        public int stressSpawnPerFrame = 40;
 
         [Header("Бустеры (ТЗ §3.5)")]
         [Tooltip("Бустеры уровня: множитель и положение.")]
@@ -291,17 +337,68 @@ namespace CastleDestroyers.Core
         [Range(0.1f, 2f)]
         [Tooltip("Взрывы ближе этого радиуса в одном кадре сливаются визуально, метры.")]
         public float explosionMergeRadius = 0.5f;
+        [Range(0f, 1f)]
+        [Tooltip("На сколько растёт визуальный взрыв за каждый слитый с ним, доля размера.")]
+        public float explosionMergeGrowth = 0.12f;
+        [Range(1f, 3f)]
+        [Tooltip("Предел роста слитого взрыва, доля размера.")]
+        public float explosionMaxStrength = 1.6f;
+        [Range(0.2f, 4f)]
+        [Tooltip("Радиус внешнего круга взрыва, метры.")]
+        public float explosionRadius = 1.5f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Длительность взрыва, секунды.")]
+        public float explosionLife = 0.32f;
+        [Range(0, 16)]
+        [Tooltip("Плоских осколков на взрыв.")]
+        public int explosionShards = 4;
+        [Range(0f, 20f)]
+        [Tooltip("Скорость осколков, м/с.")]
+        public float explosionShardSpeed = 8f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Размер осколка, метры.")]
+        public float explosionShardSize = 0.34f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Время жизни осколка, секунды.")]
+        public float explosionShardLife = 0.5f;
         [Range(0f, 2f)]
         [Tooltip("Предельная амплитуда тряски камеры, метры.")]
         public float shakeMax = 0.6f;
         [Range(1f, 10f)]
         [Tooltip("Скорость затухания тряски, 1/с.")]
         public float shakeDecay = 4f;
+        [Range(0f, 0.5f)]
+        [Tooltip("Импульс тряски от одного визуального взрыва, метры.")]
+        public float shakePerExplosion = 0.08f;
+        [Range(5f, 90f)]
+        [Tooltip("Частота тряски, рад/с.")]
+        public float shakeFrequency = 45f;
         [Range(100, 4000)]
         public int smokeCapacity = 2000;
         [Range(50, 600)]
         [Tooltip("Выше этого числа ракет дым пускает только каждая k-я ракета.")]
         public int smokeLodRocketThreshold = 200;
+        [Range(0f, 1f)]
+        [Tooltip("Насколько толще шлейф за каждую ступень LOD, доля размера.")]
+        public float smokeLodGrowth = 0.15f;
+        [Range(0.01f, 0.3f)]
+        [Tooltip("Интервал между пуфами одной ракеты, секунды.")]
+        public float smokeInterval = 0.05f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Время жизни пуфа, секунды.")]
+        public float smokeLife = 0.5f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Диаметр нового пуфа, метры.")]
+        public float smokeSizeStart = 0.24f;
+        [Range(0.05f, 2f)]
+        [Tooltip("Диаметр пуфа в конце жизни, метры.")]
+        public float smokeSizeEnd = 0.6f;
+        [Range(0f, 1f)]
+        [Tooltip("Какую долю жизни пуф остаётся цветом пламени.")]
+        public float smokeFlameFraction = 0.25f;
+        [Range(0, 255)]
+        [Tooltip("Начальная непрозрачность пуфа, 0..255.")]
+        public int smokeAlpha = 230;
         [Range(0f, 6f)]
         [Tooltip("Максимальный наклон от урона, градусы.")]
         public float swayMaxDeg = 3f;
@@ -352,9 +449,9 @@ namespace CastleDestroyers.Core
         public float castleFocusLiftY = 0.5f;
         [Tooltip("Точка фокуса в центре уровня, метры.")]
         public Vector2 centerFocus = new Vector2(0f, 9f);
-        [Range(0.1f, 0.9f)]
-        [Tooltip("Какую долю полёта камера держит центр уровня, прежде чем переехать к цели.")]
-        public float flightCenterFraction = 0.5f;
+        [Range(0f, 1f)]
+        [Tooltip("Насколько центральный кадр смещается к голове потока, доля расстояния.")]
+        public float cameraHeadFollow = 0.25f;
 
         [Header("Прочее")]
         [Tooltip("Дождь из ролика (по умолчанию выключен).")]

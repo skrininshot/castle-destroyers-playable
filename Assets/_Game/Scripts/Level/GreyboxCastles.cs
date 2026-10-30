@@ -67,6 +67,8 @@ namespace CastleDestroyers.Level
         private static readonly float[] RedTowerWidth = { 0.9f, 0.9f, 1f, 1f, 1.1f, 1.1f, 1.25f };
         private static readonly float[] RedTowerTop = { 3.1f, 3.1f, 3.9f, 3.9f, 7f, 7f, RedTop };
         private static readonly float[] RedTowerRoof = { 1.3f, 1.3f, 1.4f, 1.4f, 1.6f, 1.6f, RedRoofHeight };
+        /// <summary>Ступени силуэта красного замка: граница по расстоянию от центра и высота, парами.</summary>
+        private static readonly float[] RedHitSteps = { 0.65f, RedTop, 1.7f, 7f, 2.95f, 3.9f, RedHalfWidth, 3.1f };
 
         /// <summary>
         /// Точки крепления пушек: пары (x от центра замка, y от основания стены). Пушки стоят на стенах,
@@ -87,6 +89,20 @@ namespace CastleDestroyers.Level
         public static float RedTotalHeight()
         {
             return RedTop + RedRoofHeight;
+        }
+
+        /// <summary>Верх силуэта красного замка над основанием стены, по расстоянию от центра. Заглушка попаданий до масок этапа 5.</summary>
+        public static float RedHitTop(float offsetFromCenter)
+        {
+            float distance = Mathf.Abs(offsetFromCenter);
+            for (int i = 0; i < RedHitSteps.Length; i += 2)
+            {
+                if (distance <= RedHitSteps[i])
+                {
+                    return RedHitSteps[i + 1];
+                }
+            }
+            return 0f;
         }
 
         public static void DrawBlue(FlatMeshBuilder builder, PaletteSet palette, Rng rng, GameConfig config, float cx, float groundY)

@@ -18,6 +18,7 @@ namespace CastleDestroyers.CameraRig
         private GameConfig config;
         private GreyboxLevel level;
         private SessionFlow flow;
+        private ScreenShake shake;
         private readonly CameraFrame target = new CameraFrame();
 
         private float currentX;
@@ -33,13 +34,20 @@ namespace CastleDestroyers.CameraRig
         public const int DebugFrames = 5;
 #endif
 
-        public void Init(Camera camera, GameConfig gameConfig, GreyboxLevel greyboxLevel, SessionFlow sessionFlow)
+        /// <summary>Голова потока прошла центр уровня: пора ехать к цели (ТЗ §3.9).</summary>
+        public bool HeadPassedCenter { get; set; }
+        /// <summary>X головы потока: за ней слегка смещается центральный кадр.</summary>
+        public float FlightHeadX { get; set; }
+
+        public void Init(Camera camera, GameConfig gameConfig, GreyboxLevel greyboxLevel, SessionFlow sessionFlow, ScreenShake screenShake)
         {
             cam = camera;
             camTransform = camera.transform;
             config = gameConfig;
             level = greyboxLevel;
             flow = sessionFlow;
+            shake = screenShake;
+            FlightHeadX = config.centerFocus.x;
             cam.orthographic = true;
             Snap();
         }
@@ -82,14 +90,14 @@ namespace CastleDestroyers.CameraRig
             switch (flow.State)
             {
                 case SessionState.Flight:
-                    bool atCenter = flow.StateTime < flow.Duration(SessionState.Flight, active) * config.flightCenterFraction;
-                    if (atCenter)
+                    if (HeadPassedCenter)
                     {
-                        SetCenterFrame(frame);
+                        SetTargetFrame(frame, Opposite(active));
                     }
                     else
                     {
-                        SetTargetFrame(frame, Opposite(active));
+                        SetCenterFrame(frame);
+                        frame.x += (FlightHeadX - frame.x) * config.cameraHeadFollow;
                     }
                     break;
                 case SessionState.Resolve:
@@ -172,7 +180,7 @@ namespace CastleDestroyers.CameraRig
 
         private void Apply()
         {
-            camTransform.position = new Vector3(currentX, currentY, CameraZ);
+            camTransform.position = new Vector3(currentX + shake.OffsetX, currentY + shake.OffsetY, CameraZ);
             cam.orthographicSize = currentSize;
         }
     }

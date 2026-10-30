@@ -5,8 +5,9 @@ namespace CastleDestroyers.Flow
 {
     /// <summary>
     /// Стейт-машина сессии (ТЗ §3.1): Boot → Intro → [Aim → Fire → Flight → Resolve] по очереди сторон →
-    /// Victory / Defeat → EndCard. На этапе 1 все переходы идут по таймерам, а бой заменён
-    /// заглушкой (потери пушек из конфига). Лимиты ходов и времени, Director и счётчик ходов настоящие.
+    /// Victory / Defeat → EndCard. Aim игрока заканчивается жестом или таймером простоя, Flight держится, пока
+    /// ракеты в воздухе (FlightBusy), остальные переходы идут по таймерам. Потери пушек — заглушка из конфига до этапа 5.
+    /// Лимиты ходов и времени, Director и счётчик ходов настоящие.
     /// </summary>
     public sealed class SessionFlow : ITickable
     {
@@ -28,6 +29,9 @@ namespace CastleDestroyers.Flow
         public float StateTime { get; private set; }
         /// <summary>Время сессии с момента Boot, секунды.</summary>
         public float SessionTime { get; private set; }
+
+        /// <summary>Ракеты ещё летят: Flight не заканчивается, но не дольше flightMaxDuration.</summary>
+        public bool FlightBusy { get; set; }
 
         /// <summary>Срабатывает после входа в новое состояние.</summary>
         public event Action<SessionState, Side> StateChanged;
@@ -76,13 +80,28 @@ namespace CastleDestroyers.Flow
                 {
                     return;
                 }
-                float carry = StateTime - duration;
+                bool flight = State == SessionState.Flight;
+                if (flight && FlightBusy && StateTime < config.flightMaxDuration)
+                {
+                    return;
+                }
+                // Ожидание ракет не должно съедать время следующего состояния.
+                float carry = flight ? 0f : StateTime - duration;
                 Advance();
                 StateTime = carry;
             }
         }
 
-        /// <summary>Досрочный переход в следующее состояние (чит и будущий автовыстрел).</summary>
+        /// <summary>Игрок ведёт жест: таймер простоя начинается заново.</summary>
+        public void KeepAiming()
+        {
+            if (State == SessionState.Aim)
+            {
+                StateTime = 0f;
+            }
+        }
+
+        /// <summary>Досрочный переход в следующее состояние (выстрел игрока и чит).</summary>
         public void Skip()
         {
             if (Duration(State, ActiveSide) < 0f)
@@ -203,7 +222,7 @@ namespace CastleDestroyers.Flow
             }
         }
 
-        /// <summary>Заглушка боя до этапа 3. Director: на последнем ходу игрока добивает врага, ИИ не убивает последнюю пушку игрока.</summary>
+        /// <summary>Заглушка потерь до этапа 5. Director: на последнем ходу игрока добивает врага, ИИ не убивает последнюю пушку игрока.</summary>
         private void ApplyStubDamage()
         {
             if (ActiveSide == Side.Player)

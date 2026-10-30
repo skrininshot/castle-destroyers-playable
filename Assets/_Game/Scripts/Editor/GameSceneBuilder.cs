@@ -28,7 +28,7 @@ namespace CastleDestroyers.EditorTools
         private const string RocketMaterialPath = "Assets/_Game/Art/Mat_Rocket.mat";
         private const string RocketShaderName = "Game/Rocket";
 
-        // Порядок отрисовки: слои фона, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, чит-ракеты.
+        // Порядок отрисовки: слои фона, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, дым, ракеты, взрывы, пунктир.
         private const int OrderDecor = GreyboxLevel.BackLayerCount;
         private const int OrderTerrain = OrderDecor + 1;
         private const int OrderChunks = OrderDecor + 2;
@@ -36,7 +36,10 @@ namespace CastleDestroyers.EditorTools
         private const int OrderWave = OrderDecor + 4;
         private const int OrderCannons = OrderDecor + 5;
         private const int OrderParticles = OrderDecor + 6;
-        private const int OrderStress = OrderDecor + 7;
+        private const int OrderSmoke = OrderDecor + 7;
+        private const int OrderRockets = OrderDecor + 8;
+        private const int OrderExplosions = OrderDecor + 9;
+        private const int OrderAimDots = OrderDecor + 10;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
@@ -46,8 +49,14 @@ namespace CastleDestroyers.EditorTools
         private const int ButtonFontSize = 15;
         private const float CameraStartSize = 8f;
         private const float StatsWidth = 380f;
-        private const float StatsHeight = 160f;
+        private const float StatsHeight = 190f;
         private const float StatsAlpha = 0.4f;
+        private const float AimPanelWidth = 250f;
+        private const float AimPanelHeight = 110f;
+        private const float AimCaptionShare = 0.3f;
+        private const int AimValueFontSize = 46;
+        private const int AimCaptionFontSize = 18;
+        private const float ScaleMatchBalanced = 0.5f;
         private const int ButtonWidth = 128;
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
@@ -89,7 +98,10 @@ namespace CastleDestroyers.EditorTools
             MeshFilter wave = CreateBatch("WaterStrip", material, OrderWave);
             MeshFilter cannons = CreateBatch("Cannons", material, OrderCannons);
             MeshFilter particles = CreateBatch("Particles", particleMaterial, OrderParticles);
-            MeshFilter stress = CreateBatch("StressRockets", rocketMaterial, OrderStress);
+            MeshFilter smoke = CreateBatch("Smoke", particleMaterial, OrderSmoke);
+            MeshFilter rockets = CreateBatch("Rockets", rocketMaterial, OrderRockets);
+            MeshFilter explosions = CreateBatch("Explosions", particleMaterial, OrderExplosions);
+            MeshFilter aimDots = CreateBatch("AimDots", particleMaterial, OrderAimDots);
 
             GameBootstrap bootstrap = new GameObject("GameBootstrap").AddComponent<GameBootstrap>();
             bootstrap.config = config;
@@ -100,12 +112,16 @@ namespace CastleDestroyers.EditorTools
             bootstrap.waveFilter = wave;
             bootstrap.cannonsFilter = cannons;
             bootstrap.particlesFilter = particles;
-            bootstrap.stressFilter = stress;
+            bootstrap.smokeFilter = smoke;
+            bootstrap.rocketsFilter = rockets;
+            bootstrap.explosionsFilter = explosions;
+            bootstrap.aimDotsFilter = aimDots;
             bootstrap.rocketMaterial = rocketMaterial;
             bootstrap.terrainRoot = new GameObject("Terrain").transform;
             bootstrap.terrainMaterial = terrainMaterial;
             bootstrap.terrainSortingOrder = OrderTerrain;
             bootstrap.chunkSortingOrder = OrderChunks;
+            CreateGameUi(bootstrap);
 #if GAME_DEBUG
             CreateDebugUi(bootstrap);
 #endif
@@ -171,6 +187,59 @@ namespace CastleDestroyers.EditorTools
             return batch.GetComponent<MeshFilter>();
         }
 
+        /// <summary>Игровой канвас: пока только плашка POWER / ANGLE, не перехватывает ввод.</summary>
+        private static void CreateGameUi(GameBootstrap bootstrap)
+        {
+            GameObject canvasObject = new GameObject("GameUi", typeof(Canvas), typeof(CanvasScaler));
+            canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(ReferenceWidth, ReferenceHeight);
+            scaler.matchWidthOrHeight = ScaleMatchBalanced;
+
+            GameObject panel = new GameObject("AimPanel", typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(canvasObject.transform, false);
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(AimPanelWidth, AimPanelHeight);
+            Image background = panel.GetComponent<Image>();
+            background.raycastTarget = false;
+
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            bootstrap.aimPanel = rect;
+            bootstrap.aimPanelBackground = background;
+            bootstrap.aimPowerText = CreatePanelText(rect, "Power", 0f, 0.5f, AimCaptionShare, 1f, AimValueFontSize, "0%", font);
+            bootstrap.aimAngleText = CreatePanelText(rect, "Angle", 0.5f, 1f, AimCaptionShare, 1f, AimValueFontSize, "0°", font);
+            bootstrap.aimCaptions = new[]
+            {
+                CreatePanelText(rect, "PowerCaption", 0f, 0.5f, 0f, AimCaptionShare, AimCaptionFontSize, "POWER", font),
+                CreatePanelText(rect, "AngleCaption", 0.5f, 1f, 0f, AimCaptionShare, AimCaptionFontSize, "ANGLE", font)
+            };
+        }
+
+        private static Text CreatePanelText(RectTransform parent, string objectName, float minX, float maxX, float minY, float maxY, int fontSize, string label, Font font)
+        {
+            GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            RectTransform rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(minX, minY);
+            rect.anchorMax = new Vector2(maxX, maxY);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            Text text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false;
+            text.text = label;
+            return text;
+        }
+
 #if GAME_DEBUG
         private static void CreateDebugUi(GameBootstrap bootstrap)
         {
@@ -190,7 +259,8 @@ namespace CastleDestroyers.EditorTools
             RectTransform panel = CreateButtonsPanel(canvasObject.transform);
             overlay.nextStateButton = CreateButton(panel, "NEXT STATE", font);
             overlay.slowButton = CreateButton(panel, "SLOW x0.25", font);
-            overlay.rocketsButton = CreateButton(panel, "+1000 ROCKETS", font);
+            overlay.rocketsButton = CreateButton(panel, "STRESS OFF", font);
+            overlay.rocketsLabel = overlay.rocketsButton.GetComponentInChildren<Text>();
             overlay.themeButton = CreateButton(panel, "THEME", font);
             overlay.restartButton = CreateButton(panel, "RESTART", font);
             overlay.blastButton = CreateButton(panel, "BLAST", font);

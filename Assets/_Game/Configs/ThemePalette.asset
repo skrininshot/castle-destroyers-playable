@@ -146,6 +146,15 @@ MonoBehaviour:
     smoke:
       serializedVersion: 2
       rgba: 4292918457
+    blastCore:
+      serializedVersion: 2
+      rgba: 4294967295
+    blastMid:
+      serializedVersion: 2
+      rgba: 4283095295
+    blastEdge:
+      serializedVersion: 2
+      rgba: 4281043711
     hudPanel:
       serializedVersion: 2
       rgba: 4284687435
@@ -291,6 +300,15 @@ MonoBehaviour:
     smoke:
       serializedVersion: 2
       rgba: 4290826485
+    blastCore:
+      serializedVersion: 2
+      rgba: 4294967295
+    blastMid:
+      serializedVersion: 2
+      rgba: 4283095295
+    blastEdge:
+      serializedVersion: 2
+      rgba: 4281043711
     hudPanel:
       serializedVersion: 2
       rgba: 4284687435

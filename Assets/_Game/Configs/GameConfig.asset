@@ -23,8 +23,8 @@ MonoBehaviour:
   - label: x20 lob
     highlightBoosterMultiplier: 20
     showHand: 1
-    handAngleDeg: 55
-    handPower01: 0.75
+    handAngleDeg: 45
+    handPower01: 0.37
   - label: x50 straight shot
     highlightBoosterMultiplier: 50
     showHand: 1
@@ -37,10 +37,10 @@ MonoBehaviour:
     handPower01: 0.85
   bootDuration: 0.2
   introDuration: 1.5
-  playerAimDuration: 2.5
+  playerAimDuration: 10
   aiAimDuration: 1.5
   fireDuration: 0.6
-  flightDuration: 3
+  flightDuration: 1
   resolveDuration: 0.7
   victoryDuration: 2.5
   victoryLoserHold: 1
@@ -65,7 +65,6 @@ MonoBehaviour:
   stressRocketCount: 1000
   rocketLength: 1.1
   rocketWidth: 0.34
-  stressRocketLifetime: 4
   boosters:
   - multiplier: 20
     position: {x: 0, y: 13.4}
@@ -141,7 +140,6 @@ MonoBehaviour:
   castleLeadX: 2
   castleFocusLiftY: 0.5
   centerFocus: {x: 0, y: 9}
-  flightCenterFraction: 0.5
   rainEnabled: 0
   lightBeamEnabled: 0
   showPersistentCta: 0

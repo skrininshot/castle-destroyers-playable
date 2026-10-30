@@ -155,6 +155,34 @@ namespace CastleDestroyers.Destruction
             return Solid[texelY * Width + texelX] >= SolidThreshold;
         }
 
+        /// <summary>
+        /// Первый материал на отрезке мира: доля пути 0..1 или -1, если отрезок чист.
+        /// Начальная точка не проверяется, step — шаг выборки в метрах.
+        /// </summary>
+        public float FirstSolid(float x0, float y0, float x1, float y1, float step)
+        {
+            float deltaX = x1 - x0;
+            float deltaY = y1 - y0;
+            float length = (float)System.Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+            int samples = (int)(length / step) + 1;
+            float startX = TexelX(x0) + 0.5f;
+            float startY = TexelY(y0) + 0.5f;
+            float texelDeltaX = deltaX * TexelsPerMeter;
+            float texelDeltaY = deltaY * TexelsPerMeter;
+            for (int s = 1; s <= samples; s++)
+            {
+                float fraction = (float)s / samples;
+                int texelX = (int)(startX + texelDeltaX * fraction);
+                int texelY = (int)(startY + texelDeltaY * fraction);
+                if (texelX >= 0 && texelY >= 0 && texelX < Width && texelY < Height
+                    && Solid[texelY * Width + texelX] >= SolidThreshold)
+                {
+                    return fraction;
+                }
+            }
+            return -1f;
+        }
+
         /// <summary>Верхняя точка материала в колонке x, метры. Если колонка пуста или вне маски — низ маски.</summary>
         public float SurfaceHeight(float x)
         {

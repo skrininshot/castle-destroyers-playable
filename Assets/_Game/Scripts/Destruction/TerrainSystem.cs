@@ -41,15 +41,21 @@ namespace CastleDestroyers.Destruction
         /// <summary>Кратер в точке мира, радиус в метрах. True, если задет материал.</summary>
         public bool Explode(float x, float y, float radius)
         {
-            float texels = Mask.TexelsPerMeter;
-            float scallop = config.rimScallop ? config.rimScallopDepth * texels : 0f;
-            bool hit = CraterStamper.StampCircle(Mask, Mask.TexelX(x), Mask.TexelY(y), radius * texels, config.rimWidth * texels,
-                scallop, config.rimScallopTeeth);
+            bool hit = Stamp(x, y, radius);
             if (hit)
             {
                 fx.Dust(x, y, radius, config.craterDustPuffs);
             }
             return hit;
+        }
+
+        /// <summary>Только кратер, без пыли: пылью взрывов ракет распоряжается ExplosionSystem.</summary>
+        public bool Stamp(float x, float y, float radius)
+        {
+            float texels = Mask.TexelsPerMeter;
+            float scallop = config.rimScallop ? config.rimScallopDepth * texels : 0f;
+            return CraterStamper.StampCircle(Mask, Mask.TexelX(x), Mask.TexelY(y), radius * texels, config.rimWidth * texels,
+                scallop, config.rimScallopTeeth);
         }
 
         public void Tick(float dt)

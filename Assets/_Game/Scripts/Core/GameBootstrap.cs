@@ -1,10 +1,14 @@
 using CastleDestroyers.CameraRig;
+using CastleDestroyers.Combat;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
 using CastleDestroyers.Fx;
+using CastleDestroyers.InputRig;
 using CastleDestroyers.Level;
 using CastleDestroyers.Platform;
+using CastleDestroyers.UI;
 using UnityEngine;
+using UnityEngine.UI;
 #if GAME_DEBUG
 using CastleDestroyers.DebugTools;
 #endif
@@ -29,7 +33,16 @@ namespace CastleDestroyers.Core
         public MeshFilter waveFilter;
         public MeshFilter cannonsFilter;
         public MeshFilter particlesFilter;
-        public MeshFilter stressFilter;
+        public MeshFilter smokeFilter;
+        public MeshFilter rocketsFilter;
+        public MeshFilter explosionsFilter;
+        public MeshFilter aimDotsFilter;
+        [Tooltip("Плашка POWER / ANGLE.")]
+        public RectTransform aimPanel;
+        public Image aimPanelBackground;
+        public Text aimPowerText;
+        public Text aimAngleText;
+        public Text[] aimCaptions;
         [Tooltip("Родитель тайлов земли и обломков.")]
         public Transform terrainRoot;
         public Material terrainMaterial;
@@ -51,7 +64,11 @@ namespace CastleDestroyers.Core
         public TerrainSystem Terrain { get; private set; }
         public SurfaceDecor Decor { get; private set; }
         public FlatParticles Particles { get; private set; }
-        public CannonMarkers Cannons { get; private set; }
+        public RocketSystem Rockets { get; private set; }
+        public CannonSystem Cannons { get; private set; }
+        public ExplosionSystem Explosions { get; private set; }
+        public SmokeTrails Smoke { get; private set; }
+        public AimInput Aim { get; private set; }
         public CameraDirector CameraDirector { get; private set; }
         public ParallaxBackground Parallax { get; private set; }
         public GameLoop Loop { get; private set; }
@@ -65,6 +82,10 @@ namespace CastleDestroyers.Core
         private MaskTileView tileView;
         private ChunkSystem chunks;
         private WaterStrip water;
+        private CannonMarkers cannonView;
+        private ScreenShake shake;
+        private AimPreview aimPreview;
+        private AimPanelView aimPanelView;
         private bool booted;
 
         private void Start()
@@ -128,31 +149,62 @@ namespace CastleDestroyers.Core
             water.Init(config);
             waveFilter.sharedMesh = water.Mesh;
 
-            Cannons = new CannonMarkers();
-            Cannons.Init(Level, Match, config);
-            cannonsFilter.sharedMesh = Cannons.Mesh;
+            shake = new ScreenShake();
+            shake.Init(config);
+            Smoke = new SmokeTrails();
+            Smoke.Init(config);
+            smokeFilter.sharedMesh = Smoke.Mesh;
+            Explosions = new ExplosionSystem();
+            Explosions.Init(config, Terrain, Particles, levelFx, shake, Rng);
+            explosionsFilter.sharedMesh = Explosions.Mesh;
+            Rockets = new RocketSystem();
+            Rockets.Init(config, terrainMask, Level, Explosions, Smoke, levelFx);
+            rocketsFilter.sharedMesh = Rockets.Mesh;
+
+            Cannons = new CannonSystem();
+            Cannons.Init(config, Level, Match, Rockets, Particles);
+            cannonView = new CannonMarkers();
+            cannonView.Init(Level, Match, Cannons, config);
+            cannonsFilter.sharedMesh = cannonView.Mesh;
 
             CameraDirector = new CameraDirector();
-            CameraDirector.Init(mainCamera, config, Level, Flow);
+            CameraDirector.Init(mainCamera, config, Level, Flow, shake);
             Parallax = new ParallaxBackground();
             Parallax.Init(config, mainCamera, backLayers);
+
+            TurnCombat combat = new TurnCombat();
+            combat.Init(config, Flow, Cannons, Rockets, CameraDirector);
+            Aim = new AimInput();
+            Aim.Init(config, Flow, Cannons, mainCamera);
+            aimPreview = new AimPreview();
+            aimPreview.Init(config, Aim, Cannons);
+            aimDotsFilter.sharedMesh = aimPreview.Mesh;
+            aimPanelView = new AimPanelView();
+            aimPanelView.Init(config, Aim, Level, mainCamera, aimPanel, aimPanelBackground, aimPowerText, aimAngleText, aimCaptions);
 
             ActivePreset = config.theme.preset;
 
 #if GAME_DEBUG
             Stress = new DebugRocketStress();
-            Stress.Init(config, Level);
-            stressFilter.sharedMesh = Stress.Mesh;
+            Stress.Init(config, Level, Rockets);
             Blaster = new DebugBlaster();
             Blaster.Init(config, mainCamera, Terrain);
             debugOverlay.Init(this);
-            ITickable[] systems = { Flow, CameraDirector, Parallax, Blaster, Terrain, chunks, Decor, water, Particles, Cannons, Stress, debugOverlay };
+            ITickable[] systems =
+            {
+                Flow, Aim, combat, Cannons, Stress, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Decor, water,
+                Particles, Smoke, cannonView, aimPreview, aimPanelView, debugOverlay
+            };
 #else
             if (debugRoot != null)
             {
                 Destroy(debugRoot);
             }
-            ITickable[] systems = { Flow, CameraDirector, Parallax, Terrain, chunks, Decor, water, Particles, Cannons };
+            ITickable[] systems =
+            {
+                Flow, Aim, combat, Cannons, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Decor, water,
+                Particles, Smoke, cannonView, aimPreview, aimPanelView
+            };
 #endif
             Loop = new GameLoop();
             Loop.Init(systems, config.maxDeltaTime);
@@ -174,16 +226,23 @@ namespace CastleDestroyers.Core
             get { return config.theme.Get(ActivePreset); }
         }
 
-        /// <summary>Начинает сессию заново: счёт, FSM, ландшафт, камера, чит-ракеты.</summary>
+        /// <summary>Начинает сессию заново: счёт, FSM, ландшафт, камера, бой.</summary>
         public void Restart()
         {
             Flow.Restart();
             Terrain.Reset();
             Decor.Reset();
             Particles.Clear();
+            Rockets.Clear();
+            Cannons.Clear();
+            Explosions.Clear();
+            Smoke.Clear();
+            shake.Clear();
+            Aim.Cancel();
 #if GAME_DEBUG
-            Stress.Clear();
+            Stress.SetActive(false);
 #endif
+            CameraDirector.HeadPassedCenter = false;
             CameraDirector.Snap();
             Parallax.Apply();
         }
@@ -198,6 +257,12 @@ namespace CastleDestroyers.Core
             water.ApplyPalette(palette);
             levelFx.ApplyPalette(palette);
             Cannons.ApplyPalette(palette);
+            cannonView.ApplyPalette(palette);
+            Rockets.ApplyPalette(palette);
+            Explosions.ApplyPalette(palette);
+            Smoke.ApplyPalette(palette);
+            aimPreview.ApplyPalette(palette);
+            aimPanelView.ApplyPalette(palette);
             rocketMaterial.SetColor(RocketBodyColor, palette.rocketBody);
             rocketMaterial.SetColor(RocketShadeColor, palette.rocketShade);
             mainCamera.backgroundColor = palette.sky;

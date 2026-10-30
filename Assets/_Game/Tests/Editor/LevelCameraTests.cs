@@ -2,9 +2,6 @@ using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
-#if GAME_DEBUG
-using CastleDestroyers.DebugTools;
-#endif
 using CastleDestroyers.Level;
 using NUnit.Framework;
 using UnityEngine;
@@ -284,95 +281,6 @@ namespace CastleDestroyers.Tests
         }
     }
 
-#if GAME_DEBUG
-    public sealed class DebugRocketStressTests
-    {
-        private const int Cannons = 3;
-
-        private GameConfig config;
-        private GreyboxLevel level;
-        private DebugRocketStress stress;
-
-        [SetUp]
-        public void SetUp()
-        {
-            config = MaskFixture.LevelConfig();
-            level = new GreyboxLevel();
-            level.Init(config, DestructibleMask.CreateTerrain(config));
-            stress = new DebugRocketStress();
-            stress.Init(config, level);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            for (int i = 0; i < level.BackLayers.Length; i++)
-            {
-                Object.DestroyImmediate(level.BackLayers[i]);
-            }
-            Object.DestroyImmediate(level.FrontMesh);
-            Object.DestroyImmediate(stress.Mesh);
-            Object.DestroyImmediate(config);
-        }
-
-        [Test]
-        public void RocketsOfOneCannonFollowTheSameCurve()
-        {
-            stress.Spawn(Cannons + 1, Side.Player, ThemePalette.CreateNight(), Cannons);
-            stress.Tick(0.5f);
-            Vector3 first = stress.Mesh.vertices[0];
-            stress.Tick(config.rocketInterval);
-            Vector3 next = stress.Mesh.vertices[Cannons * 4];
-            Assert.AreEqual(first.x, next.x, 1e-2f);
-            Assert.AreEqual(first.y, next.y, 1e-2f);
-        }
-
-        [Test]
-        public void CannonsFireParallelCurves()
-        {
-            stress.Spawn(2, Side.Player, ThemePalette.CreateNight(), Cannons);
-            float interval = config.rocketInterval / Cannons;
-            stress.Tick(0.5f);
-            float firstX = stress.Mesh.vertices[0].x - level.PlayerMountX[0];
-            float firstY = stress.Mesh.vertices[0].y - level.PlayerMountY[0];
-            stress.Tick(interval);
-            Assert.AreEqual(firstX, stress.Mesh.vertices[4].x - level.PlayerMountX[1], 1e-2f);
-            Assert.AreEqual(firstY, stress.Mesh.vertices[4].y - level.PlayerMountY[1], 1e-2f);
-        }
-
-        [Test]
-        public void RocketFliesExactParabola()
-        {
-            const float step = 0.05f;
-            float angle = config.stressRocketAngleDeg * Mathf.Deg2Rad;
-            float velX = config.stressRocketSpeed * Mathf.Cos(angle);
-            float velY = config.stressRocketSpeed * Mathf.Sin(angle);
-
-            stress.Spawn(1, Side.Player, ThemePalette.CreateNight(), Cannons);
-            for (int i = 1; i <= 50; i++)
-            {
-                stress.Tick(step);
-                float t = i * step;
-                Vector3[] vertices = stress.Mesh.vertices;
-                float centerX = (vertices[0].x + vertices[1].x + vertices[2].x + vertices[3].x) * 0.25f;
-                float centerY = (vertices[0].y + vertices[1].y + vertices[2].y + vertices[3].y) * 0.25f;
-                Assert.AreEqual(level.PlayerMountX[0] + velX * t, centerX, 1e-2f, "x at step " + i);
-                Assert.AreEqual(level.PlayerMountY[0] + velY * t - 0.5f * config.gravity * t * t, centerY, 1e-2f, "y at step " + i);
-            }
-        }
-
-        [Test]
-        public void ClearRemovesRocketsImmediately()
-        {
-            stress.Spawn(2, Side.Player, ThemePalette.CreateNight(), Cannons);
-            stress.Tick(0.5f);
-            stress.Clear();
-            Assert.AreEqual(0, stress.ActiveCount);
-            Assert.AreEqual(Vector3.zero, stress.Mesh.vertices[0]);
-        }
-    }
-#endif
-
     public sealed class CameraDirectorTests
     {
         private GameConfig config;
@@ -380,6 +288,7 @@ namespace CastleDestroyers.Tests
         private SessionFlow flow;
         private GreyboxLevel level;
         private CameraDirector director;
+        private ScreenShake shake;
         private GameObject cameraObject;
 
         [SetUp]
@@ -403,7 +312,9 @@ namespace CastleDestroyers.Tests
             level.Init(config, DestructibleMask.CreateTerrain(config));
             cameraObject = new GameObject("TestCamera", typeof(Camera));
             director = new CameraDirector();
-            director.Init(cameraObject.GetComponent<Camera>(), config, level, flow);
+            shake = new ScreenShake();
+            shake.Init(config);
+            director.Init(cameraObject.GetComponent<Camera>(), config, level, flow, shake);
         }
 
         [TearDown]
@@ -447,11 +358,15 @@ namespace CastleDestroyers.Tests
         public void PlayerFlightStartsAtCenterThenMovesToEnemy()
         {
             AdvanceTo(SessionState.Flight, Side.Player);
+            director.FlightHeadX = config.centerFocus.x;
             CameraFrame early = FrameNow();
             Assert.AreEqual(config.centerFocus.x, early.x, 1e-4f);
             Assert.AreEqual(config.centerFrameWidth, early.width, 1e-4f);
 
-            flow.Tick(flow.Duration(SessionState.Flight, Side.Player) * (config.flightCenterFraction + 0.05f));
+            director.FlightHeadX = config.centerFocus.x - 10f;
+            Assert.AreEqual(config.centerFocus.x - 10f * config.cameraHeadFollow, FrameNow().x, 1e-4f);
+
+            director.HeadPassedCenter = true;
             CameraFrame late = FrameNow();
             Assert.AreEqual(level.EnemyFocusX, late.x, 1e-4f);
             Assert.AreEqual(config.targetFrameWidth, late.width, 1e-4f);
@@ -461,7 +376,7 @@ namespace CastleDestroyers.Tests
         public void EnemyFlightEndsOnPlayerCastle()
         {
             AdvanceTo(SessionState.Flight, Side.Enemy);
-            flow.Tick(flow.Duration(SessionState.Flight, Side.Enemy) * (config.flightCenterFraction + 0.05f));
+            director.HeadPassedCenter = true;
             Assert.AreEqual(level.PlayerFocusX, FrameNow().x, 1e-4f);
         }
 
@@ -493,6 +408,18 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(level.EnemyFocusX, FrameNow().x, 1e-4f);
             flow.Tick(config.victoryLoserHold + 0.1f);
             Assert.AreEqual(level.PlayerFocusX + config.castleLeadX, FrameNow().x, 1e-4f);
+        }
+
+        [Test]
+        public void ShakeOffsetsCameraWithoutMovingTheTarget()
+        {
+            director.Snap();
+            float x = cameraObject.transform.position.x;
+            shake.Add(config.shakeMax);
+            shake.Tick(0.02f);
+            director.Snap();
+            Assert.AreEqual(x + shake.OffsetX, cameraObject.transform.position.x, 1e-4f);
+            Assert.AreNotEqual(0f, shake.OffsetX);
         }
 
         [Test]

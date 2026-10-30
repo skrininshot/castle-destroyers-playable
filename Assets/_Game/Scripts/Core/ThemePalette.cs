@@ -66,6 +66,9 @@ namespace CastleDestroyers.Core
         public Color32 rocketEnemy;
         public Color32 rocketTail;
         public Color32 smoke;
+        public Color32 blastCore;
+        public Color32 blastMid;
+        public Color32 blastEdge;
 
         [Header("HUD (общий для тем)")]
         public Color32 hudPanel;
@@ -197,6 +200,9 @@ namespace CastleDestroyers.Core
             set.rocketPlayer = Hex(0x2F8CF0);
             set.rocketEnemy = Hex(0xFF4D5E);
             set.rocketTail = Hex(0xFFB22E);
+            set.blastCore = Hex(0xFFFFFF);
+            set.blastMid = Hex(0xFFD84A);
+            set.blastEdge = Hex(0xFF8A2B);
             set.hudPanel = Hex(0x4B2463);
             set.hudHealth = Hex(0xF0335A);
             set.hudGold = Hex(0xF5C443);

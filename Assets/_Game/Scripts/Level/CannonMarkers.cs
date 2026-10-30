@@ -1,3 +1,4 @@
+using CastleDestroyers.Combat;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
 using UnityEngine;
@@ -5,23 +6,22 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Greybox-пушки: трёхствольный блок на каждое крепление, один динамический меш.
+    /// Greybox-вид пушек: трёхствольный блок на каждое крепление, один динамический меш. Поворот и отдачу берёт из CannonSystem.
     /// Погибшая пушка схлопывается в точку. Настоящие трёхстволки и отрыв появятся на этапе 5.
     /// </summary>
     public sealed class CannonMarkers : ITickable
     {
         private const int VerticesPerQuad = 4;
         private const int IndicesPerQuad = 6;
-        private const int QuadsPerCannon = 4;
+        private const int QuadsPerCannon = 1 + CannonSystem.BarrelCount;
         private const float BodyLength = 0.5f;
         private const float BodyHeight = 0.66f;
-        private const float BarrelLength = 1.25f;
         private const float BarrelThickness = 0.16f;
-        private const float BarrelPitch = 0.21f;
         private const float BoundsPadding = 4f;
 
         private GreyboxLevel level;
         private MatchState match;
+        private CannonSystem cannons;
         private int playerCount;
         private int enemyCount;
         private Vector3[] vertices;
@@ -30,10 +30,11 @@ namespace CastleDestroyers.Level
 
         public Mesh Mesh { get; private set; }
 
-        public void Init(GreyboxLevel greyboxLevel, MatchState matchState, GameConfig config)
+        public void Init(GreyboxLevel greyboxLevel, MatchState matchState, CannonSystem cannonSystem, GameConfig config)
         {
             level = greyboxLevel;
             match = matchState;
+            cannons = cannonSystem;
             playerCount = level.PlayerMountX.Length;
             enemyCount = level.EnemyMountX.Length;
 
@@ -77,13 +78,13 @@ namespace CastleDestroyers.Level
 
         public void Tick(float dt)
         {
-            if (!dirty)
+            if (!dirty && !cannons.Moved)
             {
                 return;
             }
             dirty = false;
-            WriteSide(0, playerCount, level.PlayerMountX, level.PlayerMountY, match.PlayerAlive, 1f);
-            WriteSide(playerCount, enemyCount, level.EnemyMountX, level.EnemyMountY, match.EnemyAlive, -1f);
+            WriteSide(Side.Player, 0, playerCount, level.PlayerMountX, level.PlayerMountY, match.PlayerAlive, 1f);
+            WriteSide(Side.Enemy, playerCount, enemyCount, level.EnemyMountX, level.EnemyMountY, match.EnemyAlive, -1f);
             Mesh.vertices = vertices;
         }
 
@@ -106,42 +107,56 @@ namespace CastleDestroyers.Level
         }
 
         /// <summary>Первые alive креплений рисуются пушкой, остальные схлопываются.</summary>
-        private void WriteSide(int firstCannon, int count, float[] mountX, float[] mountY, int alive, float facing)
+        private void WriteSide(Side side, int firstCannon, int count, float[] mountX, float[] mountY, int alive, float facing)
         {
+            float radians = cannons.AngleDeg(side) * Mathf.Deg2Rad;
+            float cos = Mathf.Cos(radians);
+            float sin = Mathf.Sin(radians);
+            float alongX = facing * cos;
+            float alongY = sin;
+            float acrossX = -facing * sin;
+            float acrossY = cos;
+
             for (int i = 0; i < count; i++)
             {
-                int quad = (firstCannon + i) * QuadsPerCannon;
+                int cannon = firstCannon + i;
+                int quad = cannon * QuadsPerCannon;
                 float x = mountX[i];
                 float y = mountY[i];
                 if (i >= alive)
                 {
                     for (int q = 0; q < QuadsPerCannon; q++)
                     {
-                        WriteQuad(quad + q, x, y, x, y);
+                        WriteQuad(quad + q, x, y, 0f, 0f, 0f, 0f, alongX, alongY, acrossX, acrossY);
                     }
                     continue;
                 }
                 float halfBody = BodyHeight * 0.5f;
                 float halfBarrel = BarrelThickness * 0.5f;
-                float muzzle = x + facing * BarrelLength;
-                WriteQuad(quad, x, y - halfBody, x + facing * BodyLength, y + halfBody);
-                WriteQuad(quad + 1, x, y - BarrelPitch - halfBarrel, muzzle, y - BarrelPitch + halfBarrel);
-                WriteQuad(quad + 2, x, y - halfBarrel, muzzle, y + halfBarrel);
-                WriteQuad(quad + 3, x, y + BarrelPitch - halfBarrel, muzzle, y + BarrelPitch + halfBarrel);
+                WriteQuad(quad, x, y, 0f, -halfBody, BodyLength, halfBody, alongX, alongY, acrossX, acrossY);
+                for (int barrel = 0; barrel < CannonSystem.BarrelCount; barrel++)
+                {
+                    float offset = CannonSystem.BarrelOffset(barrel);
+                    float back = cannons.Recoil(cannon, barrel);
+                    WriteQuad(quad + 1 + barrel, x, y, -back, offset - halfBarrel, CannonSystem.BarrelLength - back, offset + halfBarrel,
+                        alongX, alongY, acrossX, acrossY);
+                }
             }
         }
 
-        private void WriteQuad(int quad, float x0, float y0, float x1, float y1)
+        /// <summary>Прямоугольник в осях пушки: along вдоль ствола, across поперёк.</summary>
+        private void WriteQuad(int quad, float x, float y, float along0, float across0, float along1, float across1,
+            float alongX, float alongY, float acrossX, float acrossY)
         {
             int v = quad * VerticesPerQuad;
-            vertices[v].x = x0;
-            vertices[v].y = y0;
-            vertices[v + 1].x = x1;
-            vertices[v + 1].y = y0;
-            vertices[v + 2].x = x1;
-            vertices[v + 2].y = y1;
-            vertices[v + 3].x = x0;
-            vertices[v + 3].y = y1;
+            vertices[v].x = x + along0 * alongX + across0 * acrossX;
+            vertices[v].y = y + along0 * alongY + across0 * acrossY;
+            vertices[v + 1].x = x + along1 * alongX + across0 * acrossX;
+            vertices[v + 1].y = y + along1 * alongY + across0 * acrossY;
+            vertices[v + 2].x = x + along1 * alongX + across1 * acrossX;
+            vertices[v + 2].y = y + along1 * alongY + across1 * acrossY;
+            vertices[v + 3].x = x + along0 * alongX + across1 * acrossX;
+            vertices[v + 3].y = y + along0 * alongY + across1 * acrossY;
         }
     }
 }

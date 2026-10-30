@@ -1,5 +1,6 @@
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
+using CastleDestroyers.Flow;
 using UnityEngine;
 
 namespace CastleDestroyers.Level
@@ -106,6 +107,31 @@ namespace CastleDestroyers.Level
         public float GroundHeight(float x)
         {
             return terrain.SurfaceHeight(x);
+        }
+
+        /// <summary>Точка внутри силуэта замка стороны. Заглушка попаданий до масок этапа 5.</summary>
+        public bool CastleContains(Side side, float x, float y)
+        {
+            float top;
+            float offset;
+            float groundY;
+            if (side == Side.Player)
+            {
+                offset = x - config.playerCastleX;
+                groundY = playerGroundY;
+                if (Mathf.Abs(offset) > GreyboxCastles.BlueHalfWidth)
+                {
+                    return false;
+                }
+                top = GreyboxCastles.BlueTowerTop;
+            }
+            else
+            {
+                offset = x - config.enemyCastleX;
+                groundY = enemyGroundY;
+                top = GreyboxCastles.RedHitTop(offset);
+            }
+            return top > 0f && y >= groundY && y <= groundY + config.trackHeight + config.platformHeight + top;
         }
 
         /// <summary>Пересобирает меши в цветах палитры (при старте и смене темы).</summary>

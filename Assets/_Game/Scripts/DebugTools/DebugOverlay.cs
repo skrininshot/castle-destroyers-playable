@@ -10,7 +10,7 @@ namespace CastleDestroyers.DebugTools
 {
     /// <summary>
     /// Debug-оверлей: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
-    /// 1000 ракет, смена темы, рестарт, радиус взрыва, камера). Целиком вырезается из сборки без GAME_DEBUG.
+    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера). Целиком вырезается из сборки без GAME_DEBUG.
     /// </summary>
     public sealed class DebugOverlay : MonoBehaviour, ITickable
     {
@@ -29,6 +29,7 @@ namespace CastleDestroyers.DebugTools
         public Button cameraButton;
         public Text blastLabel;
         public Text cameraLabel;
+        public Text rocketsLabel;
 
         private GameBootstrap game;
         private StringBuilder text;
@@ -52,6 +53,7 @@ namespace CastleDestroyers.DebugTools
             blastButton.onClick.AddListener(OnNextBlast);
             cameraButton.onClick.AddListener(OnNextCamera);
             UpdateBlastLabel();
+            UpdateStressLabel();
         }
 
         public void Tick(float dt)
@@ -128,8 +130,11 @@ namespace CastleDestroyers.DebugTools
             text.Append("  chunks ").Append(game.Terrain.ChunksActive);
             text.Append("  fx ").Append(game.Particles.ActiveCount).Append('\n');
 
-            text.Append("rockets ").Append(game.Stress.ActiveCount);
-            text.Append("  theme ").Append(game.ActivePreset.ToString());
+            text.Append("rockets ").Append(game.Rockets.ActiveCount).Append('/').Append(game.Rockets.Budget);
+            text.Append("  smoke ").Append(game.Smoke.ActiveCount);
+            text.Append("  boom ").Append(game.Explosions.ActiveCount).Append('\n');
+
+            text.Append("theme ").Append(game.ActivePreset.ToString());
             text.Append("  ").Append(screenWidth).Append('x').Append(screenHeight);
             statsText.text = text.ToString();
 
@@ -151,9 +156,13 @@ namespace CastleDestroyers.DebugTools
 
         private void OnSpawnRockets()
         {
-            Side side = game.Flow.ActiveSide;
-            int alive = side == Side.Player ? game.Match.PlayerAlive : game.Match.EnemyAlive;
-            game.Stress.Spawn(game.config.stressRocketCount, side, game.Palette, alive);
+            game.Stress.SetActive(!game.Stress.Active);
+            UpdateStressLabel();
+        }
+
+        private void UpdateStressLabel()
+        {
+            rocketsLabel.text = game.Stress.Active ? "STRESS ON" : "STRESS OFF";
         }
 
         private void OnToggleTheme()
@@ -164,17 +173,19 @@ namespace CastleDestroyers.DebugTools
         private void OnRestart()
         {
             game.Restart();
+            UpdateStressLabel();
         }
 
         private void OnNextBlast()
         {
             game.Blaster.NextRadius();
+            game.Aim.Blocked = game.Blaster.Active;
             UpdateBlastLabel();
         }
 
         private void UpdateBlastLabel()
         {
-            blastLabel.text = "BLAST " + game.Blaster.Radius.ToString("0.0");
+            blastLabel.text = game.Blaster.Active ? "BLAST " + game.Blaster.Radius.ToString("0.0") : "BLAST OFF";
         }
 
         private void OnNextCamera()
