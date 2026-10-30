@@ -1,0 +1,17 @@
+{
+    "name": "Game.Editor",
+    "rootNamespace": "CastleDestroyers.EditorTools",
+    "references": [
+        "Game.Runtime",
+        "UnityEngine.UI",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "autoReferenced": false,
+    "noEngineReferences": false
+}

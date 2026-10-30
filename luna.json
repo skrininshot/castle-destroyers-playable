@@ -128,7 +128,9 @@
                 "Assets/Resources/DOTweenSettings.asset"
             ]
         },
-        "scenes": [],
+        "scenes": [
+            "Assets/_Game/Scenes/Spike.unity"
+        ],
         "disabledScenes": [],
         "startupScene": 0,
         "packages": {

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33896d916c79f0a43ab1a957e6b427c3, type: 3}
+  m_Name: SpikeConfig
+  m_EditorClassIdentifier: 
+  maskSize: 512
+  tileSize: 128
+  worldSize: 10
+  craterRadius: 14
+  rimWidth: 6
+  maxTileUploadsPerFrame: 4
+  autoCratersPerFrame: 3
+  autoResetSolidRatio: 0.35
+  pointerStampInterval: 0.05
+  rocketCapacity: 1000
+  rocketsGo: 600
+  rocketLength: 0.28
+  rocketWidth: 0.1
+  launchSpeedMin: 7
+  launchSpeedMax: 11
+  gravity: 4
+  waveAmplitude: 0.35
+  waveFrequency: 9
+  wavePhaseStep: 0.7
+  rocketLifetime: 4
+  smokeCapacity: 2000
+  smokeLifetime: 1.6
+  smokeStartSize: 0.15
+  smokeEndSize: 0.6
+  smokeRiseSpeed: 0.6
+  smokeDrift: 0.3
+  fitMargin: 1.05
+  hudRefreshInterval: 0.5
+  maxDeltaTime: 0.05

@@ -43,6 +43,7 @@ crashlytics-build.properties
 # Luna (Unity Playworks)
 /LunaTemp/
 /[Ll]una[Bb]uild*/
+/Assets/.export-assets*
 
 # ОС
 .DS_Store
