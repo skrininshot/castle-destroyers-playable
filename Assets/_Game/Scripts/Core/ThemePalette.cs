@@ -13,7 +13,7 @@ namespace CastleDestroyers.Core
     [Serializable]
     public sealed class PaletteSet
     {
-        [Header("Фон: ступени светлоты, дальше = светлее")]
+        [Header("Фон: ступени светлоты, дальше = светлее (небо Night тёмное, D-023)")]
         public Color32 sky;
         public Color32 backgroundFar;
         public Color32 backgroundMid;
@@ -113,8 +113,8 @@ namespace CastleDestroyers.Core
         public static PaletteSet CreateNight()
         {
             PaletteSet set = new PaletteSet();
-            set.sky = Hex(0x5C6FC2);
-            set.backgroundFar = Hex(0x4C5CAE);
+            set.sky = Hex(0x23246E);
+            set.backgroundFar = Hex(0x5C6FC2);
             set.backgroundMid = Hex(0x373A8A);
             set.backgroundNear = Hex(0x1E1F5C);
             set.skyStar = Hex(0xDCE3FF);

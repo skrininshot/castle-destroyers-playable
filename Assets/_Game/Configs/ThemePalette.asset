@@ -16,10 +16,10 @@ MonoBehaviour:
   night:
     sky:
       serializedVersion: 2
-      rgba: 4290932572
+      rgba: 4285408291
     backgroundFar:
       serializedVersion: 2
-      rgba: 4289616972
+      rgba: 4290932572
     backgroundMid:
       serializedVersion: 2
       rgba: 4287248951

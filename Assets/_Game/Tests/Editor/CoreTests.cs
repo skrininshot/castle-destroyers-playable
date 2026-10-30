@@ -261,12 +261,12 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void NightBackgroundGetsLighterWithDistance()
+        public void NightLayersGetLighterWithDistanceOverDarkSky()
         {
             PaletteSet night = ThemePalette.CreateNight();
-            Assert.Greater(Brightness(night.sky), Brightness(night.backgroundFar));
             Assert.Greater(Brightness(night.backgroundFar), Brightness(night.backgroundMid));
             Assert.Greater(Brightness(night.backgroundMid), Brightness(night.backgroundNear));
+            Assert.Less(Brightness(night.sky), Brightness(night.backgroundMid), "D-023: night sky is dark");
         }
 
         [Test]
