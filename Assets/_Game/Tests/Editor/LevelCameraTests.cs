@@ -47,10 +47,105 @@ namespace CastleDestroyers.Tests
             Vector2[] profile = config.terrainProfile;
             Assert.AreEqual(1.8f, TerrainProfile.HeightAt(profile, config.playerCastleX), 1e-4f);
             Assert.AreEqual(1.8f, TerrainProfile.HeightAt(profile, config.enemyCastleX), 1e-4f);
-            Assert.AreEqual(11.4f, TerrainProfile.HeightAt(profile, -3.2f), 1e-4f);
-            Assert.AreEqual(11.4f, TerrainProfile.HeightAt(profile, 3.2f), 1e-4f);
+            Assert.AreEqual(11.6f, TerrainProfile.HeightAt(profile, -1.05f), 1e-4f);
+            Assert.AreEqual(11.6f, TerrainProfile.HeightAt(profile, 1.05f), 1e-4f);
             Assert.Less(TerrainProfile.HeightAt(profile, 0f), config.waterLevel, "crevasse goes down to the water");
             Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void SmoothPassesThroughControlPoints()
+        {
+            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
+            Vector2[] dense = TerrainProfile.Smooth(config.terrainProfile, 0.14f);
+            for (int i = 0; i < config.terrainProfile.Length; i++)
+            {
+                Vector2 point = config.terrainProfile[i];
+                bool found = false;
+                for (int k = 0; k < dense.Length && !found; k++)
+                {
+                    found = (dense[k] - point).sqrMagnitude < 1e-6f;
+                }
+                Assert.IsTrue(found, "control point " + i);
+            }
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void SmoothDoesNotOvershootAndKeepsXOrder()
+        {
+            Vector2[] control = { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(2f, 5f), new Vector2(3f, 5f), new Vector2(4f, 1f) };
+            Vector2[] dense = TerrainProfile.Smooth(control, 0.1f);
+            for (int i = 0; i < dense.Length; i++)
+            {
+                Assert.GreaterOrEqual(dense[i].y, -1e-4f);
+                Assert.LessOrEqual(dense[i].y, 5f + 1e-4f);
+                if (i > 0)
+                {
+                    Assert.GreaterOrEqual(dense[i].x, dense[i - 1].x);
+                }
+            }
+        }
+
+        [Test]
+        public void SmoothKeepsVerticalStepSharp()
+        {
+            Vector2[] control = { new Vector2(0f, 4f), new Vector2(2f, 4f), new Vector2(2f, -1f), new Vector2(4f, -1f) };
+            Vector2[] dense = TerrainProfile.Smooth(control, 0.1f);
+            Assert.AreEqual(4f, TerrainProfile.HeightAt(dense, 1.95f), 1e-4f);
+            Assert.AreEqual(-1f, TerrainProfile.HeightAt(dense, 2.05f), 1e-4f);
+        }
+
+        [Test]
+        public void MountainMatchesLevelSpec()
+        {
+            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
+            Vector2[] dense = TerrainProfile.Smooth(config.terrainProfile, 0.14f);
+            float top = float.NegativeInfinity;
+            for (int i = 0; i < dense.Length; i++)
+            {
+                top = Mathf.Max(top, dense[i].y);
+            }
+            Assert.GreaterOrEqual(top, 11f);
+            Assert.LessOrEqual(top, 12f);
+            Assert.Greater(TerrainProfile.HeightAt(dense, -0.7f), config.waterLevel, "wall of the crevasse is above water");
+            Assert.Less(TerrainProfile.HeightAt(dense, 0f), config.waterLevel);
+            Object.DestroyImmediate(config);
+        }
+    }
+
+    public sealed class FlatMeshBuilderTests
+    {
+        [Test]
+        public void RoundedShapesGrowBuffersAndStayInBounds()
+        {
+            FlatMeshBuilder builder = new FlatMeshBuilder();
+            Mesh mesh = new Mesh();
+            Color32 color = new Color32(255, 255, 255, 255);
+            for (int i = 0; i < 400; i++)
+            {
+                builder.AddRoundedRect(0f, 0f, 2f, 1f, 0.3f, color);
+                builder.AddCircle(1f, 0.5f, 0.5f, color);
+                builder.AddArch(0.5f, 0f, 1.5f, 1f, color);
+            }
+            builder.Apply(mesh);
+            Assert.AreEqual(builder.VertexCount, mesh.vertexCount);
+            Assert.LessOrEqual(mesh.bounds.max.x, 2f + 1e-4f);
+            Assert.LessOrEqual(mesh.bounds.max.y, 1f + 1e-4f);
+            Assert.GreaterOrEqual(mesh.bounds.min.x, -1e-4f);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void RadiusIsClampedToHalfOfSmallerSide()
+        {
+            FlatMeshBuilder builder = new FlatMeshBuilder();
+            Mesh mesh = new Mesh();
+            builder.AddRoundedRect(0f, 0f, 2f, 1f, 5f, new Color32(255, 255, 255, 255));
+            builder.Apply(mesh);
+            Assert.AreEqual(1f, mesh.bounds.max.y, 1e-4f);
+            Assert.AreEqual(0f, mesh.bounds.min.x, 1e-4f);
+            Object.DestroyImmediate(mesh);
         }
     }
 
@@ -156,6 +251,44 @@ namespace CastleDestroyers.Tests
             Assert.Greater(nightVertices, 0);
             level.Build(ThemePalette.CreateSunset());
             Assert.AreEqual(nightVertices, level.Mesh.vertexCount);
+        }
+
+        [Test]
+        public void MeshFitsSixteenBitIndices()
+        {
+            level.Build(ThemePalette.CreateNight());
+            Assert.Less(level.Mesh.vertexCount, 65535);
+        }
+
+        [Test]
+        public void RebuildIsDeterministic()
+        {
+            level.Build(ThemePalette.CreateNight());
+            Vector3[] first = level.Mesh.vertices;
+            level.Build(ThemePalette.CreateNight());
+            CollectionAssert.AreEqual(first, level.Mesh.vertices);
+        }
+
+        [Test]
+        public void MountTablesCoverMaximumCannonCount()
+        {
+            Assert.GreaterOrEqual(GreyboxCastles.BlueMounts.Length, 14 * 2);
+            Assert.GreaterOrEqual(GreyboxCastles.RedMounts.Length, 14 * 2);
+        }
+
+        [Test]
+        public void MountsStayOnTheCastleSilhouette()
+        {
+            for (int i = 0; i < GreyboxCastles.RedMounts.Length; i += 2)
+            {
+                Assert.LessOrEqual(Mathf.Abs(GreyboxCastles.RedMounts[i]), GreyboxCastles.RedHalfWidth, "red " + i);
+                Assert.LessOrEqual(GreyboxCastles.RedMounts[i + 1], GreyboxCastles.RedTop, "red " + i);
+            }
+            for (int i = 0; i < GreyboxCastles.BlueMounts.Length; i += 2)
+            {
+                Assert.LessOrEqual(Mathf.Abs(GreyboxCastles.BlueMounts[i]), GreyboxCastles.BlueHalfWidth, "blue " + i);
+                Assert.LessOrEqual(GreyboxCastles.BlueMounts[i + 1], GreyboxCastles.BlueTowerTop, "blue " + i);
+            }
         }
 
         [Test]

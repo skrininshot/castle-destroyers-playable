@@ -4,43 +4,90 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Greybox уровня 1 (ТЗ §3.8): фон ступенями, ландшафт по контуру, вода, замки-прямоугольники,
-    /// бустеры. Всё в одном статичном меше, порядок отрисовки = порядок добавления.
+    /// Greybox уровня 1 (ТЗ §3.8, §3.10): плоский фон, гладкий ландшафт с фестонной кромкой, вода, замки, бустеры.
+    /// Всё в одном статичном меше, порядок отрисовки = порядок добавления.
     /// Заменяется масками и артом на этапах 2, 5 и 7; геометрия мест (замки, бустеры) остаётся.
     /// </summary>
     public sealed class GreyboxLevel
     {
-        // Размеры greybox-силуэтов, метры. Живут только до арт-пасса, поэтому не в GameConfig.
-        private const float BlueHalfWidth = 3.5f;
-        private const float BlueBaseHeight = 2.8f;
-        private const float BlueTowerWidth = 2f;
-        private const float BlueTowerHeight = 4.2f;
-        private const float BlueRoofHeight = 1.8f;
-        private const float RedTowerWidth = 1.3f;
-        private const float RedTowerPitch = 1.4f;
-        private const float RedBaseHeight = 4f;
-        private const float RedRoofHeight = 1.4f;
-        private const float RoofOverhang = 0.25f;
-        private const float PlatformOverhang = 0.5f;
-        private const float TrackWidth = 2.6f;
-        private const float TrackInset = 0.2f;
-        private const float StoneShadeFraction = 0.3f;
-        private const int MountMaxRows = 6;
-        private const float MountBottomMargin = 0.7f;
-        private const float MountTopMargin = 0.7f;
-        private const float MountColumnSpacing = 0.9f;
-        private const float MountColumnStagger = 0.5f;
+        // Размеры декора, метры. Живут только до арт-пасса, поэтому не в GameConfig.
         private const int GroundSamples = 5;
-        private const byte WaterAlpha = 215;
-        private const byte BoosterAlpha = 200;
-        private const float WaterRimThickness = 0.25f;
-        private const int BoosterMultiplierMid = 20;
-        private const int BoosterMultiplierHigh = 50;
+        private const float ProfileStep = 0.14f;
+        private const float RimScallopPitch = 0.7f;
+        private const float RimMinDepth = 0.55f;
+        private const float RimScallopDepth = 0.75f;
 
-        private static readonly float[] RedTowerExtraHeights = { 2.5f, 5f, 3.5f, 7f, 3.5f, 5f, 2.5f };
+        private const uint DecorSeed = 7321u;
+        private const int BuriedAttempts = 260;
+        private const float BuriedRange = 44f;
+        private const float BuriedMaxHeight = 12f;
+        private const float BuriedMinRadius = 0.2f;
+        private const float BuriedMaxRadius = 0.5f;
+        private const float BuriedFlatten = 0.6f;
+        private const float BuriedDepth = 0.9f;
+        private const float BuriedAboveWater = 0.3f;
+
+        private const float TreeSink = 0.15f;
+        private const float TreeTilt = 0.2f;
+        private const float TreeMinHeight = 1.5f;
+        private const float TreeMaxHeight = 2.4f;
+        private const float TreeHalfWidthFraction = 0.36f;
+        private const float TrunkHeightFraction = 0.16f;
+        private const float TrunkWidthFraction = 0.16f;
+        private const float SlopeProbe = 0.2f;
+        private const int TreeTiers = 3;
+        private const float TierOverlap = 0.45f;
+
+        private const int StarCount = 80;
+        private const float StarMinY = 10f;
+        private const float StarMaxY = 40f;
+        private const float StarMinSize = 0.06f;
+        private const float StarMaxSize = 0.14f;
+        private const float MoonX = 5.6f;
+        private const float MoonY = 19.5f;
+        private const float MoonRadius = 2.4f;
+
+        private const float FarStep = 15f;
+        private const float FarHalfWidth = 11f;
+        private const float FarMinPeak = 15f;
+        private const float FarMaxPeak = 21f;
+        private const float FarTipRadius = 2f;
+        private const float MidBandHeight = 3.6f;
+        private const float MidStep = 1.5f;
+        private const float MidMinPeak = 6f;
+        private const float MidMaxPeak = 9f;
+        private const float MidHalfWidth = 1.2f;
+        private const float NearStep = 2.6f;
+        private const float NearMinRadius = 1.4f;
+        private const float NearMaxRadius = 2.5f;
+        private const float NearMinY = 1.2f;
+        private const float NearMaxY = 2.8f;
+
+        private const float WaterRimThickness = 0.22f;
+        private const float WaveStep = 0.5f;
+        private const float WaveAmplitude = 0.09f;
+        private const float WaveFrequency = 0.9f;
+        private const int WaterPillCount = 110;
+        private const float WaterPillMinWidth = 0.5f;
+        private const float WaterPillMaxWidth = 1.8f;
+        private const float WaterPillHeight = 0.11f;
+        private const float WaterPillDepth = 24f;
+        private const float WaterPillTop = 0.6f;
+
+        // Кратеры на луне: смещение от центра и радиус в долях радиуса луны.
+        private static readonly float[] MoonCraters = { -0.35f, 0.3f, 0.26f, 0.32f, -0.15f, 0.18f, -0.1f, -0.5f, 0.14f };
+
+        // Деревья на склонах и у подножий: X ёлки, метры.
+        private static readonly float[] TreeX =
+        {
+            -16.4f, -15.1f, -13.3f, -11.6f, -9.9f, -8.6f, -7.1f, -5.9f, -4.6f, -3.3f, -2.1f,
+            2.3f, 3.6f, 5f, 6.4f, 7.8f, 9.2f, 10.8f, 12.6f, 14.8f, 16f
+        };
 
         private readonly FlatMeshBuilder builder = new FlatMeshBuilder();
+        private readonly Rng decorRng = new Rng(DecorSeed);
         private GameConfig config;
+        private Vector2[] profile;
 
         public Mesh Mesh { get; private set; }
         public float PlayerFocusX { get; private set; }
@@ -58,64 +105,49 @@ namespace CastleDestroyers.Level
         public void Init(GameConfig gameConfig)
         {
             config = gameConfig;
+            profile = TerrainProfile.Smooth(config.terrainProfile, ProfileStep);
             Mesh = new Mesh();
             Mesh.name = "GreyboxLevel";
             Mesh.MarkDynamic();
 
-            playerGroundY = CastleGroundY(config.playerCastleX, BlueHalfWidth);
-            enemyGroundY = CastleGroundY(config.enemyCastleX, RedHalfWidth());
+            playerGroundY = CastleGroundY(config.playerCastleX, GreyboxCastles.BlueHalfWidth);
+            enemyGroundY = CastleGroundY(config.enemyCastleX, GreyboxCastles.RedHalfWidth);
 
             float playerWallBase = playerGroundY + config.trackHeight + config.platformHeight;
             float enemyWallBase = enemyGroundY + config.trackHeight + config.platformHeight;
             PlayerFocusX = config.playerCastleX;
-            PlayerFocusY = playerWallBase + (BlueBaseHeight + BlueTowerHeight) * 0.5f;
+            PlayerFocusY = playerWallBase + (GreyboxCastles.BlueTowerTop + GreyboxCastles.BlueRoofHeight) * 0.5f;
             EnemyFocusX = config.enemyCastleX;
-            EnemyFocusY = enemyWallBase + (RedBaseHeight + MaxRedExtraHeight()) * 0.5f;
+            EnemyFocusY = enemyWallBase + GreyboxCastles.RedTotalHeight() * 0.5f;
 
             PlayerMountX = new float[config.playerCannons];
             PlayerMountY = new float[config.playerCannons];
             EnemyMountX = new float[config.enemyCannons];
             EnemyMountY = new float[config.enemyCannons];
-            ComputeMounts(PlayerMountX, PlayerMountY, config.playerCastleX, BlueHalfWidth, playerWallBase, BlueBaseHeight, 1f);
-            ComputeMounts(EnemyMountX, EnemyMountY, config.enemyCastleX, RedHalfWidth(), enemyWallBase, RedBaseHeight, -1f);
+            ComputeMounts(PlayerMountX, PlayerMountY, GreyboxCastles.BlueMounts, config.playerCastleX, playerWallBase);
+            ComputeMounts(EnemyMountX, EnemyMountY, GreyboxCastles.RedMounts, config.enemyCastleX, enemyWallBase);
         }
 
         /// <summary>Высота ландшафта в точке x, метры.</summary>
         public float GroundHeight(float x)
         {
-            return TerrainProfile.HeightAt(config.terrainProfile, x);
+            return TerrainProfile.HeightAt(profile, x);
         }
 
         /// <summary>Пересобирает меш в цветах палитры (при старте и смене темы).</summary>
         public void Build(PaletteSet palette)
         {
             builder.Clear();
+            decorRng.Reset(DecorSeed);
             float extent = config.levelWidth;
             AddBackdrop(palette, extent);
-            AddTerrain(palette, extent);
+            AddTrees(palette);
+            AddTerrain(palette);
             AddWater(palette, extent);
-            AddBlueCastle(palette);
-            AddRedCastle(palette);
-            AddBoosters(palette);
+            GreyboxCastles.DrawBlue(builder, palette, decorRng, config, config.playerCastleX, playerGroundY);
+            GreyboxCastles.DrawRed(builder, palette, decorRng, config, config.enemyCastleX, enemyGroundY);
+            GreyboxBoosters.Draw(builder, palette, config);
             builder.Apply(Mesh);
-        }
-
-        private float RedHalfWidth()
-        {
-            return RedTowerExtraHeights.Length * RedTowerPitch * 0.5f;
-        }
-
-        private static float MaxRedExtraHeight()
-        {
-            float max = 0f;
-            for (int i = 0; i < RedTowerExtraHeights.Length; i++)
-            {
-                if (RedTowerExtraHeights[i] > max)
-                {
-                    max = RedTowerExtraHeights[i];
-                }
-            }
-            return max;
         }
 
         /// <summary>Самая высокая точка ландшафта под замком: гусеницы не должны висеть над склоном.</summary>
@@ -134,184 +166,239 @@ namespace CastleDestroyers.Level
             return ground;
         }
 
-        private void ComputeMounts(float[] mountX, float[] mountY, float centerX, float halfWidth, float wallBase, float wallHeight, float facing)
+        private static void ComputeMounts(float[] mountX, float[] mountY, float[] table, float centerX, float wallBase)
         {
-            int count = mountX.Length;
-            int rows = count < MountMaxRows ? count : MountMaxRows;
-            float frontX = centerX + facing * halfWidth;
-            int columns = (count + rows - 1) / rows;
-            float span = wallHeight - MountBottomMargin - MountTopMargin;
-            // Каждая следующая колонка сдвинута на пол-шага по высоте, чтобы стволы не перекрывали друг друга.
-            float rowSpan = rows - 1 + MountColumnStagger * (columns - 1);
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < mountX.Length; i++)
             {
-                int row = i % rows;
-                int column = i / rows;
-                float t = rowSpan <= 0f ? 0.5f : (row + MountColumnStagger * column) / rowSpan;
-                mountX[i] = frontX - facing * column * MountColumnSpacing;
-                mountY[i] = wallBase + MountBottomMargin + span * t;
+                mountX[i] = centerX + table[i * 2];
+                mountY[i] = wallBase + table[i * 2 + 1];
             }
         }
 
         private void AddBackdrop(PaletteSet palette, float extent)
         {
-            AddBackdropLayer(palette.backgroundFar, extent, 20f, 13f, 0.65f);
-            AddBackdropLayer(palette.backgroundMid, extent, 11f, 8f, 0.8f);
-            AddBackdropLayer(palette.backgroundNear, extent, 5.5f, 5f, 0.9f);
+            AddStars(palette, extent);
+            AddMoon(palette);
+            AddFarMountains(palette, extent);
+            AddMidForest(palette, extent);
+            AddNearBushes(palette, extent);
         }
 
-        /// <summary>Ряд треугольных силуэтов от воды вверх. Высоты чередуются по детерминированному шаблону.</summary>
-        private void AddBackdropLayer(Color32 color, float extent, float peakHeight, float halfWidth, float spacingFactor)
+        private void AddStars(PaletteSet palette, float extent)
         {
-            float step = halfWidth * 2f * spacingFactor;
-            int count = (int)(extent * 2f / step) + 2;
-            float baseY = config.waterLevel;
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < StarCount; i++)
             {
-                float cx = -extent + i * step;
-                float variation = 0.7f + 0.3f * ((i * 3) % 5) / 4f;
-                float peak = baseY + peakHeight * variation;
-                builder.AddTriangle(cx - halfWidth, baseY, cx + halfWidth, baseY, cx, peak, color);
+                float x = decorRng.Range(-extent, extent);
+                float y = decorRng.Range(StarMinY, StarMaxY);
+                float size = decorRng.Range(StarMinSize, StarMaxSize);
+                builder.AddQuad(x - size, y, x, y - size, x + size, y, x, y + size, palette.skyStar);
             }
         }
 
-        private void AddTerrain(PaletteSet palette, float extent)
+        private void AddMoon(PaletteSet palette)
         {
-            Vector2[] profile = config.terrainProfile;
+            builder.AddCircle(MoonX, MoonY, MoonRadius, palette.moon);
+            for (int i = 0; i + 2 < MoonCraters.Length; i += 3)
+            {
+                float x = MoonX + MoonCraters[i] * MoonRadius;
+                float y = MoonY + MoonCraters[i + 1] * MoonRadius;
+                builder.AddCircle(x, y, MoonCraters[i + 2] * MoonRadius, palette.moonShade);
+            }
+        }
+
+        /// <summary>Дальние горы: треугольники со скруглённой вершиной.</summary>
+        private void AddFarMountains(PaletteSet palette, float extent)
+        {
+            int count = (int)(extent * 2f / FarStep) + 2;
+            for (int i = 0; i < count; i++)
+            {
+                float cx = -extent + i * FarStep + decorRng.Range(-1f, 1f);
+                float peak = config.waterLevel + decorRng.Range(FarMinPeak, FarMaxPeak);
+                AddRoundedPeak(cx, config.waterLevel, FarHalfWidth, peak, FarTipRadius, palette.backgroundFar);
+            }
+        }
+
+        private void AddRoundedPeak(float cx, float baseY, float halfWidth, float peak, float tipRadius, Color32 color)
+        {
+            float height = peak - baseY;
+            float side = Mathf.Sqrt(halfWidth * halfWidth + height * height);
+            float centerY = peak - tipRadius * side / halfWidth;
+            float tangentX = tipRadius * height / side;
+            float tangentY = centerY + tipRadius * halfWidth / side;
+            builder.AddQuad(cx - halfWidth, baseY, cx + halfWidth, baseY, cx + tangentX, tangentY, cx - tangentX, tangentY, color);
+            builder.AddCircle(cx, centerY, tipRadius, color);
+        }
+
+        /// <summary>Средний план: сплошная полоса и ели-треугольники над ней.</summary>
+        private void AddMidForest(PaletteSet palette, float extent)
+        {
+            float baseY = config.waterLevel;
+            builder.AddRect(-extent, baseY, extent, baseY + MidBandHeight, palette.backgroundMid);
+            int count = (int)(extent * 2f / MidStep) + 1;
+            for (int i = 0; i < count; i++)
+            {
+                float cx = -extent + i * MidStep;
+                float peak = baseY + decorRng.Range(MidMinPeak, MidMaxPeak);
+                float foot = baseY + MidBandHeight - 0.1f;
+                builder.AddTriangle(cx - MidHalfWidth, foot, cx + MidHalfWidth, foot, cx, peak, palette.backgroundMid);
+            }
+        }
+
+        /// <summary>Ближний план: круглые кусты тёмного тона.</summary>
+        private void AddNearBushes(PaletteSet palette, float extent)
+        {
+            float baseY = config.waterLevel;
+            int count = (int)(extent * 2f / NearStep) + 1;
+            for (int i = 0; i < count; i++)
+            {
+                float cx = -extent + i * NearStep + decorRng.Range(-0.6f, 0.6f);
+                builder.AddCircle(cx, baseY + decorRng.Range(NearMinY, NearMaxY), decorRng.Range(NearMinRadius, NearMaxRadius), palette.backgroundNear);
+            }
+            builder.AddRect(-extent, baseY, extent, baseY + NearMinY, palette.backgroundNear);
+        }
+
+        /// <summary>Ёлки на склонах. Рисуются до земли, поэтому их основание скрыто в склоне.</summary>
+        private void AddTrees(PaletteSet palette)
+        {
+            for (int i = 0; i < TreeX.Length; i++)
+            {
+                float x = TreeX[i];
+                float slope = (GroundHeight(x + SlopeProbe) - GroundHeight(x - SlopeProbe)) / (SlopeProbe * 2f);
+                float length = Mathf.Sqrt(1f + slope * slope);
+                // Ось дерева — между вертикалью и нормалью склона.
+                float upX = -slope / length * TreeTilt;
+                float upY = 1f / length * TreeTilt + (1f - TreeTilt);
+                float upLength = Mathf.Sqrt(upX * upX + upY * upY);
+                upX /= upLength;
+                upY /= upLength;
+                AddFir(x - upX * TreeSink, GroundHeight(x) - upY * TreeSink, upX, upY, decorRng.Range(TreeMinHeight, TreeMaxHeight), palette);
+            }
+        }
+
+        /// <summary>Ель из ярусов-треугольников: левая половина светлая, правая теневая.</summary>
+        private void AddFir(float x, float y, float upX, float upY, float height, PaletteSet palette)
+        {
+            float sideX = upY;
+            float sideY = -upX;
+            float halfWidth = height * TreeHalfWidthFraction;
+            float trunkHalf = halfWidth * TrunkWidthFraction;
+            float trunkTop = height * TrunkHeightFraction;
+            builder.AddQuad(
+                x - sideX * trunkHalf, y - sideY * trunkHalf,
+                x + sideX * trunkHalf, y + sideY * trunkHalf,
+                x + sideX * trunkHalf + upX * trunkTop, y + sideY * trunkHalf + upY * trunkTop,
+                x - sideX * trunkHalf + upX * trunkTop, y - sideY * trunkHalf + upY * trunkTop,
+                palette.treeShade);
+
+            float tierHeight = (height - trunkTop) / (1f + (TreeTiers - 1) * (1f - TierOverlap));
+            for (int tier = 0; tier < TreeTiers; tier++)
+            {
+                float bottom = trunkTop + tier * tierHeight * (1f - TierOverlap);
+                float top = bottom + tierHeight;
+                float half = halfWidth * (TreeTiers - tier + 1) / (TreeTiers + 1);
+                float baseX = x + upX * bottom;
+                float baseY = y + upY * bottom;
+                float apexX = x + upX * top;
+                float apexY = y + upY * top;
+                builder.AddTriangle(baseX - sideX * half, baseY - sideY * half, baseX, baseY, apexX, apexY, palette.treeLight);
+                builder.AddTriangle(baseX, baseY, baseX + sideX * half, baseY + sideY * half, apexX, apexY, palette.treeShade);
+            }
+        }
+
+        private void AddTerrain(PaletteSet palette)
+        {
             float bottom = config.levelBottom;
             for (int i = 0; i < profile.Length - 1; i++)
             {
                 float x0 = profile[i].x;
-                float y0 = profile[i].y;
                 float x1 = profile[i + 1].x;
-                float y1 = profile[i + 1].y;
                 if (x1 - x0 > 0f)
                 {
-                    builder.AddQuad(x0, y0, x1, y1, x1, bottom, x0, bottom, palette.ground);
+                    builder.AddQuad(x0, profile[i].y, x1, profile[i + 1].y, x1, bottom, x0, bottom, palette.ground);
                 }
             }
+            AddBuriedDecor(palette);
+            AddGroundRim(palette);
+        }
 
-            // Цветная кромка по верху (ТЗ §3.8): полоса толщиной groundRimThickness вглубь по нормали.
+        /// <summary>Редкие «закопанные» камни на тон темнее, чтобы большая масса не была пустой (ТЗ §3.8).</summary>
+        private void AddBuriedDecor(PaletteSet palette)
+        {
+            for (int i = 0; i < BuriedAttempts; i++)
+            {
+                float x = decorRng.Range(-BuriedRange, BuriedRange);
+                float y = decorRng.Range(config.waterLevel + BuriedAboveWater, BuriedMaxHeight);
+                float radius = decorRng.Range(BuriedMinRadius, BuriedMaxRadius);
+                bool inside = y + BuriedDepth < GroundHeight(x - radius) && y + BuriedDepth < GroundHeight(x + radius);
+                if (inside)
+                {
+                    builder.AddEllipse(x, y, radius, radius * BuriedFlatten, palette.groundShade);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Цветная кромка (ТЗ §3.8): непрерывная лента вдоль контура. Соседние сегменты делят вершины,
+        /// поэтому на изгибах нет щелей, а глубина фестоном меняется вдоль контура.
+        /// </summary>
+        private void AddGroundRim(PaletteSet palette)
+        {
             float thickness = config.groundRimThickness;
+            float distance = 0f;
+            float innerX0 = 0f;
+            float innerY0 = 0f;
+            RimInner(0, distance, thickness, ref innerX0, ref innerY0);
             for (int i = 0; i < profile.Length - 1; i++)
             {
                 float dx = profile[i + 1].x - profile[i].x;
                 float dy = profile[i + 1].y - profile[i].y;
-                float length = Mathf.Sqrt(dx * dx + dy * dy);
-                if (length <= 0f)
-                {
-                    continue;
-                }
-                float nx = dy / length * thickness;
-                float ny = -dx / length * thickness;
-                builder.AddQuad(
-                    profile[i].x, profile[i].y,
-                    profile[i + 1].x, profile[i + 1].y,
-                    profile[i + 1].x + nx, profile[i + 1].y + ny,
-                    profile[i].x + nx, profile[i].y + ny,
-                    palette.groundRim);
-            }
-
-            // Дальше профиля земля продолжается ровной полосой до края фона.
-            float firstX = profile[0].x;
-            float lastX = profile[profile.Length - 1].x;
-            if (firstX > -extent)
-            {
-                builder.AddRect(-extent, bottom, firstX, profile[0].y, palette.ground);
-                builder.AddRect(-extent, profile[0].y - thickness, firstX, profile[0].y, palette.groundRim);
-            }
-            if (lastX < extent)
-            {
-                float lastY = profile[profile.Length - 1].y;
-                builder.AddRect(lastX, bottom, extent, lastY, palette.ground);
-                builder.AddRect(lastX, lastY - thickness, extent, lastY, palette.groundRim);
+                distance += Mathf.Sqrt(dx * dx + dy * dy);
+                float innerX1 = 0f;
+                float innerY1 = 0f;
+                RimInner(i + 1, distance, thickness, ref innerX1, ref innerY1);
+                builder.AddQuad(profile[i].x, profile[i].y, profile[i + 1].x, profile[i + 1].y, innerX1, innerY1, innerX0, innerY0, palette.groundRim);
+                innerX0 = innerX1;
+                innerY0 = innerY1;
             }
         }
 
+        /// <summary>Внутренняя вершина кромки: точка контура, сдвинутая вглубь по усреднённой нормали.</summary>
+        private void RimInner(int index, float distance, float thickness, ref float x, ref float y)
+        {
+            int prev = index > 0 ? index - 1 : index;
+            int next = index < profile.Length - 1 ? index + 1 : index;
+            float dx = profile[next].x - profile[prev].x;
+            float dy = profile[next].y - profile[prev].y;
+            float length = Mathf.Sqrt(dx * dx + dy * dy);
+            float scallop = Mathf.Abs(Mathf.Sin(Mathf.PI * distance / RimScallopPitch));
+            float depth = thickness * (RimMinDepth + RimScallopDepth * scallop);
+            x = profile[index].x + dy / length * depth;
+            y = profile[index].y - dx / length * depth;
+        }
+
+        /// <summary>Вода непрозрачная: основной тон, блики-пилюли и светлая волнистая кромка (ТЗ §3.8).</summary>
         private void AddWater(PaletteSet palette, float extent)
         {
-            Color32 water = palette.water;
-            water.a = WaterAlpha;
-            builder.AddRect(-extent, config.levelBottom, extent, config.waterLevel, water);
-            builder.AddRect(-extent, config.waterLevel - WaterRimThickness, extent, config.waterLevel, palette.waterRim);
-        }
-
-        private void AddBlueCastle(PaletteSet palette)
-        {
-            float cx = config.playerCastleX;
-            float trackTop = playerGroundY + config.trackHeight;
-            float wallBase = trackTop + config.platformHeight;
-            AddPlatformAndTracks(palette, cx, BlueHalfWidth, playerGroundY, trackTop, wallBase);
-
-            builder.AddRect(cx - BlueHalfWidth, wallBase, cx + BlueHalfWidth, wallBase + BlueBaseHeight, palette.castleStone);
-            float towerBase = wallBase + BlueBaseHeight;
-            AddTower(palette, cx - BlueHalfWidth + BlueTowerWidth * 0.5f, BlueTowerWidth, wallBase, BlueBaseHeight + BlueTowerHeight, BlueRoofHeight, palette.roofPlayer);
-            AddTower(palette, cx + BlueHalfWidth - BlueTowerWidth * 0.5f, BlueTowerWidth, wallBase, BlueBaseHeight + BlueTowerHeight, BlueRoofHeight, palette.roofPlayer);
-            // Тень на внутренней стороне основания: проём между башнями читается как в референсе.
-            builder.AddRect(cx - BlueHalfWidth + BlueTowerWidth, wallBase, cx + BlueHalfWidth - BlueTowerWidth, towerBase, palette.castleStoneShade);
-        }
-
-        private void AddRedCastle(PaletteSet palette)
-        {
-            float cx = config.enemyCastleX;
-            float halfWidth = RedHalfWidth();
-            float trackTop = enemyGroundY + config.trackHeight;
-            float wallBase = trackTop + config.platformHeight;
-            AddPlatformAndTracks(palette, cx, halfWidth, enemyGroundY, trackTop, wallBase);
-
-            builder.AddRect(cx - halfWidth, wallBase, cx + halfWidth, wallBase + RedBaseHeight, palette.castleStone);
-            int towers = RedTowerExtraHeights.Length;
-            for (int i = 0; i < towers; i++)
+            float level = config.waterLevel;
+            builder.AddRect(-extent, config.levelBottom, extent, level, palette.water);
+            for (int i = 0; i < WaterPillCount; i++)
             {
-                float tx = cx + (i - (towers - 1) * 0.5f) * RedTowerPitch;
-                AddTower(palette, tx, RedTowerWidth, wallBase, RedBaseHeight + RedTowerExtraHeights[i], RedRoofHeight, palette.roofEnemy);
+                float x = decorRng.Range(-extent, extent);
+                float y = level - decorRng.Range(WaterPillTop, WaterPillDepth);
+                float width = decorRng.Range(WaterPillMinWidth, WaterPillMaxWidth);
+                builder.AddRoundedRect(x, y, x + width, y + WaterPillHeight, WaterPillHeight * 0.5f, palette.waterHighlight);
             }
-        }
 
-        private void AddPlatformAndTracks(PaletteSet palette, float cx, float halfWidth, float groundY, float trackTop, float wallBase)
-        {
-            float trackInnerEdge = halfWidth + PlatformOverhang - TrackInset;
-            builder.AddRect(cx - trackInnerEdge, groundY, cx - trackInnerEdge + TrackWidth, trackTop, palette.track);
-            builder.AddRect(cx + trackInnerEdge - TrackWidth, groundY, cx + trackInnerEdge, trackTop, palette.track);
-            builder.AddRect(cx - halfWidth - PlatformOverhang, trackTop, cx + halfWidth + PlatformOverhang, wallBase, palette.platform);
-        }
-
-        /// <summary>Башня: стена с тенью на правой трети и коническая крыша.</summary>
-        private void AddTower(PaletteSet palette, float cx, float width, float wallBase, float height, float roofHeight, Color32 roofColor)
-        {
-            float half = width * 0.5f;
-            float top = wallBase + height;
-            builder.AddRect(cx - half, wallBase, cx + half, top, palette.castleStone);
-            builder.AddRect(cx + half - width * StoneShadeFraction, wallBase, cx + half, top, palette.castleStoneShade);
-            builder.AddTriangle(cx - half - RoofOverhang, top, cx + half + RoofOverhang, top, cx, top + roofHeight, roofColor);
-        }
-
-        private void AddBoosters(PaletteSet palette)
-        {
-            BoosterSpec[] boosters = config.boosters;
-            float halfWidth = config.boosterWidth * 0.5f;
-            float halfHeight = config.boosterHeight * 0.5f;
-            for (int i = 0; i < boosters.Length; i++)
+            int steps = (int)(extent * 2f / WaveStep);
+            float bottom = level - WaterRimThickness;
+            for (int i = 0; i < steps; i++)
             {
-                Color32 color = BoosterColor(palette, boosters[i].multiplier);
-                color.a = BoosterAlpha;
-                float x = boosters[i].position.x;
-                float y = boosters[i].position.y;
-                builder.AddRect(x - halfWidth, y - halfHeight, x + halfWidth, y + halfHeight, color);
+                float x0 = -extent + i * WaveStep;
+                float x1 = x0 + WaveStep;
+                float y0 = level + WaveAmplitude * Mathf.Sin(x0 * WaveFrequency);
+                float y1 = level + WaveAmplitude * Mathf.Sin(x1 * WaveFrequency);
+                builder.AddQuad(x0, bottom, x1, bottom, x1, y1, x0, y0, palette.waterRim);
             }
-        }
-
-        private static Color32 BoosterColor(PaletteSet palette, int multiplier)
-        {
-            if (multiplier >= BoosterMultiplierHigh)
-            {
-                return palette.booster50;
-            }
-            if (multiplier >= BoosterMultiplierMid)
-            {
-                return palette.booster20;
-            }
-            return palette.booster10;
         }
     }
 }

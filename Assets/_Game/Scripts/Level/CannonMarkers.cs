@@ -5,15 +5,19 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Greybox-пушки: по прямоугольнику-стволу на каждое крепление, один динамический меш.
+    /// Greybox-пушки: трёхствольный блок на каждое крепление, один динамический меш.
     /// Погибшая пушка схлопывается в точку. Настоящие трёхстволки и отрыв появятся на этапе 5.
     /// </summary>
     public sealed class CannonMarkers : ITickable
     {
         private const int VerticesPerQuad = 4;
         private const int IndicesPerQuad = 6;
-        private const float BarrelLength = 1f;
-        private const float BarrelThickness = 0.35f;
+        private const int QuadsPerCannon = 4;
+        private const float BodyLength = 0.5f;
+        private const float BodyHeight = 0.66f;
+        private const float BarrelLength = 1.25f;
+        private const float BarrelThickness = 0.16f;
+        private const float BarrelPitch = 0.21f;
         private const float BoundsPadding = 4f;
 
         private GreyboxLevel level;
@@ -33,7 +37,7 @@ namespace CastleDestroyers.Level
             playerCount = level.PlayerMountX.Length;
             enemyCount = level.EnemyMountX.Length;
 
-            int total = playerCount + enemyCount;
+            int total = (playerCount + enemyCount) * QuadsPerCannon;
             vertices = new Vector3[total * VerticesPerQuad];
             colors = new Color32[total * VerticesPerQuad];
             int[] triangles = new int[total * IndicesPerQuad];
@@ -62,11 +66,11 @@ namespace CastleDestroyers.Level
             dirty = true;
         }
 
-        /// <summary>Перекрашивает стволы под новую палитру.</summary>
+        /// <summary>Перекрашивает пушки под новую палитру.</summary>
         public void ApplyPalette(PaletteSet palette)
         {
-            FillColors(0, playerCount, palette.cannonPlayer);
-            FillColors(playerCount, enemyCount, palette.cannonEnemy);
+            FillColors(0, playerCount, palette.cannonPlayer, palette.cannonPlayerShade);
+            FillColors(playerCount, enemyCount, palette.cannonEnemy, palette.cannonEnemyShade);
             Mesh.colors32 = colors;
             dirty = true;
         }
@@ -88,40 +92,56 @@ namespace CastleDestroyers.Level
             dirty = true;
         }
 
-        private void FillColors(int firstQuad, int count, Color32 color)
+        /// <summary>Первый квад пушки — казённик теневым тоном, остальные — стволы основным.</summary>
+        private void FillColors(int firstCannon, int count, Color32 barrel, Color32 body)
         {
-            int start = firstQuad * VerticesPerQuad;
-            int end = (firstQuad + count) * VerticesPerQuad;
-            for (int v = start; v < end; v++)
+            for (int cannon = firstCannon; cannon < firstCannon + count; cannon++)
             {
-                colors[v] = color;
+                int start = cannon * QuadsPerCannon * VerticesPerQuad;
+                for (int v = 0; v < QuadsPerCannon * VerticesPerQuad; v++)
+                {
+                    colors[start + v] = v < VerticesPerQuad ? body : barrel;
+                }
             }
         }
 
-        /// <summary>Первые alive креплений рисуются стволом, остальные схлопываются.</summary>
-        private void WriteSide(int firstQuad, int count, float[] mountX, float[] mountY, int alive, float facing)
+        /// <summary>Первые alive креплений рисуются пушкой, остальные схлопываются.</summary>
+        private void WriteSide(int firstCannon, int count, float[] mountX, float[] mountY, int alive, float facing)
         {
-            float halfThickness = BarrelThickness * 0.5f;
             for (int i = 0; i < count; i++)
             {
-                int v = (firstQuad + i) * VerticesPerQuad;
-                float x0 = mountX[i];
+                int quad = (firstCannon + i) * QuadsPerCannon;
+                float x = mountX[i];
                 float y = mountY[i];
-                float x1 = x0 + facing * BarrelLength;
-                float halfH = i < alive ? halfThickness : 0f;
                 if (i >= alive)
                 {
-                    x1 = x0;
+                    for (int q = 0; q < QuadsPerCannon; q++)
+                    {
+                        WriteQuad(quad + q, x, y, x, y);
+                    }
+                    continue;
                 }
-                vertices[v].x = x0;
-                vertices[v].y = y - halfH;
-                vertices[v + 1].x = x1;
-                vertices[v + 1].y = y - halfH;
-                vertices[v + 2].x = x1;
-                vertices[v + 2].y = y + halfH;
-                vertices[v + 3].x = x0;
-                vertices[v + 3].y = y + halfH;
+                float halfBody = BodyHeight * 0.5f;
+                float halfBarrel = BarrelThickness * 0.5f;
+                float muzzle = x + facing * BarrelLength;
+                WriteQuad(quad, x, y - halfBody, x + facing * BodyLength, y + halfBody);
+                WriteQuad(quad + 1, x, y - BarrelPitch - halfBarrel, muzzle, y - BarrelPitch + halfBarrel);
+                WriteQuad(quad + 2, x, y - halfBarrel, muzzle, y + halfBarrel);
+                WriteQuad(quad + 3, x, y + BarrelPitch - halfBarrel, muzzle, y + BarrelPitch + halfBarrel);
             }
+        }
+
+        private void WriteQuad(int quad, float x0, float y0, float x1, float y1)
+        {
+            int v = quad * VerticesPerQuad;
+            vertices[v].x = x0;
+            vertices[v].y = y0;
+            vertices[v + 1].x = x1;
+            vertices[v + 1].y = y0;
+            vertices[v + 2].x = x1;
+            vertices[v + 2].y = y1;
+            vertices[v + 3].x = x0;
+            vertices[v + 3].y = y1;
         }
     }
 }

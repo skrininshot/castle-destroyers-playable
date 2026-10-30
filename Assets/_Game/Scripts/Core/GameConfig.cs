@@ -220,19 +220,19 @@ namespace CastleDestroyers.Core
         public float waterLevel;
         [Tooltip("Нижний край ландшафта и воды по Y, метры.")]
         public float levelBottom = -40f;
-        [Tooltip("Контур ландшафта слева направо: x от центра уровня, y над водой. Вертикальные участки задаются двумя точками с одним x.")]
+        [Tooltip("Опорные точки контура слева направо: x от центра уровня, y над водой. Между ними контур сглаживается. Вертикальные участки задаются двумя точками с одним x.")]
         public Vector2[] terrainProfile =
         {
-            new Vector2(-34f, 1.6f), new Vector2(-26f, 1.8f), new Vector2(-18f, 1.8f),
-            new Vector2(-14f, 0.2f), new Vector2(-11f, 0.2f),
-            new Vector2(-9.5f, 1.2f), new Vector2(-8f, 3.4f), new Vector2(-6.2f, 6.6f),
-            new Vector2(-4.6f, 9.6f), new Vector2(-3.2f, 11.4f), new Vector2(-1.4f, 11.8f),
-            new Vector2(-0.7f, 11.6f), new Vector2(-0.7f, -3f),
-            new Vector2(0.7f, -3f), new Vector2(0.7f, 11.6f),
-            new Vector2(1.4f, 11.8f), new Vector2(3.2f, 11.4f), new Vector2(4.6f, 9.6f),
-            new Vector2(6.2f, 6.6f), new Vector2(8f, 3.4f), new Vector2(9.5f, 1.2f),
-            new Vector2(11f, 0.2f), new Vector2(14f, 0.2f),
-            new Vector2(18f, 1.8f), new Vector2(26f, 1.8f), new Vector2(34f, 1.6f)
+            new Vector2(-62f, 1.2f), new Vector2(-34f, 1.4f), new Vector2(-28f, 1.8f), new Vector2(-17f, 1.8f),
+            new Vector2(-13.6f, 1f), new Vector2(-11f, 0.7f), new Vector2(-9f, 1f),
+            new Vector2(-7.5f, 1.9f), new Vector2(-6.1f, 3.4f), new Vector2(-5f, 5.2f), new Vector2(-4f, 7.2f),
+            new Vector2(-3.1f, 9f), new Vector2(-2.2f, 10.5f), new Vector2(-1.5f, 11.35f), new Vector2(-1.05f, 11.6f),
+            new Vector2(-0.82f, 11.2f), new Vector2(-0.72f, 9.6f), new Vector2(-0.66f, 4f), new Vector2(-0.62f, -3f),
+            new Vector2(0.62f, -3f), new Vector2(0.66f, 4f), new Vector2(0.72f, 9.6f), new Vector2(0.82f, 11.2f),
+            new Vector2(1.05f, 11.6f), new Vector2(1.5f, 11.35f), new Vector2(2.2f, 10.5f), new Vector2(3.1f, 9f),
+            new Vector2(4f, 7.2f), new Vector2(5f, 5.2f), new Vector2(6.1f, 3.4f), new Vector2(7.5f, 1.9f),
+            new Vector2(9f, 1f), new Vector2(11f, 0.7f), new Vector2(13.6f, 1f),
+            new Vector2(17f, 1.8f), new Vector2(28f, 1.8f), new Vector2(34f, 1.4f), new Vector2(62f, 1.2f)
         };
         [Range(0.1f, 1f)]
         [Tooltip("Толщина цветной кромки по верху земли, метры.")]
@@ -243,10 +243,10 @@ namespace CastleDestroyers.Core
         public float enemyCastleX = 23f;
         [Range(0.1f, 1.5f)]
         [Tooltip("Высота гусениц, метры.")]
-        public float trackHeight = 0.6f;
+        public float trackHeight = 1.2f;
         [Range(0.1f, 1.5f)]
         [Tooltip("Высота деревянной платформы, метры.")]
-        public float platformHeight = 0.5f;
+        public float platformHeight = 0.8f;
 
         [Header("Камера (ТЗ §3.9)")]
         [Range(0.1f, 2f)]
@@ -254,24 +254,24 @@ namespace CastleDestroyers.Core
         public float cameraSmoothTime = 0.45f;
         [Range(8f, 40f)]
         [Tooltip("Ширина кадра на своём замке, метры.")]
-        public float castleFrameWidth = 16f;
+        public float castleFrameWidth = 14f;
         [Range(10f, 60f)]
         [Tooltip("Ширина кадра в центре уровня (гора и бустеры), метры. Самый широкий кадр.")]
-        public float centerFrameWidth = 38f;
+        public float centerFrameWidth = 18f;
         [Range(8f, 50f)]
         [Tooltip("Ширина кадра на замке-цели, метры. Чуть уже центрального.")]
-        public float targetFrameWidth = 24f;
+        public float targetFrameWidth = 16f;
         [Range(6f, 40f)]
         [Tooltip("Минимальная высота кадра, метры. Нужна в ландшафтной ориентации.")]
-        public float minFrameHeight = 16f;
+        public float minFrameHeight = 22f;
         [Range(0f, 8f)]
         [Tooltip("Сдвиг камеры к противнику, чтобы свой замок стоял чуть левее центра, метры.")]
         public float castleLeadX = 2f;
         [Range(-2f, 8f)]
         [Tooltip("Подъём точки фокуса над центром замка, метры (видно небо над ним).")]
-        public float castleFocusLiftY = 2f;
+        public float castleFocusLiftY = 0.5f;
         [Tooltip("Точка фокуса в центре уровня, метры.")]
-        public Vector2 centerFocus = new Vector2(0f, 6f);
+        public Vector2 centerFocus = new Vector2(0f, 9f);
         [Range(0.1f, 0.9f)]
         [Tooltip("Какую долю полёта камера держит центр уровня, прежде чем переехать к цели.")]
         public float flightCenterFraction = 0.5f;

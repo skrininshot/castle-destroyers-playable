@@ -24,13 +24,16 @@ namespace CastleDestroyers.EditorTools
         private const int ReferenceHeight = 1280;
         private const int SafeTop = 130;
         private const int SafeBottom = 130;
-        private const int FontSize = 26;
+        private const int StatsFontSize = 17;
+        private const int ButtonFontSize = 15;
         private const float CameraStartSize = 8f;
-        private const float StatsHeight = 260f;
-        private const int ButtonWidth = 220;
-        private const int ButtonHeight = 84;
-        private const int ButtonSpacing = 10;
-        private const int ButtonRows = 2;
+        private const float StatsWidth = 380f;
+        private const float StatsHeight = 136f;
+        private const float StatsAlpha = 0.4f;
+        private const int ButtonWidth = 128;
+        private const int ButtonHeight = 56;
+        private const int ButtonSpacing = 8;
+        private const int ButtonRows = 1;
 
         [MenuItem("Tools/Castle Destroyers/Build Game Scene")]
         public static void Build()
@@ -64,6 +67,16 @@ namespace CastleDestroyers.EditorTools
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>Возвращает обе темы ассета к значениям из кода. Правки цветов в инспекторе будут потеряны.</summary>
+        [MenuItem("Tools/Castle Destroyers/Reset Theme Palette To Defaults")]
+        public static void ResetThemePalette()
+        {
+            ThemePalette theme = LoadOrCreate<ThemePalette>(ThemePath);
+            theme.ResetPresets();
+            EditorUtility.SetDirty(theme);
             AssetDatabase.SaveAssets();
         }
 
@@ -146,12 +159,12 @@ namespace CastleDestroyers.EditorTools
             panel.transform.SetParent(canvas, false);
             RectTransform panelRect = panel.GetComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0f, 1f);
-            panelRect.anchorMax = new Vector2(1f, 1f);
-            panelRect.pivot = new Vector2(0.5f, 1f);
+            panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0f, 1f);
             panelRect.offsetMin = new Vector2(20f, -SafeTop - StatsHeight);
-            panelRect.offsetMax = new Vector2(-20f, -SafeTop);
+            panelRect.offsetMax = new Vector2(20f + StatsWidth, -SafeTop);
             Image background = panel.GetComponent<Image>();
-            background.color = new Color(0f, 0f, 0f, 0.55f);
+            background.color = new Color(0f, 0f, 0f, StatsAlpha);
             background.raycastTarget = false;
 
             GameObject textObject = new GameObject("Stats", typeof(RectTransform), typeof(Text));
@@ -159,11 +172,11 @@ namespace CastleDestroyers.EditorTools
             RectTransform rect = textObject.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(12f, 8f);
-            rect.offsetMax = new Vector2(-12f, -8f);
+            rect.offsetMin = new Vector2(10f, 6f);
+            rect.offsetMax = new Vector2(-10f, -6f);
             Text text = textObject.GetComponent<Text>();
             text.font = font;
-            text.fontSize = FontSize;
+            text.fontSize = StatsFontSize;
             text.color = Color.white;
             text.raycastTarget = false;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -205,7 +218,7 @@ namespace CastleDestroyers.EditorTools
             rect.offsetMax = Vector2.zero;
             Text text = labelObject.GetComponent<Text>();
             text.font = font;
-            text.fontSize = FontSize;
+            text.fontSize = ButtonFontSize;
             text.color = Color.black;
             text.alignment = TextAnchor.MiddleCenter;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;

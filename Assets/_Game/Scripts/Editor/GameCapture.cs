@@ -34,9 +34,11 @@ namespace CastleDestroyers.EditorTools
             public ThemePreset preset;
             public int turn;
             public bool stress;
+            public bool clean;
 
-            public Shot(string name, SessionState state, Side side, float dwell, bool landscape, ThemePreset preset, int turn, bool stress)
+            public Shot(string name, SessionState state, Side side, float dwell, bool landscape, ThemePreset preset, int turn, bool stress, bool clean = false)
             {
+                this.clean = clean;
                 this.name = name;
                 this.state = state;
                 this.side = side;
@@ -69,7 +71,12 @@ namespace CastleDestroyers.EditorTools
                 new Shot("09_flight_center_landscape", SessionState.Flight, Side.Player, 0.6f, true, ThemePreset.Night, 1, true),
                 new Shot("10_player_aim_landscape", SessionState.Aim, Side.Player, 1.0f, true, ThemePreset.Night, 1, false),
                 new Shot("11_player_aim_sunset", SessionState.Aim, Side.Player, 1.0f, false, ThemePreset.Sunset, 1, false),
-                new Shot("12_flight_center_sunset", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Sunset, 1, true)
+                new Shot("12_flight_center_sunset", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Sunset, 1, true),
+                new Shot("13_clean_player_castle", SessionState.Aim, Side.Player, 1.0f, false, ThemePreset.Night, 1, false, true),
+                new Shot("14_clean_mountain", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Night, 1, false, true),
+                new Shot("15_clean_enemy_castle", SessionState.Resolve, Side.Player, 0.1f, false, ThemePreset.Night, 1, false, true),
+                new Shot("16_clean_mountain_sunset", SessionState.Flight, Side.Player, 0.6f, false, ThemePreset.Sunset, 1, false, true),
+                new Shot("17_clean_mountain_landscape", SessionState.Flight, Side.Player, 0.6f, true, ThemePreset.Night, 1, false, true)
             };
 
             for (int i = 0; i < shots.Length; i++)
@@ -149,7 +156,7 @@ namespace CastleDestroyers.EditorTools
             Camera camera = game.mainCamera;
             camera.targetTexture = target;
             camera.aspect = (float)width / height;
-            Canvas canvas = AttachDebugCanvas(game, camera);
+            Canvas canvas = shot.clean ? null : AttachDebugCanvas(game, camera);
             game.CameraDirector.Snap();
             camera.Render();
 

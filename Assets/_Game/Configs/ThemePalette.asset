@@ -26,15 +26,36 @@ MonoBehaviour:
     backgroundNear:
       serializedVersion: 2
       rgba: 4284227358
+    skyStar:
+      serializedVersion: 2
+      rgba: 4294960092
+    moon:
+      serializedVersion: 2
+      rgba: 4292014066
+    moonShade:
+      serializedVersion: 2
+      rgba: 4289778390
     ground:
       serializedVersion: 2
-      rgba: 4282342943
+      rgba: 4283199007
+    groundShade:
+      serializedVersion: 2
+      rgba: 4282474010
     groundRim:
       serializedVersion: 2
       rgba: 4286242879
+    treeLight:
+      serializedVersion: 2
+      rgba: 4285242412
+    treeShade:
+      serializedVersion: 2
+      rgba: 4283791903
     water:
       serializedVersion: 2
       rgba: 4289242922
+    waterHighlight:
+      serializedVersion: 2
+      rgba: 4290625349
     waterRim:
       serializedVersion: 2
       rgba: 4293193100
@@ -44,36 +65,69 @@ MonoBehaviour:
     castleStoneShade:
       serializedVersion: 2
       rgba: 4291077289
+    castleWindow:
+      serializedVersion: 2
+      rgba: 4283970362
+    castleWindowLit:
+      serializedVersion: 2
+      rgba: 4286239487
     roofPlayer:
       serializedVersion: 2
       rgba: 4292921148
+    roofPlayerShade:
+      serializedVersion: 2
+      rgba: 4290551850
     roofEnemy:
       serializedVersion: 2
       rgba: 4283579362
+    roofEnemyShade:
+      serializedVersion: 2
+      rgba: 4282395320
     cannonPlayer:
       serializedVersion: 2
       rgba: 4293557038
+    cannonPlayerShade:
+      serializedVersion: 2
+      rgba: 4289549851
     cannonEnemy:
       serializedVersion: 2
       rgba: 4281280216
+    cannonEnemyShade:
+      serializedVersion: 2
+      rgba: 4280293022
     platform:
       serializedVersion: 2
       rgba: 4282146443
+    platformShade:
+      serializedVersion: 2
+      rgba: 4280894830
     track:
       serializedVersion: 2
       rgba: 4282394155
+    trackWheel:
+      serializedVersion: 2
+      rgba: 4289235342
     booster10:
       serializedVersion: 2
       rgba: 4294345276
+    booster10Cap:
+      serializedVersion: 2
+      rgba: 4291321892
     booster20:
       serializedVersion: 2
       rgba: 4281250047
+    booster20Cap:
+      serializedVersion: 2
+      rgba: 4279207656
     booster50:
       serializedVersion: 2
       rgba: 4285714495
+    booster50Cap:
+      serializedVersion: 2
+      rgba: 4283738151
     rocketPlayer:
       serializedVersion: 2
-      rgba: 4294937932
+      rgba: 4294960767
     rocketEnemy:
       serializedVersion: 2
       rgba: 4284370431
@@ -108,15 +162,36 @@ MonoBehaviour:
     backgroundNear:
       serializedVersion: 2
       rgba: 4284365475
+    skyStar:
+      serializedVersion: 2
+      rgba: 4292076543
+    moon:
+      serializedVersion: 2
+      rgba: 4291424767
+    moonShade:
+      serializedVersion: 2
+      rgba: 4288337919
     ground:
       serializedVersion: 2
-      rgba: 4281543587
+      rgba: 4282003640
+    groundShade:
+      serializedVersion: 2
+      rgba: 4281477283
     groundRim:
       serializedVersion: 2
       rgba: 4283919359
+    treeLight:
+      serializedVersion: 2
+      rgba: 4283347087
+    treeShade:
+      serializedVersion: 2
+      rgba: 4282027116
     water:
       serializedVersion: 2
       rgba: 4292374574
+    waterHighlight:
+      serializedVersion: 2
+      rgba: 4293299019
     waterRim:
       serializedVersion: 2
       rgba: 4294952083
@@ -126,36 +201,69 @@ MonoBehaviour:
     castleStoneShade:
       serializedVersion: 2
       rgba: 4291077289
+    castleWindow:
+      serializedVersion: 2
+      rgba: 4283970362
+    castleWindowLit:
+      serializedVersion: 2
+      rgba: 4286239487
     roofPlayer:
       serializedVersion: 2
       rgba: 4293437500
+    roofPlayerShade:
+      serializedVersion: 2
+      rgba: 4290938410
     roofEnemy:
       serializedVersion: 2
       rgba: 4281998222
+    roofEnemyShade:
+      serializedVersion: 2
+      rgba: 4281340782
     cannonPlayer:
       serializedVersion: 2
       rgba: 4293557038
+    cannonPlayerShade:
+      serializedVersion: 2
+      rgba: 4289549851
     cannonEnemy:
       serializedVersion: 2
       rgba: 4281280216
+    cannonEnemyShade:
+      serializedVersion: 2
+      rgba: 4280293022
     platform:
       serializedVersion: 2
       rgba: 4280958827
+    platformShade:
+      serializedVersion: 2
+      rgba: 4280234066
     track:
       serializedVersion: 2
       rgba: 4282394155
+    trackWheel:
+      serializedVersion: 2
+      rgba: 4289235342
     booster10:
       serializedVersion: 2
       rgba: 4294345276
+    booster10Cap:
+      serializedVersion: 2
+      rgba: 4291321892
     booster20:
       serializedVersion: 2
       rgba: 4281250047
+    booster20Cap:
+      serializedVersion: 2
+      rgba: 4279207656
     booster50:
       serializedVersion: 2
       rgba: 4285714495
+    booster50Cap:
+      serializedVersion: 2
+      rgba: 4283738151
     rocketPlayer:
       serializedVersion: 2
-      rgba: 4294937932
+      rgba: 4294960767
     rocketEnemy:
       serializedVersion: 2
       rgba: 4284370431

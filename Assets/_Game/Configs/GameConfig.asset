@@ -101,45 +101,57 @@ MonoBehaviour:
   waterLevel: 0
   levelBottom: -40
   terrainProfile:
-  - {x: -34, y: 1.6}
-  - {x: -26, y: 1.8}
-  - {x: -18, y: 1.8}
-  - {x: -14, y: 0.2}
-  - {x: -11, y: 0.2}
-  - {x: -9.5, y: 1.2}
-  - {x: -8, y: 3.4}
-  - {x: -6.2, y: 6.6}
-  - {x: -4.6, y: 9.6}
-  - {x: -3.2, y: 11.4}
-  - {x: -1.4, y: 11.8}
-  - {x: -0.7, y: 11.6}
-  - {x: -0.7, y: -3}
-  - {x: 0.7, y: -3}
-  - {x: 0.7, y: 11.6}
-  - {x: 1.4, y: 11.8}
-  - {x: 3.2, y: 11.4}
-  - {x: 4.6, y: 9.6}
-  - {x: 6.2, y: 6.6}
-  - {x: 8, y: 3.4}
-  - {x: 9.5, y: 1.2}
-  - {x: 11, y: 0.2}
-  - {x: 14, y: 0.2}
-  - {x: 18, y: 1.8}
-  - {x: 26, y: 1.8}
-  - {x: 34, y: 1.6}
+  - {x: -62, y: 1.2}
+  - {x: -34, y: 1.4}
+  - {x: -28, y: 1.8}
+  - {x: -17, y: 1.8}
+  - {x: -13.6, y: 1}
+  - {x: -11, y: 0.7}
+  - {x: -9, y: 1}
+  - {x: -7.5, y: 1.9}
+  - {x: -6.1, y: 3.4}
+  - {x: -5, y: 5.2}
+  - {x: -4, y: 7.2}
+  - {x: -3.1, y: 9}
+  - {x: -2.2, y: 10.5}
+  - {x: -1.5, y: 11.35}
+  - {x: -1.05, y: 11.6}
+  - {x: -0.82, y: 11.2}
+  - {x: -0.72, y: 9.6}
+  - {x: -0.66, y: 4}
+  - {x: -0.62, y: -3}
+  - {x: 0.62, y: -3}
+  - {x: 0.66, y: 4}
+  - {x: 0.72, y: 9.6}
+  - {x: 0.82, y: 11.2}
+  - {x: 1.05, y: 11.6}
+  - {x: 1.5, y: 11.35}
+  - {x: 2.2, y: 10.5}
+  - {x: 3.1, y: 9}
+  - {x: 4, y: 7.2}
+  - {x: 5, y: 5.2}
+  - {x: 6.1, y: 3.4}
+  - {x: 7.5, y: 1.9}
+  - {x: 9, y: 1}
+  - {x: 11, y: 0.7}
+  - {x: 13.6, y: 1}
+  - {x: 17, y: 1.8}
+  - {x: 28, y: 1.8}
+  - {x: 34, y: 1.4}
+  - {x: 62, y: 1.2}
   groundRimThickness: 0.4
   playerCastleX: -22
   enemyCastleX: 23
-  trackHeight: 0.6
-  platformHeight: 0.5
+  trackHeight: 1.2
+  platformHeight: 0.8
   cameraSmoothTime: 0.45
-  castleFrameWidth: 16
-  centerFrameWidth: 38
-  targetFrameWidth: 24
-  minFrameHeight: 16
+  castleFrameWidth: 14
+  centerFrameWidth: 18
+  targetFrameWidth: 16
+  minFrameHeight: 22
   castleLeadX: 2
-  castleFocusLiftY: 2
-  centerFocus: {x: 0, y: 6}
+  castleFocusLiftY: 0.5
+  centerFocus: {x: 0, y: 9}
   flightCenterFraction: 0.5
   rainEnabled: 0
   lightBeamEnabled: 0

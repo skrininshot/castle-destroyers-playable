@@ -85,8 +85,7 @@ namespace CastleDestroyers.DebugTools
             float facing = side == Side.Player ? 1f : -1f;
             float muzzleX = (side == Side.Player ? level.PlayerFocusX : level.EnemyFocusX) + facing * MuzzleOffsetX;
             float muzzleY = (side == Side.Player ? level.PlayerFocusY : level.EnemyFocusY) + MuzzleOffsetY;
-            Color32 nose = side == Side.Player ? palette.rocketPlayer : palette.rocketEnemy;
-            Color32 tail = palette.rocketTail;
+            Color32 color = side == Side.Player ? palette.rocketPlayer : palette.rocketEnemy;
 
             int spawned = 0;
             for (int n = 0; n < count; n++)
@@ -106,10 +105,10 @@ namespace CastleDestroyers.DebugTools
                 age[i] = rng.Range(0f, config.stressRocketLifetime * 0.1f);
 
                 int v = i * VerticesPerQuad;
-                colors[v] = tail;
-                colors[v + 1] = nose;
-                colors[v + 2] = tail;
-                colors[v + 3] = nose;
+                colors[v] = color;
+                colors[v + 1] = color;
+                colors[v + 2] = color;
+                colors[v + 3] = color;
                 spawned++;
             }
             if (spawned > 0)

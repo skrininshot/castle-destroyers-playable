@@ -10,6 +10,12 @@ namespace CastleDestroyers.Level
     {
         private const int InitialVertices = 512;
         private const int GrowFactor = 2;
+        private const int CircleSegments = 40;
+        private const int ArchSegments = 10;
+        private const int CornerSegments = 5;
+        private const float FullTurn = Mathf.PI * 2f;
+        private const float HalfTurn = Mathf.PI;
+        private const float QuarterTurn = Mathf.PI * 0.5f;
 
         private Vector3[] vertices = new Vector3[InitialVertices];
         private Color32[] colors = new Color32[InitialVertices];
@@ -61,6 +67,59 @@ namespace CastleDestroyers.Level
             AddQuad(minX, minY, maxX, minY, maxX, maxY, minX, maxY, color);
         }
 
+        public void AddCircle(float cx, float cy, float radius, Color32 color)
+        {
+            AddPie(cx, cy, radius, radius, 0f, FullTurn, CircleSegments, color);
+        }
+
+        public void AddEllipse(float cx, float cy, float radiusX, float radiusY, Color32 color)
+        {
+            AddPie(cx, cy, radiusX, radiusY, 0f, FullTurn, CircleSegments, color);
+        }
+
+        /// <summary>Прямоугольник со скруглёнными углами; радиус ограничен половиной меньшей стороны.</summary>
+        public void AddRoundedRect(float minX, float minY, float maxX, float maxY, float radius, Color32 color)
+        {
+            float halfSide = Mathf.Min(maxX - minX, maxY - minY) * 0.5f;
+            float r = Mathf.Min(radius, halfSide);
+            AddRect(minX + r, minY, maxX - r, maxY, color);
+            AddRect(minX, minY + r, minX + r, maxY - r, color);
+            AddRect(maxX - r, minY + r, maxX, maxY - r, color);
+            AddPie(maxX - r, maxY - r, r, r, 0f, QuarterTurn, CornerSegments, color);
+            AddPie(minX + r, maxY - r, r, r, QuarterTurn, QuarterTurn, CornerSegments, color);
+            AddPie(minX + r, minY + r, r, r, HalfTurn, QuarterTurn, CornerSegments, color);
+            AddPie(maxX - r, minY + r, r, r, HalfTurn + QuarterTurn, QuarterTurn, CornerSegments, color);
+        }
+
+        /// <summary>Арка: прямоугольник с полукруглым верхом во всю ширину (окна, ворота).</summary>
+        public void AddArch(float minX, float minY, float maxX, float maxY, Color32 color)
+        {
+            float r = (maxX - minX) * 0.5f;
+            float shoulder = maxY - r;
+            AddRect(minX, minY, maxX, shoulder, color);
+            AddPie(minX + r, shoulder, r, r, 0f, HalfTurn, ArchSegments, color);
+        }
+
+        /// <summary>Веер от центра: сектор эллипса от startAngle на sweep радиан.</summary>
+        private void AddPie(float cx, float cy, float radiusX, float radiusY, float startAngle, float sweep, int segments, Color32 color)
+        {
+            EnsureCapacity(segments + 2, segments * 3);
+            int center = vertexCount;
+            SetVertex(center, cx, cy, color);
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = startAngle + sweep * i / segments;
+                SetVertex(center + 1 + i, cx + Mathf.Cos(angle) * radiusX, cy + Mathf.Sin(angle) * radiusY, color);
+            }
+            for (int i = 0; i < segments; i++)
+            {
+                triangles[triangleIndexCount++] = center;
+                triangles[triangleIndexCount++] = center + 1 + i;
+                triangles[triangleIndexCount++] = center + 2 + i;
+            }
+            vertexCount += segments + 2;
+        }
+
         /// <summary>Переносит накопленное в меш. Лишние элементы буферов отсекаются.</summary>
         public void Apply(Mesh mesh)
         {
@@ -85,15 +144,24 @@ namespace CastleDestroyers.Level
 
         private void EnsureCapacity(int addVertices, int addIndices)
         {
-            if (vertexCount + addVertices > vertices.Length)
+            int size = vertices.Length;
+            while (vertexCount + addVertices > size)
             {
-                int size = vertices.Length * GrowFactor;
+                size *= GrowFactor;
+            }
+            if (size != vertices.Length)
+            {
                 System.Array.Resize(ref vertices, size);
                 System.Array.Resize(ref colors, size);
             }
-            if (triangleIndexCount + addIndices > triangles.Length)
+            int indexSize = triangles.Length;
+            while (triangleIndexCount + addIndices > indexSize)
             {
-                System.Array.Resize(ref triangles, triangles.Length * GrowFactor);
+                indexSize *= GrowFactor;
+            }
+            if (indexSize != triangles.Length)
+            {
+                System.Array.Resize(ref triangles, indexSize);
             }
         }
     }
