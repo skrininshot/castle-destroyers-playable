@@ -1,0 +1,148 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83b16eb0bbf25ce40b10e74277f22329, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: 
+  theme: {fileID: 11400000, guid: e6f6bb77344a6794e8d147ff38cd6ecd, type: 2}
+  rngSeed: 12345
+  maxPlayerTurns: 3
+  maxSessionSeconds: 75
+  maxDeltaTime: 0.05
+  directorEnabled: 1
+  bonusPickEnabled: 0
+  turnHints:
+  - label: x20 lob
+    highlightBoosterMultiplier: 20
+    showHand: 1
+    handAngleDeg: 55
+    handPower01: 0.75
+  - label: x50 straight shot
+    highlightBoosterMultiplier: 50
+    showHand: 1
+    handAngleDeg: 20
+    handPower01: 0.9
+  - label: free shot
+    highlightBoosterMultiplier: 0
+    showHand: 0
+    handAngleDeg: 40
+    handPower01: 0.85
+  bootDuration: 0.2
+  introDuration: 1.5
+  playerAimDuration: 2.5
+  aiAimDuration: 1.5
+  fireDuration: 0.6
+  flightDuration: 3
+  resolveDuration: 0.7
+  victoryDuration: 2.5
+  victoryLoserHold: 1
+  defeatDuration: 2
+  stubEnemyLossPerPlayerTurn: 4
+  stubPlayerLossPerAiTurn: 1
+  aimMinDeg: 5
+  aimMaxDeg: 85
+  aimMaxDragScreenFraction: 0.35
+  aimDeadZone: 0.03
+  aimTurnSpeed: 240
+  aimPreviewFraction: 0.3
+  launchSpeedMin: 12
+  launchSpeedMax: 32
+  gravity: 14
+  playerCannons: 3
+  enemyCannons: 12
+  rocketsPerCannon: 10
+  rocketInterval: 0.06
+  cannonHitRadius: 0.5
+  maxActiveRockets: 600
+  stressRocketCount: 1000
+  waveAmplitude: 0.35
+  waveFrequency: 9
+  wavePhaseStep: 0.5
+  rocketLength: 0.8
+  rocketWidth: 0.25
+  stressRocketLifetime: 4
+  boosters:
+  - multiplier: 20
+    position: {x: 0, y: 13.4}
+  - multiplier: 10
+    position: {x: 0, y: 8.5}
+  - multiplier: 50
+    position: {x: 0, y: 1.6}
+  boosterWidth: 1
+  boosterHeight: 2
+  boosterSpreadDeg: 12
+  boosterSpawnStagger: 0.04
+  boosterPulse: 0.03
+  maskTexelsPerMeter: 16
+  maskTileSize: 128
+  maxTileUploadsPerFrame: 4
+  craterRadiusGround: 1.2
+  rimWidth: 0.3
+  rimScallop: 0
+  connectivityInterval: 0.1
+  connectivityCellTexels: 4
+  minChunkCells: 6
+  explosionPoolSize: 128
+  explosionMergeRadius: 0.5
+  shakeMax: 0.6
+  shakeDecay: 4
+  smokeCapacity: 2000
+  smokeLodRocketThreshold: 200
+  swayMaxDeg: 3
+  levelWidth: 60
+  waterLevel: 0
+  levelBottom: -40
+  terrainProfile:
+  - {x: -34, y: 1.6}
+  - {x: -26, y: 1.8}
+  - {x: -18, y: 1.8}
+  - {x: -14, y: 0.2}
+  - {x: -11, y: 0.2}
+  - {x: -9.5, y: 1.2}
+  - {x: -8, y: 3.4}
+  - {x: -6.2, y: 6.6}
+  - {x: -4.6, y: 9.6}
+  - {x: -3.2, y: 11.4}
+  - {x: -1.4, y: 11.8}
+  - {x: -0.7, y: 11.6}
+  - {x: -0.7, y: -3}
+  - {x: 0.7, y: -3}
+  - {x: 0.7, y: 11.6}
+  - {x: 1.4, y: 11.8}
+  - {x: 3.2, y: 11.4}
+  - {x: 4.6, y: 9.6}
+  - {x: 6.2, y: 6.6}
+  - {x: 8, y: 3.4}
+  - {x: 9.5, y: 1.2}
+  - {x: 11, y: 0.2}
+  - {x: 14, y: 0.2}
+  - {x: 18, y: 1.8}
+  - {x: 26, y: 1.8}
+  - {x: 34, y: 1.6}
+  groundRimThickness: 0.4
+  playerCastleX: -22
+  enemyCastleX: 23
+  trackHeight: 0.6
+  platformHeight: 0.5
+  cameraSmoothTime: 0.45
+  castleFrameWidth: 16
+  centerFrameWidth: 38
+  targetFrameWidth: 24
+  minFrameHeight: 16
+  castleLeadX: 2
+  castleFocusLiftY: 2
+  centerFocus: {x: 0, y: 6}
+  flightCenterFraction: 0.5
+  rainEnabled: 0
+  lightBeamEnabled: 0
+  showPersistentCta: 0
+  debugSlowScale: 0.25
+  debugHudRefresh: 0.25

@@ -1,0 +1,179 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91fc9d682441cdd49830e557d2693630, type: 3}
+  m_Name: ThemePalette
+  m_EditorClassIdentifier: 
+  preset: 0
+  night:
+    sky:
+      serializedVersion: 2
+      rgba: 4290932572
+    backgroundFar:
+      serializedVersion: 2
+      rgba: 4289616972
+    backgroundMid:
+      serializedVersion: 2
+      rgba: 4287248951
+    backgroundNear:
+      serializedVersion: 2
+      rgba: 4284227358
+    ground:
+      serializedVersion: 2
+      rgba: 4282342943
+    groundRim:
+      serializedVersion: 2
+      rgba: 4286242879
+    water:
+      serializedVersion: 2
+      rgba: 4289242922
+    waterRim:
+      serializedVersion: 2
+      rgba: 4293193100
+    castleStone:
+      serializedVersion: 2
+      rgba: 4293317591
+    castleStoneShade:
+      serializedVersion: 2
+      rgba: 4291077289
+    roofPlayer:
+      serializedVersion: 2
+      rgba: 4292921148
+    roofEnemy:
+      serializedVersion: 2
+      rgba: 4283579362
+    cannonPlayer:
+      serializedVersion: 2
+      rgba: 4293557038
+    cannonEnemy:
+      serializedVersion: 2
+      rgba: 4281280216
+    platform:
+      serializedVersion: 2
+      rgba: 4282146443
+    track:
+      serializedVersion: 2
+      rgba: 4282394155
+    booster10:
+      serializedVersion: 2
+      rgba: 4294345276
+    booster20:
+      serializedVersion: 2
+      rgba: 4281250047
+    booster50:
+      serializedVersion: 2
+      rgba: 4285714495
+    rocketPlayer:
+      serializedVersion: 2
+      rgba: 4294937932
+    rocketEnemy:
+      serializedVersion: 2
+      rgba: 4284370431
+    rocketTail:
+      serializedVersion: 2
+      rgba: 4281250559
+    smoke:
+      serializedVersion: 2
+      rgba: 4292918457
+    hudPanel:
+      serializedVersion: 2
+      rgba: 4284687435
+    hudHealth:
+      serializedVersion: 2
+      rgba: 4284101616
+    hudGold:
+      serializedVersion: 2
+      rgba: 4282631413
+    hudText:
+      serializedVersion: 2
+      rgba: 4294967295
+  sunset:
+    sky:
+      serializedVersion: 2
+      rgba: 4289250559
+    backgroundFar:
+      serializedVersion: 2
+      rgba: 4288128511
+    backgroundMid:
+      serializedVersion: 2
+      rgba: 4286542568
+    backgroundNear:
+      serializedVersion: 2
+      rgba: 4284365475
+    ground:
+      serializedVersion: 2
+      rgba: 4281543587
+    groundRim:
+      serializedVersion: 2
+      rgba: 4283919359
+    water:
+      serializedVersion: 2
+      rgba: 4292374574
+    waterRim:
+      serializedVersion: 2
+      rgba: 4294952083
+    castleStone:
+      serializedVersion: 2
+      rgba: 4293317591
+    castleStoneShade:
+      serializedVersion: 2
+      rgba: 4291077289
+    roofPlayer:
+      serializedVersion: 2
+      rgba: 4293437500
+    roofEnemy:
+      serializedVersion: 2
+      rgba: 4281998222
+    cannonPlayer:
+      serializedVersion: 2
+      rgba: 4293557038
+    cannonEnemy:
+      serializedVersion: 2
+      rgba: 4281280216
+    platform:
+      serializedVersion: 2
+      rgba: 4280958827
+    track:
+      serializedVersion: 2
+      rgba: 4282394155
+    booster10:
+      serializedVersion: 2
+      rgba: 4294345276
+    booster20:
+      serializedVersion: 2
+      rgba: 4281250047
+    booster50:
+      serializedVersion: 2
+      rgba: 4285714495
+    rocketPlayer:
+      serializedVersion: 2
+      rgba: 4294937932
+    rocketEnemy:
+      serializedVersion: 2
+      rgba: 4284370431
+    rocketTail:
+      serializedVersion: 2
+      rgba: 4281250559
+    smoke:
+      serializedVersion: 2
+      rgba: 4290826485
+    hudPanel:
+      serializedVersion: 2
+      rgba: 4284687435
+    hudHealth:
+      serializedVersion: 2
+      rgba: 4284101616
+    hudGold:
+      serializedVersion: 2
+      rgba: 4282631413
+    hudText:
+      serializedVersion: 2
+      rgba: 4294967295

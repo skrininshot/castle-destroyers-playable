@@ -1,0 +1,155 @@
+#if GAME_DEBUG
+using System.Text;
+using CastleDestroyers.Core;
+using CastleDestroyers.Flow;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace CastleDestroyers.DebugTools
+{
+    /// <summary>
+    /// Debug-оверлей: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
+    /// 1000 ракет, смена темы, рестарт). Целиком вырезается из сборки без GAME_DEBUG.
+    /// </summary>
+    public sealed class DebugOverlay : MonoBehaviour, ITickable
+    {
+        private const int HudTextCapacity = 384;
+        private const float PortraitMatch = 0f;
+        private const float LandscapeMatch = 1f;
+
+        public CanvasScaler canvasScaler;
+        public Text statsText;
+        public Button nextStateButton;
+        public Button slowButton;
+        public Button rocketsButton;
+        public Button themeButton;
+        public Button restartButton;
+
+        private GameBootstrap game;
+        private StringBuilder text;
+        private int screenWidth;
+        private int screenHeight;
+        private int windowFrames;
+        private float windowTime;
+        private float windowMaxDelta;
+        private bool slow;
+
+        public void Init(GameBootstrap bootstrap)
+        {
+            game = bootstrap;
+            text = new StringBuilder(HudTextCapacity);
+            nextStateButton.onClick.AddListener(OnNextState);
+            slowButton.onClick.AddListener(OnToggleSlow);
+            rocketsButton.onClick.AddListener(OnSpawnRockets);
+            themeButton.onClick.AddListener(OnToggleTheme);
+            restartButton.onClick.AddListener(OnRestart);
+        }
+
+        public void Tick(float dt)
+        {
+            float realDelta = Time.unscaledDeltaTime;
+            windowFrames++;
+            windowTime += realDelta;
+            if (realDelta > windowMaxDelta)
+            {
+                windowMaxDelta = realDelta;
+            }
+            ApplyLayoutIfResized();
+            if (windowTime >= game.config.debugHudRefresh)
+            {
+                Refresh();
+            }
+        }
+
+        /// <summary>Немедленно обновляет текст (для editor-захвата, где нет реального времени кадра).</summary>
+        public void ForceRefresh()
+        {
+            if (windowFrames == 0)
+            {
+                windowFrames = 1;
+                windowTime = 1f / 60f;
+            }
+            Refresh();
+        }
+
+        private void ApplyLayoutIfResized()
+        {
+            if (Screen.width == screenWidth && Screen.height == screenHeight)
+            {
+                return;
+            }
+            screenWidth = Screen.width;
+            screenHeight = Screen.height;
+            canvasScaler.matchWidthOrHeight = screenWidth < screenHeight ? PortraitMatch : LandscapeMatch;
+        }
+
+        private void Refresh()
+        {
+            GameConfig config = game.config;
+            SessionFlow flow = game.Flow;
+            MatchState match = game.Match;
+            float fps = windowFrames / windowTime;
+            float minFps = windowMaxDelta > 0f ? 1f / windowMaxDelta : 0f;
+
+            text.Length = 0;
+            text.Append("FPS ").Append(Mathf.RoundToInt(fps));
+            text.Append(" min ").Append(Mathf.RoundToInt(minFps));
+            text.Append("  scale ").Append(game.Loop.TimeScale.ToString("0.00")).Append('\n');
+
+            text.Append("state ").Append(flow.State.ToString());
+            text.Append(" (").Append(flow.ActiveSide.ToString()).Append(')');
+            text.Append("  t ").Append(flow.StateTime.ToString("0.0"));
+            text.Append('/').Append(Mathf.Max(0f, flow.Duration(flow.State, flow.ActiveSide)).ToString("0.0")).Append('\n');
+
+            text.Append("turn ").Append(flow.PlayerTurn).Append('/').Append(config.maxPlayerTurns);
+            TurnHint hint = flow.CurrentHint;
+            if (hint != null && flow.PlayerTurn > 0)
+            {
+                text.Append("  hint: ").Append(hint.label);
+            }
+            text.Append('\n');
+
+            text.Append("cannons P ").Append(match.PlayerAlive).Append('/').Append(match.PlayerStart);
+            text.Append("  E ").Append(match.EnemyAlive).Append('/').Append(match.EnemyStart).Append('\n');
+
+            text.Append("session ").Append(flow.SessionTime.ToString("0.0")).Append('/').Append(config.maxSessionSeconds.ToString("0"));
+            text.Append("  end ").Append(flow.EndReason.ToString()).Append('\n');
+
+            text.Append("rockets ").Append(game.Stress.ActiveCount);
+            text.Append("  theme ").Append(game.ActivePreset.ToString());
+            text.Append("  ").Append(screenWidth).Append('x').Append(screenHeight);
+            statsText.text = text.ToString();
+
+            windowFrames = 0;
+            windowTime = 0f;
+            windowMaxDelta = 0f;
+        }
+
+        private void OnNextState()
+        {
+            game.Flow.Skip();
+        }
+
+        private void OnToggleSlow()
+        {
+            slow = !slow;
+            game.Loop.TimeScale = slow ? game.config.debugSlowScale : 1f;
+        }
+
+        private void OnSpawnRockets()
+        {
+            game.Stress.Spawn(game.config.stressRocketCount, game.Flow.ActiveSide, game.Palette);
+        }
+
+        private void OnToggleTheme()
+        {
+            game.SetPreset(game.ActivePreset == ThemePreset.Night ? ThemePreset.Sunset : ThemePreset.Night);
+        }
+
+        private void OnRestart()
+        {
+            game.Restart();
+        }
+    }
+}
+#endif
