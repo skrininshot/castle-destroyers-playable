@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Растеризация SVG-источников в PNG. Пока одна цель: маска ландшафта уровня 1 (ТЗ §3.8).
+"""Растеризация SVG-источников в PNG: маска ландшафта уровня 1 (ТЗ §3.8) и ракета (ТЗ §3.4).
 
 Использование: python Tools/rasterize_svg.py
 
 Каналы Level1_TerrainMask.png, значения — покрытие текселя 0..255:
   R — материал, G — цветная кромка земли, B — «закопанные» декоры.
 Нижняя строка картинки — низ уровня. Изменение PNG запекает данные в Unity (TerrainMaskBaker).
+
+Каналы Rocket.png: R — силуэт, G — детали в цвет стороны, B — теневая полоса. Цвета задаёт палитра.
 
 Разбирается подмножество SVG: <path> с командами M, L, C, Z в абсолютных координатах и <ellipse>.
 Этап 7 расширит скрипт на остальной арт.
@@ -21,6 +23,8 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "Art" / "Source" / "Level1_TerrainMask.svg"
 OUTPUT = ROOT / "Assets" / "_Game" / "Art" / "Level" / "Level1_TerrainMask.png"
+ROCKET_SOURCE = ROOT / "Art" / "Source" / "Rocket.svg"
+ROCKET_OUTPUT = ROOT / "Assets" / "_Game" / "Art" / "Level" / "Rocket.png"
 SVG_NS = "{http://www.w3.org/2000/svg}"
 
 SUPERSAMPLE = 6
@@ -116,7 +120,29 @@ def downsample(canvas, size):
     return numpy.asarray(canvas.resize(size, Image.Resampling.BOX), dtype=numpy.uint8)
 
 
+def rasterize_rocket():
+    root = ElementTree.parse(ROCKET_SOURCE).getroot()
+    size = (int(root.get("width")), int(root.get("height")))
+    canvas_size = (size[0] * SUPERSAMPLE, size[1] * SUPERSAMPLE)
+    layers = {}
+    for name in ("body", "accent", "shade"):
+        canvas = Image.new("L", canvas_size, 0)
+        draw = ImageDraw.Draw(canvas)
+        data = root.find(f"{SVG_NS}path[@id='{name}']").get("d")
+        for contour in data.split("Z"):
+            if contour.strip():
+                draw.polygon(scaled(flatten_path(contour)[0]), fill=255)
+        layers[name] = canvas
+    channels = numpy.dstack((
+        downsample(layers["body"], size),
+        downsample(clipped(layers["accent"], layers["body"]), size),
+        downsample(clipped(layers["shade"], layers["body"]), size)))
+    Image.fromarray(channels, "RGB").save(ROCKET_OUTPUT, optimize=True)
+    print(f"{ROCKET_OUTPUT.relative_to(ROOT)}: {size[0]}x{size[1]}, {ROCKET_OUTPUT.stat().st_size} bytes")
+
+
 def main():
+    rasterize_rocket()
     root = ElementTree.parse(SOURCE).getroot()
     width = int(root.get("width"))
     height = int(root.get("height"))

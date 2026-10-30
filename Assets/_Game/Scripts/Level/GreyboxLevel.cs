@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Greybox уровня 1 (ТЗ §3.8, §3.10): статичные меши вокруг земли. BackMesh — фон, рисуется до неё;
+    /// Greybox уровня 1 (ТЗ §3.8, §3.10): статичные меши вокруг земли. BackLayers — слои фона для параллакса, рисуются до неё;
     /// FrontMesh — вода, замки и бустеры, рисуется после неё и обломков. Порядок внутри меша = порядок добавления.
     /// Заменяется масками и артом на этапах 5 и 7; геометрия мест (замки, бустеры) остаётся.
     /// </summary>
@@ -13,6 +13,7 @@ namespace CastleDestroyers.Level
     {
         // Размеры декора, метры. Живут только до арт-пасса, поэтому не в GameConfig.
         private const int GroundSamples = 5;
+        public const int BackLayerCount = 5;
         private const uint DecorSeed = 7321u;
 
         private const int StarCount = 80;
@@ -55,7 +56,8 @@ namespace CastleDestroyers.Level
         private GameConfig config;
         private DestructibleMask terrain;
 
-        public Mesh BackMesh { get; private set; }
+        /// <summary>Слои фона от дальнего к ближнему: звёзды, луна, горы, лес, кусты.</summary>
+        public Mesh[] BackLayers { get; private set; }
         public Mesh FrontMesh { get; private set; }
         public float PlayerFocusX { get; private set; }
         public float PlayerFocusY { get; private set; }
@@ -73,8 +75,12 @@ namespace CastleDestroyers.Level
         {
             config = gameConfig;
             terrain = terrainMask;
-            BackMesh = new Mesh();
-            BackMesh.name = "LevelBack";
+            BackLayers = new Mesh[BackLayerCount];
+            for (int i = 0; i < BackLayerCount; i++)
+            {
+                BackLayers[i] = new Mesh();
+                BackLayers[i].name = "LevelBack";
+            }
             FrontMesh = new Mesh();
             FrontMesh.name = "LevelFront";
 
@@ -107,9 +113,16 @@ namespace CastleDestroyers.Level
         {
             float extent = config.levelWidth;
             decorRng.Reset(DecorSeed);
-            builder.Clear();
-            AddBackdrop(palette, extent);
-            builder.Apply(BackMesh);
+            AddStars(palette, extent);
+            ApplyLayer(0);
+            AddMoon(palette);
+            ApplyLayer(1);
+            AddFarMountains(palette, extent);
+            ApplyLayer(2);
+            AddMidForest(palette, extent);
+            ApplyLayer(3);
+            AddNearBushes(palette, extent);
+            ApplyLayer(4);
 
             builder.Clear();
             AddWater(palette, extent);
@@ -144,13 +157,10 @@ namespace CastleDestroyers.Level
             }
         }
 
-        private void AddBackdrop(PaletteSet palette, float extent)
+        private void ApplyLayer(int layer)
         {
-            AddStars(palette, extent);
-            AddMoon(palette);
-            AddFarMountains(palette, extent);
-            AddMidForest(palette, extent);
-            AddNearBushes(palette, extent);
+            builder.Apply(BackLayers[layer]);
+            builder.Clear();
         }
 
         private void AddStars(PaletteSet palette, float extent)
@@ -178,6 +188,8 @@ namespace CastleDestroyers.Level
         /// <summary>Дальние горы: треугольники со скруглённой вершиной.</summary>
         private void AddFarMountains(PaletteSet palette, float extent)
         {
+            // Слои двигаются относительно воды, поэтому их низ уходит глубоко под неё.
+            builder.AddRect(-extent, config.levelBottom, extent, config.waterLevel, palette.backgroundFar);
             int count = (int)(extent * 2f / FarStep) + 2;
             for (int i = 0; i < count; i++)
             {
@@ -202,7 +214,7 @@ namespace CastleDestroyers.Level
         private void AddMidForest(PaletteSet palette, float extent)
         {
             float baseY = config.waterLevel;
-            builder.AddRect(-extent, baseY, extent, baseY + MidBandHeight, palette.backgroundMid);
+            builder.AddRect(-extent, config.levelBottom, extent, baseY + MidBandHeight, palette.backgroundMid);
             int count = (int)(extent * 2f / MidStep) + 1;
             for (int i = 0; i < count; i++)
             {
@@ -223,7 +235,7 @@ namespace CastleDestroyers.Level
                 float cx = -extent + i * NearStep + decorRng.Range(-0.6f, 0.6f);
                 builder.AddCircle(cx, baseY + decorRng.Range(NearMinY, NearMaxY), decorRng.Range(NearMinRadius, NearMaxRadius), palette.backgroundNear);
             }
-            builder.AddRect(-extent, baseY, extent, baseY + NearMinY, palette.backgroundNear);
+            builder.AddRect(-extent, config.levelBottom, extent, baseY + NearMinY, palette.backgroundNear);
         }
 
         /// <summary>Вода непрозрачная: основной тон и блики-пилюли. Волнистую кромку рисует WaterStrip (ТЗ §3.8).</summary>

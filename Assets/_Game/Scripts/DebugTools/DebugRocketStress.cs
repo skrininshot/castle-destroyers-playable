@@ -8,21 +8,17 @@ namespace CastleDestroyers.DebugTools
 {
     /// <summary>
     /// Чит «спавн 1000 ракет»: SoA-квады в одном динамическом меше, баллистика + синусоида, слоты через IndexPool.
+    /// Ракеты вылетают из пушек по очереди и идут по одной дуге: случайности нет (D-031).
     /// Только для нагрузочной проверки каркаса. Настоящий RocketSystem появится на этапе 3.
     /// </summary>
     public sealed class DebugRocketStress : ITickable
     {
         private const int VerticesPerQuad = 4;
         private const int IndicesPerQuad = 6;
-        private const float MinAngleDeg = 35f;
-        private const float MaxAngleDeg = 65f;
-        private const float MuzzleOffsetX = 3f;
-        private const float MuzzleOffsetY = 3f;
         private const float Epsilon = 0.0001f;
         private const float BoundsPadding = 4f;
 
         private GameConfig config;
-        private Rng rng;
         private GreyboxLevel level;
         private IndexPool pool;
 
@@ -31,6 +27,7 @@ namespace CastleDestroyers.DebugTools
         private float[] velX;
         private float[] velY;
         private float[] phase;
+        private float[] facing;
         private float[] age;
         private Vector3[] vertices;
         private Color32[] colors;
@@ -39,11 +36,10 @@ namespace CastleDestroyers.DebugTools
         public Mesh Mesh { get; private set; }
         public int ActiveCount { get { return pool.ActiveCount; } }
 
-        public void Init(GameConfig gameConfig, GreyboxLevel greyboxLevel, Rng random)
+        public void Init(GameConfig gameConfig, GreyboxLevel greyboxLevel)
         {
             config = gameConfig;
             level = greyboxLevel;
-            rng = random;
 
             int capacity = config.stressRocketCount;
             pool = new IndexPool(capacity);
@@ -52,14 +48,20 @@ namespace CastleDestroyers.DebugTools
             velX = new float[capacity];
             velY = new float[capacity];
             phase = new float[capacity];
+            facing = new float[capacity];
             age = new float[capacity];
             vertices = new Vector3[capacity * VerticesPerQuad];
             colors = new Color32[capacity * VerticesPerQuad];
 
+            Vector2[] uv = new Vector2[vertices.Length];
             int[] triangles = new int[capacity * IndicesPerQuad];
             for (int i = 0; i < capacity; i++)
             {
                 int v = i * VerticesPerQuad;
+                uv[v + 1].x = 1f;
+                uv[v + 2].y = 1f;
+                uv[v + 3].x = 1f;
+                uv[v + 3].y = 1f;
                 int t = i * IndicesPerQuad;
                 triangles[t] = v;
                 triangles[t + 1] = v + 2;
@@ -73,19 +75,26 @@ namespace CastleDestroyers.DebugTools
             Mesh.name = "DebugRocketStress";
             Mesh.MarkDynamic();
             Mesh.vertices = vertices;
+            Mesh.uv = uv;
             Mesh.colors32 = colors;
             Mesh.triangles = triangles;
             float half = config.levelWidth + BoundsPadding;
             Mesh.bounds = new Bounds(Vector3.zero, new Vector3(half * 2f, half * 2f, 1f));
         }
 
-        /// <summary>Выпускает до count ракет из замка стороны; сверх лимита буфера не создаёт.</summary>
-        public int Spawn(int count, Side side, PaletteSet palette)
+        /// <summary>Выпускает до count ракет из живых пушек стороны по очереди; сверх лимита буфера не создаёт.</summary>
+        public int Spawn(int count, Side side, PaletteSet palette, int aliveCannons)
         {
-            float facing = side == Side.Player ? 1f : -1f;
-            float muzzleX = (side == Side.Player ? level.PlayerFocusX : level.EnemyFocusX) + facing * MuzzleOffsetX;
-            float muzzleY = (side == Side.Player ? level.PlayerFocusY : level.EnemyFocusY) + MuzzleOffsetY;
+            float direction = side == Side.Player ? 1f : -1f;
+            float[] mountX = side == Side.Player ? level.PlayerMountX : level.EnemyMountX;
+            float[] mountY = side == Side.Player ? level.PlayerMountY : level.EnemyMountY;
+            int mounts = aliveCannons < 1 ? 1 : aliveCannons;
             Color32 color = side == Side.Player ? palette.rocketPlayer : palette.rocketEnemy;
+            float angle = config.stressRocketAngleDeg * Mathf.Deg2Rad;
+            float speedX = direction * config.stressRocketSpeed * Mathf.Cos(angle);
+            float speedY = config.stressRocketSpeed * Mathf.Sin(angle);
+            // Как настоящий залп: каждая пушка стреляет с интервалом rocketInterval, пушки стреляют вперемешку.
+            float interval = config.rocketInterval / mounts;
 
             int spawned = 0;
             for (int n = 0; n < count; n++)
@@ -95,14 +104,15 @@ namespace CastleDestroyers.DebugTools
                 {
                     break;
                 }
-                float angle = rng.Range(MinAngleDeg, MaxAngleDeg) * Mathf.Deg2Rad;
-                float speed = rng.Range(config.launchSpeedMin, config.launchSpeedMax);
-                originX[i] = muzzleX;
-                originY[i] = muzzleY;
-                velX[i] = facing * speed * Mathf.Cos(angle);
-                velY[i] = speed * Mathf.Sin(angle);
-                phase[i] = i * config.wavePhaseStep;
-                age[i] = rng.Range(0f, config.stressRocketLifetime * 0.1f);
+                int mount = n % mounts;
+                originX[i] = mountX[mount];
+                originY[i] = mountY[mount];
+                velX[i] = speedX;
+                velY[i] = speedY;
+                facing[i] = direction;
+                // Фаза своя у пушки, а не у ракеты: ракеты одной пушки проходят одну и ту же кривую.
+                phase[i] = mount * config.wavePhaseStep;
+                age[i] = -n * interval;
 
                 int v = i * VerticesPerQuad;
                 colors[v] = color;
@@ -129,7 +139,7 @@ namespace CastleDestroyers.DebugTools
                 }
             }
             pool.Clear();
-            dirty = true;
+            Mesh.vertices = vertices;
         }
 
         public void Tick(float dt)
@@ -155,6 +165,10 @@ namespace CastleDestroyers.DebugTools
                 }
                 float t = age[i] + dt;
                 age[i] = t;
+                if (t < 0f)
+                {
+                    continue;
+                }
 
                 float tangentX = velX[i];
                 float tangentY = velY[i] - gravity * t;
@@ -183,8 +197,9 @@ namespace CastleDestroyers.DebugTools
 
                 float forwardX = dirX * halfLength;
                 float forwardY = dirY * halfLength;
-                float sideX = -dirY * halfWidth;
-                float sideY = dirX * halfWidth;
+                // Верх картинки всегда смотрит вверх, поэтому у летящих влево ось инвертирована.
+                float sideX = -dirY * halfWidth * facing[i];
+                float sideY = dirX * halfWidth * facing[i];
 
                 int v = i * VerticesPerQuad;
                 verts[v].x = x - forwardX - sideX;

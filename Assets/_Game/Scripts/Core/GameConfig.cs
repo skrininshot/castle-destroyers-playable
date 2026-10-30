@@ -132,17 +132,23 @@ namespace CastleDestroyers.Core
         [Tooltip("Частота синусоиды, рад/с.")]
         public float waveFrequency = 9f;
         [Range(0f, 3f)]
-        [Tooltip("Сдвиг фазы между соседними ракетами, рад.")]
-        public float wavePhaseStep = 0.5f;
+        [Tooltip("Сдвиг фазы синусоиды между пушками, рад. 0 — все потоки идут одинаковой дугой (D-031).")]
+        public float wavePhaseStep;
         [Range(0.2f, 2f)]
         [Tooltip("Длина квада ракеты, метры.")]
-        public float rocketLength = 0.8f;
+        public float rocketLength = 1.1f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина квада ракеты, метры.")]
-        public float rocketWidth = 0.25f;
+        public float rocketWidth = 0.34f;
         [Range(1f, 10f)]
         [Tooltip("Время жизни ракеты в стресс-тесте, секунды.")]
         public float stressRocketLifetime = 4f;
+        [Range(5f, 85f)]
+        [Tooltip("Угол выстрела в стресс-тесте, градусы. Все ракеты летят по одной дуге.")]
+        public float stressRocketAngleDeg = 48f;
+        [Range(1f, 60f)]
+        [Tooltip("Скорость ракеты в стресс-тесте, м/с.")]
+        public float stressRocketSpeed = 27f;
 
         [Header("Бустеры (ТЗ §3.5)")]
         [Tooltip("Бустеры уровня: множитель и положение.")]
@@ -326,6 +332,10 @@ namespace CastleDestroyers.Core
         [Range(0.1f, 1.5f)]
         [Tooltip("Высота деревянной платформы, метры.")]
         public float platformHeight = 0.8f;
+
+        [Header("Фон (ТЗ §3.10)")]
+        [Tooltip("Параллакс слоёв от дальнего к ближнему: звёзды, луна, горы, лес, кусты. 0 — слой стоит на экране, 1 — движется с уровнем.")]
+        public float[] parallaxFactors = { 0f, 0.05f, 0.15f, 0.3f, 0.5f };
 
         [Header("Камера (ТЗ §3.9)")]
         [Range(0.1f, 2f)]

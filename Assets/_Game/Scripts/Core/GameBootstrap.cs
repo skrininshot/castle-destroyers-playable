@@ -17,9 +17,13 @@ namespace CastleDestroyers.Core
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
+        private static readonly int RocketBodyColor = Shader.PropertyToID("_BodyColor");
+        private static readonly int RocketShadeColor = Shader.PropertyToID("_ShadeColor");
+
         public GameConfig config;
         public Camera mainCamera;
-        public MeshFilter backFilter;
+        [Tooltip("Слои фона от дальнего к ближнему.")]
+        public MeshFilter[] backFilters;
         public MeshFilter decorFilter;
         public MeshFilter frontFilter;
         public MeshFilter waveFilter;
@@ -29,6 +33,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Родитель тайлов земли и обломков.")]
         public Transform terrainRoot;
         public Material terrainMaterial;
+        public Material rocketMaterial;
         [Tooltip("Порядок отрисовки тайлов земли.")]
         public int terrainSortingOrder;
         [Tooltip("Порядок отрисовки обломков: поверх земли, но под водой.")]
@@ -48,6 +53,7 @@ namespace CastleDestroyers.Core
         public FlatParticles Particles { get; private set; }
         public CannonMarkers Cannons { get; private set; }
         public CameraDirector CameraDirector { get; private set; }
+        public ParallaxBackground Parallax { get; private set; }
         public GameLoop Loop { get; private set; }
         public ThemePreset ActivePreset { get; private set; }
 #if GAME_DEBUG
@@ -93,7 +99,12 @@ namespace CastleDestroyers.Core
 
             Level = new GreyboxLevel();
             Level.Init(config, terrainMask);
-            backFilter.sharedMesh = Level.BackMesh;
+            Transform[] backLayers = new Transform[backFilters.Length];
+            for (int i = 0; i < backFilters.Length; i++)
+            {
+                backFilters[i].sharedMesh = Level.BackLayers[i];
+                backLayers[i] = backFilters[i].transform;
+            }
             frontFilter.sharedMesh = Level.FrontMesh;
 
             Particles = new FlatParticles();
@@ -123,23 +134,25 @@ namespace CastleDestroyers.Core
 
             CameraDirector = new CameraDirector();
             CameraDirector.Init(mainCamera, config, Level, Flow);
+            Parallax = new ParallaxBackground();
+            Parallax.Init(config, mainCamera, backLayers);
 
             ActivePreset = config.theme.preset;
 
 #if GAME_DEBUG
             Stress = new DebugRocketStress();
-            Stress.Init(config, Level, Rng);
+            Stress.Init(config, Level);
             stressFilter.sharedMesh = Stress.Mesh;
             Blaster = new DebugBlaster();
             Blaster.Init(config, mainCamera, Terrain);
             debugOverlay.Init(this);
-            ITickable[] systems = { Flow, CameraDirector, Blaster, Terrain, chunks, Decor, water, Particles, Cannons, Stress, debugOverlay };
+            ITickable[] systems = { Flow, CameraDirector, Parallax, Blaster, Terrain, chunks, Decor, water, Particles, Cannons, Stress, debugOverlay };
 #else
             if (debugRoot != null)
             {
                 Destroy(debugRoot);
             }
-            ITickable[] systems = { Flow, CameraDirector, Terrain, chunks, Decor, water, Particles, Cannons };
+            ITickable[] systems = { Flow, CameraDirector, Parallax, Terrain, chunks, Decor, water, Particles, Cannons };
 #endif
             Loop = new GameLoop();
             Loop.Init(systems, config.maxDeltaTime);
@@ -172,6 +185,7 @@ namespace CastleDestroyers.Core
             Stress.Clear();
 #endif
             CameraDirector.Snap();
+            Parallax.Apply();
         }
 
         private void ApplyTheme()
@@ -184,6 +198,8 @@ namespace CastleDestroyers.Core
             water.ApplyPalette(palette);
             levelFx.ApplyPalette(palette);
             Cannons.ApplyPalette(palette);
+            rocketMaterial.SetColor(RocketBodyColor, palette.rocketBody);
+            rocketMaterial.SetColor(RocketShadeColor, palette.rocketShade);
             mainCamera.backgroundColor = palette.sky;
         }
 

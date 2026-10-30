@@ -128,9 +128,15 @@ MonoBehaviour:
     booster50Cap:
       serializedVersion: 2
       rgba: 4283738151
+    rocketBody:
+      serializedVersion: 2
+      rgba: 4294504690
+    rocketShade:
+      serializedVersion: 2
+      rgba: 4291999417
     rocketPlayer:
       serializedVersion: 2
-      rgba: 4294960767
+      rgba: 4293954607
     rocketEnemy:
       serializedVersion: 2
       rgba: 4284370431
@@ -267,9 +273,15 @@ MonoBehaviour:
     booster50Cap:
       serializedVersion: 2
       rgba: 4283738151
+    rocketBody:
+      serializedVersion: 2
+      rgba: 4294504690
+    rocketShade:
+      serializedVersion: 2
+      rgba: 4291999417
     rocketPlayer:
       serializedVersion: 2
-      rgba: 4294960767
+      rgba: 4293954607
     rocketEnemy:
       serializedVersion: 2
       rgba: 4284370431

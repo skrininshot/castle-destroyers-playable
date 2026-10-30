@@ -2,6 +2,9 @@ using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
+#if GAME_DEBUG
+using CastleDestroyers.DebugTools;
+#endif
 using CastleDestroyers.Level;
 using NUnit.Framework;
 using UnityEngine;
@@ -95,7 +98,10 @@ namespace CastleDestroyers.Tests
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(level.BackMesh);
+            for (int i = 0; i < level.BackLayers.Length; i++)
+            {
+                Object.DestroyImmediate(level.BackLayers[i]);
+            }
             Object.DestroyImmediate(level.FrontMesh);
             Object.DestroyImmediate(config);
         }
@@ -142,12 +148,12 @@ namespace CastleDestroyers.Tests
         public void BuildProducesGeometryForBothThemes()
         {
             level.Build(ThemePalette.CreateNight());
-            int nightBack = level.BackMesh.vertexCount;
+            int nightBack = level.BackLayers[2].vertexCount;
             int nightFront = level.FrontMesh.vertexCount;
             Assert.Greater(nightBack, 0);
             Assert.Greater(nightFront, 0);
             level.Build(ThemePalette.CreateSunset());
-            Assert.AreEqual(nightBack, level.BackMesh.vertexCount);
+            Assert.AreEqual(nightBack, level.BackLayers[2].vertexCount);
             Assert.AreEqual(nightFront, level.FrontMesh.vertexCount);
         }
 
@@ -155,7 +161,11 @@ namespace CastleDestroyers.Tests
         public void MeshFitsSixteenBitIndices()
         {
             level.Build(ThemePalette.CreateNight());
-            Assert.Less(level.BackMesh.vertexCount, 65535);
+            for (int i = 0; i < level.BackLayers.Length; i++)
+            {
+                Assert.Greater(level.BackLayers[i].vertexCount, 0, "layer " + i);
+                Assert.Less(level.BackLayers[i].vertexCount, 65535, "layer " + i);
+            }
             Assert.Less(level.FrontMesh.vertexCount, 65535);
         }
 
@@ -163,10 +173,10 @@ namespace CastleDestroyers.Tests
         public void RebuildIsDeterministic()
         {
             level.Build(ThemePalette.CreateNight());
-            Vector3[] back = level.BackMesh.vertices;
+            Vector3[] back = level.BackLayers[3].vertices;
             Vector3[] front = level.FrontMesh.vertices;
             level.Build(ThemePalette.CreateNight());
-            CollectionAssert.AreEqual(back, level.BackMesh.vertices);
+            CollectionAssert.AreEqual(back, level.BackLayers[3].vertices);
             CollectionAssert.AreEqual(front, level.FrontMesh.vertices);
         }
 
@@ -201,6 +211,139 @@ namespace CastleDestroyers.Tests
             Assert.Greater(level.EnemyFocusY, level.GroundHeight(config.enemyCastleX));
         }
     }
+
+    public sealed class ParallaxTests
+    {
+        private const float Reference = 9f;
+
+        /// <summary>Где на экране окажется точка слоя: смещение от центра кадра.</summary>
+        private static float ScreenOffset(float camera, float point, float factor, float zoom)
+        {
+            float scale = ParallaxBackground.LayerScale(zoom, factor);
+            float world = ParallaxBackground.LayerOffset(camera, Reference, factor, scale) + point * scale;
+            return world - camera;
+        }
+
+        [Test]
+        public void FactorOneMovesWithLevel()
+        {
+            Assert.AreEqual(1f, ParallaxBackground.LayerScale(0.7f, 1f), 1e-5f);
+            Assert.AreEqual(0f, ParallaxBackground.LayerOffset(-20f, Reference, 1f, 1f), 1e-5f);
+        }
+
+        [Test]
+        public void FactorZeroStaysFixedOnScreen()
+        {
+            Assert.AreEqual(ScreenOffset(Reference, 5f, 0f, 1f), ScreenOffset(-20f, 5f, 0f, 1f), 1e-4f);
+        }
+
+        [Test]
+        public void AtReferenceFrameLayersAreInPlace()
+        {
+            float[] factors = { 0f, 0.05f, 0.15f, 0.3f, 0.5f };
+            for (int i = 0; i < factors.Length; i++)
+            {
+                Assert.AreEqual(1f, ParallaxBackground.LayerScale(1f, factors[i]), 1e-5f);
+                Assert.AreEqual(0f, ParallaxBackground.LayerOffset(Reference, Reference, factors[i], 1f), 1e-5f);
+            }
+        }
+
+        [Test]
+        public void NearerLayerShiftsMoreOnScreen()
+        {
+            float far = Mathf.Abs(ScreenOffset(-20f, Reference, 0.15f, 1f));
+            float near = Mathf.Abs(ScreenOffset(-20f, Reference, 0.5f, 1f));
+            Assert.Greater(near, far);
+        }
+
+        [Test]
+        public void FartherLayerReactsLessToZoom()
+        {
+            float far = ParallaxBackground.LayerScale(0.7f, 0.15f);
+            float near = ParallaxBackground.LayerScale(0.7f, 0.5f);
+            Assert.Less(far, near);
+        }
+
+        [Test]
+        public void DefaultFactorsCoverEveryLayerAndGrowTowardViewer()
+        {
+            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
+            Assert.AreEqual(GreyboxLevel.BackLayerCount, config.parallaxFactors.Length);
+            for (int i = 1; i < config.parallaxFactors.Length; i++)
+            {
+                Assert.Greater(config.parallaxFactors[i], config.parallaxFactors[i - 1]);
+            }
+            Object.DestroyImmediate(config);
+        }
+    }
+
+#if GAME_DEBUG
+    public sealed class DebugRocketStressTests
+    {
+        private const int Cannons = 3;
+
+        private GameConfig config;
+        private GreyboxLevel level;
+        private DebugRocketStress stress;
+
+        [SetUp]
+        public void SetUp()
+        {
+            config = MaskFixture.LevelConfig();
+            level = new GreyboxLevel();
+            level.Init(config, DestructibleMask.CreateTerrain(config));
+            stress = new DebugRocketStress();
+            stress.Init(config, level);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            for (int i = 0; i < level.BackLayers.Length; i++)
+            {
+                Object.DestroyImmediate(level.BackLayers[i]);
+            }
+            Object.DestroyImmediate(level.FrontMesh);
+            Object.DestroyImmediate(stress.Mesh);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void RocketsOfOneCannonFollowTheSameCurve()
+        {
+            stress.Spawn(Cannons + 1, Side.Player, ThemePalette.CreateNight(), Cannons);
+            stress.Tick(0.5f);
+            Vector3 first = stress.Mesh.vertices[0];
+            stress.Tick(config.rocketInterval);
+            Vector3 next = stress.Mesh.vertices[Cannons * 4];
+            Assert.AreEqual(first.x, next.x, 1e-2f);
+            Assert.AreEqual(first.y, next.y, 1e-2f);
+        }
+
+        [Test]
+        public void CannonsFireParallelCurves()
+        {
+            stress.Spawn(2, Side.Player, ThemePalette.CreateNight(), Cannons);
+            float interval = config.rocketInterval / Cannons;
+            stress.Tick(0.5f);
+            float firstX = stress.Mesh.vertices[0].x - level.PlayerMountX[0];
+            float firstY = stress.Mesh.vertices[0].y - level.PlayerMountY[0];
+            stress.Tick(interval);
+            Assert.AreEqual(firstX, stress.Mesh.vertices[4].x - level.PlayerMountX[1], 1e-2f);
+            Assert.AreEqual(firstY, stress.Mesh.vertices[4].y - level.PlayerMountY[1], 1e-2f);
+        }
+
+        [Test]
+        public void ClearRemovesRocketsImmediately()
+        {
+            stress.Spawn(2, Side.Player, ThemePalette.CreateNight(), Cannons);
+            stress.Tick(0.5f);
+            stress.Clear();
+            Assert.AreEqual(0, stress.ActiveCount);
+            Assert.AreEqual(Vector3.zero, stress.Mesh.vertices[0]);
+        }
+    }
+#endif
 
     public sealed class CameraDirectorTests
     {
@@ -239,7 +382,10 @@ namespace CastleDestroyers.Tests
         public void TearDown()
         {
             Object.DestroyImmediate(cameraObject);
-            Object.DestroyImmediate(level.BackMesh);
+            for (int i = 0; i < level.BackLayers.Length; i++)
+            {
+                Object.DestroyImmediate(level.BackLayers[i]);
+            }
             Object.DestroyImmediate(level.FrontMesh);
             Object.DestroyImmediate(config);
         }

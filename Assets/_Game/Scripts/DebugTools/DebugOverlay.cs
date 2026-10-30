@@ -151,7 +151,9 @@ namespace CastleDestroyers.DebugTools
 
         private void OnSpawnRockets()
         {
-            game.Stress.Spawn(game.config.stressRocketCount, game.Flow.ActiveSide, game.Palette);
+            Side side = game.Flow.ActiveSide;
+            int alive = side == Side.Player ? game.Match.PlayerAlive : game.Match.EnemyAlive;
+            game.Stress.Spawn(game.config.stressRocketCount, side, game.Palette, alive);
         }
 
         private void OnToggleTheme()

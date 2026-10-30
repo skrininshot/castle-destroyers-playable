@@ -74,6 +74,21 @@ namespace CastleDestroyers.EditorTools
             game.Terrain.Explode(game.config.enemyCastleX - 9.5f, 1f, 1.2f);
             Settle(game, 0.3f);
             Shoot(game, "11_red_hill_craters", ViewRed, false, ThemePreset.Night, true);
+
+            Fresh(game, ThemePreset.Night);
+            Rockets(game, 1.1f);
+            Shoot(game, "12_rockets_launch", ViewBlue, false, ThemePreset.Night, true);
+            Fresh(game, ThemePreset.Night);
+            Rockets(game, 1.8f);
+            Shoot(game, "13_rockets_arc", ViewAll, true, ThemePreset.Night, true);
+            Fresh(game, ThemePreset.Night);
+            Rockets(game, 1.5f);
+            Shoot(game, "14_rockets_closeup", ViewMountain, false, ThemePreset.Night, true);
+
+            Fresh(game, ThemePreset.Night);
+            Shoot(game, "15_parallax_blue", ViewBlue, false, ThemePreset.Night, true);
+            Shoot(game, "16_parallax_center", ViewMountain, false, ThemePreset.Night, true);
+            Shoot(game, "17_parallax_red", ViewRed, false, ThemePreset.Night, true);
         }
 
         private static void Fresh(GameBootstrap game, ThemePreset preset)
@@ -81,6 +96,14 @@ namespace CastleDestroyers.EditorTools
             game.SetPreset(preset);
             game.Restart();
             game.Loop.TimeScale = 1f;
+        }
+
+        private static void Rockets(GameBootstrap game, float seconds)
+        {
+#if GAME_DEBUG
+            game.Stress.Spawn(game.config.stressRocketCount, CastleDestroyers.Flow.Side.Player, game.Palette, game.config.playerCannons);
+#endif
+            Settle(game, seconds);
         }
 
         private static void Settle(GameBootstrap game, float seconds)
@@ -127,6 +150,7 @@ namespace CastleDestroyers.EditorTools
             game.CameraDirector.DebugView = view;
 #endif
             game.CameraDirector.Snap();
+            game.Parallax.Apply();
             Render(game, name, landscape, clean);
             Debug.Log("[GameCapture] " + name + " preset " + preset);
         }
@@ -157,6 +181,7 @@ namespace CastleDestroyers.EditorTools
             camera.aspect = (float)width / height;
             Canvas canvas = clean ? null : AttachDebugCanvas(game, camera);
             game.CameraDirector.Snap();
+            game.Parallax.Apply();
             camera.Render();
 
             RenderTexture previous = RenderTexture.active;

@@ -65,9 +65,9 @@ MonoBehaviour:
   stressRocketCount: 1000
   waveAmplitude: 0.35
   waveFrequency: 9
-  wavePhaseStep: 0.5
-  rocketLength: 0.8
-  rocketWidth: 0.25
+  wavePhaseStep: 0
+  rocketLength: 1.1
+  rocketWidth: 0.34
   stressRocketLifetime: 4
   boosters:
   - multiplier: 20

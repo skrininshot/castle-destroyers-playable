@@ -1,4 +1,5 @@
 using CastleDestroyers.Core;
+using CastleDestroyers.Level;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -24,16 +25,18 @@ namespace CastleDestroyers.EditorTools
         private const string ParticleMaterialPath = "Assets/_Game/Art/Mat_FlatParticle.mat";
         private const string ParticleShaderName = "Game/FlatParticle";
 
-        // Порядок отрисовки: фон, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, чит-ракеты.
-        private const int OrderBack = 0;
-        private const int OrderDecor = 1;
-        private const int OrderTerrain = 2;
-        private const int OrderChunks = 3;
-        private const int OrderFront = 4;
-        private const int OrderWave = 5;
-        private const int OrderCannons = 6;
-        private const int OrderParticles = 7;
-        private const int OrderStress = 8;
+        private const string RocketMaterialPath = "Assets/_Game/Art/Mat_Rocket.mat";
+        private const string RocketShaderName = "Game/Rocket";
+
+        // Порядок отрисовки: слои фона, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, чит-ракеты.
+        private const int OrderDecor = GreyboxLevel.BackLayerCount;
+        private const int OrderTerrain = OrderDecor + 1;
+        private const int OrderChunks = OrderDecor + 2;
+        private const int OrderFront = OrderDecor + 3;
+        private const int OrderWave = OrderDecor + 4;
+        private const int OrderCannons = OrderDecor + 5;
+        private const int OrderParticles = OrderDecor + 6;
+        private const int OrderStress = OrderDecor + 7;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
@@ -70,27 +73,35 @@ namespace CastleDestroyers.EditorTools
             Material material = LoadOrCreateMaterial(MaterialPath, ShaderName);
             Material terrainMaterial = LoadOrCreateMaterial(TerrainMaterialPath, TerrainShaderName);
             Material particleMaterial = LoadOrCreateMaterial(ParticleMaterialPath, ParticleShaderName);
+            Material rocketMaterial = LoadOrCreateMaterial(RocketMaterialPath, RocketShaderName);
+            rocketMaterial.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(GameTextureImport.RocketPath));
+            EditorUtility.SetDirty(rocketMaterial);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Camera camera = CreateCamera();
-            MeshFilter back = CreateBatch("LevelBack", material, OrderBack);
+            MeshFilter[] back = new MeshFilter[GreyboxLevel.BackLayerCount];
+            for (int i = 0; i < back.Length; i++)
+            {
+                back[i] = CreateBatch("LevelBack" + i, material, i);
+            }
             MeshFilter decor = CreateBatch("SurfaceDecor", material, OrderDecor);
             MeshFilter front = CreateBatch("LevelFront", material, OrderFront);
             MeshFilter wave = CreateBatch("WaterStrip", material, OrderWave);
             MeshFilter cannons = CreateBatch("Cannons", material, OrderCannons);
             MeshFilter particles = CreateBatch("Particles", particleMaterial, OrderParticles);
-            MeshFilter stress = CreateBatch("StressRockets", material, OrderStress);
+            MeshFilter stress = CreateBatch("StressRockets", rocketMaterial, OrderStress);
 
             GameBootstrap bootstrap = new GameObject("GameBootstrap").AddComponent<GameBootstrap>();
             bootstrap.config = config;
             bootstrap.mainCamera = camera;
-            bootstrap.backFilter = back;
+            bootstrap.backFilters = back;
             bootstrap.decorFilter = decor;
             bootstrap.frontFilter = front;
             bootstrap.waveFilter = wave;
             bootstrap.cannonsFilter = cannons;
             bootstrap.particlesFilter = particles;
             bootstrap.stressFilter = stress;
+            bootstrap.rocketMaterial = rocketMaterial;
             bootstrap.terrainRoot = new GameObject("Terrain").transform;
             bootstrap.terrainMaterial = terrainMaterial;
             bootstrap.terrainSortingOrder = OrderTerrain;

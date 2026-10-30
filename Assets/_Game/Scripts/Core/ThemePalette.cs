@@ -60,6 +60,8 @@ namespace CastleDestroyers.Core
         public Color32 booster50Cap;
 
         [Header("Ракеты и дым")]
+        public Color32 rocketBody;
+        public Color32 rocketShade;
         public Color32 rocketPlayer;
         public Color32 rocketEnemy;
         public Color32 rocketTail;
@@ -190,7 +192,9 @@ namespace CastleDestroyers.Core
             set.booster20Cap = Hex(0xE8860F);
             set.booster50 = Hex(0x3FD072);
             set.booster50Cap = Hex(0x27A854);
-            set.rocketPlayer = Hex(0x7FE6FF);
+            set.rocketBody = Hex(0xF2F0F8);
+            set.rocketShade = Hex(0xB9B6D2);
+            set.rocketPlayer = Hex(0x2F8CF0);
             set.rocketEnemy = Hex(0xFF4D5E);
             set.rocketTail = Hex(0xFFB22E);
             set.hudPanel = Hex(0x4B2463);
