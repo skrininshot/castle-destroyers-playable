@@ -63,9 +63,6 @@ MonoBehaviour:
   cannonHitRadius: 0.5
   maxActiveRockets: 600
   stressRocketCount: 1000
-  waveAmplitude: 0.25
-  waveLength: 8
-  wavePhaseStep: 0
   rocketLength: 1.1
   rocketWidth: 0.34
   stressRocketLifetime: 4

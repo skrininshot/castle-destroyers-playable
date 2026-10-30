@@ -1,5 +1,4 @@
 #if GAME_DEBUG
-using CastleDestroyers.Combat;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
 using CastleDestroyers.Level;
@@ -8,8 +7,8 @@ using UnityEngine;
 namespace CastleDestroyers.DebugTools
 {
     /// <summary>
-    /// Чит «спавн 1000 ракет»: SoA-квады в одном динамическом меше, баллистика + синусоида, слоты через IndexPool.
-    /// Ракеты вылетают из пушек по очереди и идут по одной дуге: случайности нет (D-031).
+    /// Чит «спавн 1000 ракет»: SoA-квады в одном динамическом меше, чистая баллистика, слоты через IndexPool.
+    /// Ракеты вылетают из пушек по очереди и идут по одной дуге: случайности и волны нет (D-031, D-034).
     /// Только для нагрузочной проверки каркаса. Настоящий RocketSystem появится на этапе 3.
     /// </summary>
     public sealed class DebugRocketStress : ITickable
@@ -18,7 +17,6 @@ namespace CastleDestroyers.DebugTools
         private const int IndicesPerQuad = 6;
         private const float Epsilon = 0.0001f;
         private const float BoundsPadding = 4f;
-        private const float FullTurn = Mathf.PI * 2f;
 
         private GameConfig config;
         private GreyboxLevel level;
@@ -28,9 +26,7 @@ namespace CastleDestroyers.DebugTools
         private float[] originY;
         private float[] velX;
         private float[] velY;
-        private float[] phase;
         private float[] facing;
-        private float[] pathStart;
         private float[] age;
         private Vector3[] vertices;
         private Color32[] colors;
@@ -50,9 +46,7 @@ namespace CastleDestroyers.DebugTools
             originY = new float[capacity];
             velX = new float[capacity];
             velY = new float[capacity];
-            phase = new float[capacity];
             facing = new float[capacity];
-            pathStart = new float[capacity];
             age = new float[capacity];
             vertices = new Vector3[capacity * VerticesPerQuad];
             colors = new Color32[capacity * VerticesPerQuad];
@@ -114,9 +108,6 @@ namespace CastleDestroyers.DebugTools
                 velX[i] = speedX;
                 velY[i] = speedY;
                 facing[i] = direction;
-                pathStart[i] = RocketPath.SpeedIntegral(speedX * speedX, speedY);
-                // Фаза своя у пушки, а не у ракеты: ракеты одной пушки проходят одну и ту же кривую.
-                phase[i] = mount * config.wavePhaseStep;
                 age[i] = -n * interval;
 
                 int v = i * VerticesPerQuad;
@@ -154,8 +145,6 @@ namespace CastleDestroyers.DebugTools
                 return;
             }
             float gravity = config.gravity;
-            float amplitude = config.waveAmplitude;
-            float waveNumber = FullTurn / config.waveLength;
             float lifetime = config.stressRocketLifetime;
             float halfLength = config.rocketLength * 0.5f;
             float halfWidth = config.rocketWidth * 0.5f;
@@ -175,20 +164,8 @@ namespace CastleDestroyers.DebugTools
                     continue;
                 }
 
-                float tangentX = velX[i];
-                float tangentY = velY[i] - gravity * t;
-                float tangentLength = Mathf.Sqrt(tangentX * tangentX + tangentY * tangentY) + Epsilon;
-                float normalX = -tangentY / tangentLength;
-                float normalY = tangentX / tangentLength;
-
-                // Волна привязана к пройденному пути, поэтому её длина не зависит от скорости ракеты.
-                float distance = (pathStart[i] - RocketPath.SpeedIntegral(velX[i] * velX[i], tangentY)) / gravity;
-                float wave = waveNumber * distance + phase[i];
-                float offset = amplitude * Mathf.Sin(wave);
-                float offsetRate = amplitude * waveNumber * tangentLength * Mathf.Cos(wave);
-
-                float x = originX[i] + velX[i] * t + normalX * offset;
-                float y = originY[i] + velY[i] * t - 0.5f * gravity * t * t + normalY * offset;
+                float x = originX[i] + velX[i] * t;
+                float y = originY[i] + velY[i] * t - 0.5f * gravity * t * t;
                 if (t >= lifetime || y < waterLevel)
                 {
                     Collapse(i);
@@ -196,8 +173,8 @@ namespace CastleDestroyers.DebugTools
                     continue;
                 }
 
-                float dirX = tangentX + normalX * offsetRate;
-                float dirY = tangentY + normalY * offsetRate;
+                float dirX = velX[i];
+                float dirY = velY[i] - gravity * t;
                 float dirLength = Mathf.Sqrt(dirX * dirX + dirY * dirY) + Epsilon;
                 dirX /= dirLength;
                 dirY /= dirLength;
