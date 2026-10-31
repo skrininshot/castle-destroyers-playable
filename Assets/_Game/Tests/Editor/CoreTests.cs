@@ -356,7 +356,7 @@ namespace CastleDestroyers.Tests
         {
             Assert.GreaterOrEqual(config.turnHints.Length, config.maxPlayerTurns);
             Assert.AreEqual(20, config.GetHint(0).highlightBoosterMultiplier);
-            Assert.AreEqual(50, config.GetHint(1).highlightBoosterMultiplier);
+            Assert.AreEqual(20, config.GetHint(1).highlightBoosterMultiplier);
             Assert.IsFalse(config.GetHint(2).showHand);
         }
 

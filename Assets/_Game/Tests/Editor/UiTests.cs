@@ -133,11 +133,11 @@ namespace CastleDestroyers.Tests
             rig.Config.turnHints[1].panToBooster = true;
             ToAim(2);
             Assert.IsTrue(director.ShowMountain);
-            Assert.AreEqual(50, guide.HighlightMultiplier);
+            Assert.AreEqual(20, guide.HighlightMultiplier);
             Assert.IsFalse(guide.HandVisible);
             Run(rig.Config.hintPanDuration + Step * 2f);
             Assert.IsFalse(director.ShowMountain);
-            Assert.AreEqual(50, guide.HighlightMultiplier);
+            Assert.AreEqual(20, guide.HighlightMultiplier);
         }
 
         [Test]

@@ -26,6 +26,8 @@ namespace CastleDestroyers.EditorTools
         private const float ScanAngleStep = 6f;
         private const float ScanPowerFrom = 0.45f;
         private const float ScanPowerStep = 0.07f;
+        private const int TurnTwoMatches = 6;
+        private const float EnemyStoneWhole = 13200f;
 
         public static void Run()
         {
@@ -51,6 +53,73 @@ namespace CastleDestroyers.EditorTools
             ScanEnemyShots(game, log);
             File.WriteAllText(OutputPath, log.ToString());
             EditorApplication.Exit(0);
+        }
+
+        /// <summary>Только сетка второго хода.</summary>
+        public static void RunSecondShots()
+        {
+            GameBootstrap game = Open();
+            StringBuilder log = new StringBuilder();
+            ScanSecondShots(game, log);
+            File.WriteAllText(OutputPath, log.ToString());
+            EditorApplication.Exit(0);
+        }
+
+        /// <summary>Подбор подсказки хода 2 по настоящим матчам: сетка считает не те пушки, что доживают в игре. Средние пушки / % камня / худшие пушки.</summary>
+        public static void RunTurnTwoMatches()
+        {
+            GameBootstrap game = Open();
+            StringBuilder log = new StringBuilder();
+            TurnHint hint = game.config.GetHint(1);
+            for (float angle = 22f; angle <= 62.5f; angle += 4f)
+            {
+                log.Append("angle ").Append(angle.ToString("00")).Append(':');
+                for (float power = 0.5f; power <= 0.901f; power += 0.05f)
+                {
+                    hint.handAngleDeg = angle;
+                    hint.handPower01 = power;
+                    float red = 0f;
+                    float stone = 0f;
+                    int worst = 0;
+                    for (int i = 0; i < TurnTwoMatches; i++)
+                    {
+                        PlayUntilTurnTwoEnds(game);
+                        int alive = game.Match.EnemyAlive;
+                        red += alive;
+                        stone += game.Castles.Body(Side.Enemy).Mask.SolidCount;
+                        worst = Mathf.Max(worst, alive);
+                    }
+                    log.Append(' ').Append((red / TurnTwoMatches).ToString("00.0")).Append('/').Append(Mathf.RoundToInt(100f * stone / TurnTwoMatches / EnemyStoneWhole).ToString("000")).Append('/').Append(worst.ToString("00"));
+                }
+                log.Append('\n');
+                File.WriteAllText(OutputPath, log.ToString());
+            }
+            EditorApplication.Exit(0);
+        }
+
+        private static void PlayUntilTurnTwoEnds(GameBootstrap game)
+        {
+            game.Restart();
+            SessionState last = SessionState.Boot;
+            for (int steps = 0; steps < MaxSteps && !game.Flow.IsFinished; steps++)
+            {
+                SessionFlow flow = game.Flow;
+                if (flow.State == SessionState.Aim && flow.ActiveSide == Side.Player)
+                {
+                    TurnHint hint = flow.CurrentHint;
+                    game.Cannons.SetAim(Side.Player, hint.handAngleDeg, hint.handPower01);
+                    flow.Skip();
+                }
+                game.Loop.Tick(Step);
+                if (flow.State != last)
+                {
+                    if (last == SessionState.Flight && flow.PlayerTurn == 2 && flow.ActiveSide == Side.Player)
+                    {
+                        return;
+                    }
+                    last = flow.State;
+                }
+            }
         }
 
         private static GameBootstrap Open()
@@ -112,17 +181,18 @@ namespace CastleDestroyers.EditorTools
             }
         }
 
-        /// <summary>Сетка второго хода: прошёл ход 1 по подсказке, у игрока на пушку меньше, ответа ИИ не было. Красные пушки / честное число.</summary>
+        /// <summary>Сетка второго хода: прошёл ход 1 по подсказке, у игрока на пушку меньше, ответа ИИ не было. Красные пушки / честное число / % камня красных.</summary>
         private static void ScanSecondShots(GameBootstrap game, StringBuilder log)
         {
             log.Append("second shot: red left / honest\n");
-            for (float angle = 8f; angle <= 36f; angle += 4f)
+            for (float angle = 14f; angle <= 32f; angle += 2f)
             {
                 log.Append("angle ").Append(angle.ToString("00")).Append(':');
                 for (float power = 0.55f; power <= 1.001f; power += 0.05f)
                 {
                     TurnHint hint = game.config.GetHint(0);
                     FirstShot(game, hint.handAngleDeg, hint.handPower01);
+                    int stone = game.Castles.Body(Side.Enemy).Mask.SolidCount;
                     for (int i = 0; i < 16 && !(game.Flow.State == SessionState.Aim && game.Flow.ActiveSide == Side.Player); i++)
                     {
                         game.Flow.Skip();
@@ -133,7 +203,8 @@ namespace CastleDestroyers.EditorTools
                     game.Cannons.SetAim(Side.Player, angle, power);
                     game.Flow.Skip();
                     WaitForFlight(game);
-                    log.Append(' ').Append(game.Match.EnemyAlive.ToString("00")).Append('/').Append(Mathf.RoundToInt(game.Boosters.HonestTotal - honest).ToString("0000"));
+                    log.Append(' ').Append(game.Match.EnemyAlive.ToString("00")).Append('/').Append(Mathf.RoundToInt(game.Boosters.HonestTotal - honest).ToString("0000"))
+                        .Append('/').Append((100 * game.Castles.Body(Side.Enemy).Mask.SolidCount / stone).ToString("000"));
                 }
                 log.Append('\n');
             }

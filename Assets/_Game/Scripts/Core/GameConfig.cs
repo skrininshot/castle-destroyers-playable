@@ -44,7 +44,7 @@ namespace CastleDestroyers.Core
         public TurnHint[] turnHints =
         {
             new TurnHint("x20 lob", 20, true, 50f, 0.68f),
-            new TurnHint("x50 straight shot", 50, true, 16f, 0.8f),
+            new TurnHint("x20 steep lob", 20, true, 54f, 0.6f),
             new TurnHint("free shot", 0, false, 50f, 0.68f)
         };
 
@@ -428,7 +428,7 @@ namespace CastleDestroyers.Core
         [Range(0.2f, 4f)]
         [Tooltip("Радиус кратера в земле, метры.")]
         [LunaPlaygroundField("Ground crater radius, m", 3, PlaygroundSection)]
-        public float craterRadiusGround = 1.5f;
+        public float craterRadiusGround = 1f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина каймы кратера, метры.")]
         public float rimWidth = 0.18f;

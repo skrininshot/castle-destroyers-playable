@@ -29,11 +29,11 @@ MonoBehaviour:
     handAngleDeg: 50
     handPower01: 0.68
     panToBooster: 0
-  - label: x50 straight shot
-    highlightBoosterMultiplier: 50
+  - label: x20 steep lob
+    highlightBoosterMultiplier: 20
     showHand: 1
-    handAngleDeg: 16
-    handPower01: 0.8
+    handAngleDeg: 54
+    handPower01: 0.6
     panToBooster: 0
   - label: free shot
     highlightBoosterMultiplier: 0
@@ -327,7 +327,7 @@ MonoBehaviour:
     handPower01: 0.68
     panToBooster: 0
   - label: shot x10
-    highlightBoosterMultiplier: 10
+    highlightBoosterMultiplier: 20
     showHand: 0
     handAngleDeg: 32
     handPower01: 0.55
