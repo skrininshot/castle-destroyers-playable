@@ -25,16 +25,19 @@ MonoBehaviour:
     showHand: 1
     handAngleDeg: 50
     handPower01: 0.68
+    panToBooster: 0
   - label: x50 straight shot
     highlightBoosterMultiplier: 50
     showHand: 1
-    handAngleDeg: 18
-    handPower01: 0.7
+    handAngleDeg: 16
+    handPower01: 0.8
+    panToBooster: 1
   - label: free shot
     highlightBoosterMultiplier: 0
     showHand: 0
-    handAngleDeg: 40
-    handPower01: 0.85
+    handAngleDeg: 50
+    handPower01: 0.68
+    panToBooster: 0
   bootDuration: 0.2
   introDuration: 1.5
   playerAimDuration: 10
@@ -58,7 +61,7 @@ MonoBehaviour:
   enemyCannons: 12
   rocketsPerCannon: 10
   rocketInterval: 0.06
-  cannonHitRadius: 0.3
+  cannonHitRadius: 0.45
   maxActiveRockets: 600
   stressRocketCount: 1000
   rocketLength: 1.1

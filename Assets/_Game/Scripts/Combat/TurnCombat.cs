@@ -6,7 +6,7 @@ namespace CastleDestroyers.Combat
 {
     /// <summary>
     /// Связывает FSM с боем: начинает залп при входе в Fire, держит Flight, пока ракеты в воздухе, и сообщает камере
-    /// положение головы потока. Без жеста игрока стреляет по подсказке хода. Угол ИИ — заглушка до этапа 6.
+    /// положение и высоту потока. Без жеста игрока стреляет по подсказке хода, последний залп усиливает Director.
     /// </summary>
     public sealed class TurnCombat : ITickable
     {
@@ -16,6 +16,8 @@ namespace CastleDestroyers.Combat
         private RocketSystem rockets;
         private BoosterSystem boosters;
         private CameraDirector cameraDirector;
+        private bool headPassed;
+        private float centerHold;
 
         public void Init(GameConfig gameConfig, SessionFlow sessionFlow, CannonSystem cannonSystem, RocketSystem rocketSystem, BoosterSystem boosterSystem, CameraDirector director)
         {
@@ -30,33 +32,40 @@ namespace CastleDestroyers.Combat
 
         public void Tick(float dt)
         {
-            flow.FlightBusy = cannons.IsFiring || rockets.ActiveCount > 0 || boosters.PendingCopies > 0;
             Side side = flow.ActiveSide;
+            if (cannons.IsFiring && flow.Match.IsEliminated(side == Side.Player ? Side.Enemy : Side.Player))
+            {
+                cannons.StopSalvo(side);
+            }
+            flow.FlightBusy = cannons.IsFiring || rockets.ActiveCount > 0 || boosters.PendingCopies > 0;
             if (flow.State != SessionState.Flight || rockets.Count(side) == 0)
             {
                 return;
             }
             float headX = rockets.HeadX(side);
             float facing = side == Side.Player ? 1f : -1f;
+            float topY = rockets.TopY(side);
             cameraDirector.FlightHeadX = headX;
+            if (topY > cameraDirector.FlightTopY)
+            {
+                cameraDirector.FlightTopY = topY;
+            }
             if ((headX - config.centerFocus.x) * facing > 0f)
             {
-                cameraDirector.HeadPassedCenter = true;
+                headPassed = true;
+            }
+            if (headPassed)
+            {
+                centerHold += dt;
+                cameraDirector.HeadPassedCenter = centerHold >= config.cameraCenterHold;
             }
         }
 
         private void OnStateChanged(SessionState state, Side side)
         {
-            if (state == SessionState.Aim)
+            if (state == SessionState.Aim && side == Side.Player)
             {
-                if (side == Side.Enemy)
-                {
-                    cannons.SetAim(Side.Enemy, config.stubAiAngleDeg, config.stubAiPower);
-                }
-                else
-                {
-                    cannons.ClearAim(Side.Player);
-                }
+                cannons.ClearAim(Side.Player);
             }
             else if (state == SessionState.Fire)
             {
@@ -67,6 +76,10 @@ namespace CastleDestroyers.Combat
                 }
                 cameraDirector.HeadPassedCenter = false;
                 cameraDirector.FlightHeadX = config.centerFocus.x;
+                cameraDirector.FlightTopY = cannons.SalvoApexY(side);
+                headPassed = false;
+                centerHold = 0f;
+                cannons.SetSalvoWeight(side, flow.IsFinisherTurn ? config.directorFinisherWeight : 1f);
                 cannons.BeginSalvo(side);
             }
         }

@@ -213,7 +213,9 @@ namespace CastleDestroyers.CastleRig
             float water = config.waterLevel;
             bool leftEmpty = SampleTrack(Left);
             bool rightEmpty = SampleTrack(Right);
-            if (leftEmpty && rightEmpty)
+            // Director не отдаёт замок игрока воде: матч решают пушки, а не случайный подкоп (ТЗ §3.1).
+            bool spared = config.directorEnabled && Side == Side.Player;
+            if (leftEmpty && rightEmpty && !spared)
             {
                 State = CastleState.Sinking;
                 return;

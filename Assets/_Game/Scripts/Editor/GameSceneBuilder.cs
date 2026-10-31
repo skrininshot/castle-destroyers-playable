@@ -51,6 +51,8 @@ namespace CastleDestroyers.EditorTools
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
         private const int SafeTop = 130;
+        private const int StatsTop = 250;
+        private const int DebugCanvasOrder = 10;
         private const int SafeBottom = 130;
         private const int StatsFontSize = 16;
         private const int ButtonFontSize = 15;
@@ -64,6 +66,42 @@ namespace CastleDestroyers.EditorTools
         private const int AimValueFontSize = 46;
         private const int AimCaptionFontSize = 18;
         private const float ScaleMatchBalanced = 0.5f;
+
+        // HUD: координаты внутри корня, от левого верхнего угла. Корень висит под верхними 10% экрана (ТЗ §2.2).
+        private const float SafeTopAnchor = 0.9f;
+        private const float HudWidth = 640f;
+        private const float HudHeight = 76f;
+        private const float HudPanelHeight = 46f;
+        private const float HudFrameSize = 76f;
+        private const float HudIconSize = 50f;
+        private const float HudBarHeight = 26f;
+        private const float HudBarWidth = 214f;
+        private const float HudBarX = 192f;
+        private const float HudCrossedSize = 64f;
+        private const float HudCrossedIconSize = 46f;
+        private const int MaxCannonSegments = 14;
+        private const float BannerWidth = 330f;
+        private const float BannerHeight = 76f;
+        private const float BannerAnchorY = 0.8f;
+        private const int BannerFontSize = 42;
+        private const float HandSize = 150f;
+        private const float HandShadowOffset = 7f;
+        private const float EndLogoAnchorY = 0.76f;
+        private const float EndLogoAngle = 3f;
+        private const int EndLogoFontSize = 76;
+        private const float EndLogoWidth = 680f;
+        private const float EndLogoHeight = 190f;
+        private const float EndLogoShadow = 6f;
+        private const float EndIconAnchorY = 0.48f;
+        private const float EndIconSize = 200f;
+        private const float EndCaptionAnchorY = 0.33f;
+        private const int EndCaptionFontSize = 30;
+        private const float EndButtonAnchorY = 0.22f;
+        private const float EndButtonWidth = 360f;
+        private const float EndButtonHeight = 104f;
+        private const float EndButtonEdge = 10f;
+        private const int EndButtonFontSize = 50;
+        private const float PillPixelsPerUnit = 1f;
         private const int ButtonWidth = 128;
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
@@ -223,6 +261,9 @@ namespace CastleDestroyers.EditorTools
             rect.sizeDelta = new Vector2(AimPanelWidth, AimPanelHeight);
             Image background = panel.GetComponent<Image>();
             background.raycastTarget = false;
+            Sprite pill = LoadSprite(GameTextureImport.PillPath);
+            background.sprite = pill;
+            background.type = Image.Type.Sliced;
 
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             bootstrap.aimPanel = rect;
@@ -234,6 +275,168 @@ namespace CastleDestroyers.EditorTools
                 CreatePanelText(rect, "PowerCaption", 0f, 0.5f, 0f, AimCaptionShare, AimCaptionFontSize, "POWER", font),
                 CreatePanelText(rect, "AngleCaption", 0.5f, 1f, 0f, AimCaptionShare, AimCaptionFontSize, "ANGLE", font)
             };
+
+            Transform canvas = canvasObject.transform;
+            CreateHud(bootstrap, canvas, pill);
+            CreateBanner(bootstrap, canvas, pill, font);
+            CreateHand(bootstrap, canvas);
+            CreateEndCard(bootstrap, canvas, pill, font);
+        }
+
+        private static Sprite LoadSprite(string path)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        /// <summary>Прямоугольник на точке родителя (доли его размера), размер в единицах канваса.</summary>
+        private static RectTransform CreateRect(Transform parent, string objectName, float anchorX, float anchorY, float width, float height)
+        {
+            GameObject rectObject = new GameObject(objectName, typeof(RectTransform));
+            rectObject.transform.SetParent(parent, false);
+            RectTransform rect = rectObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(anchorX, anchorY);
+            rect.anchorMax = new Vector2(anchorX, anchorY);
+            rect.sizeDelta = new Vector2(width, height);
+            return rect;
+        }
+
+        private static Image CreateImage(Transform parent, string objectName, float anchorX, float anchorY, float width, float height, Sprite sprite)
+        {
+            RectTransform rect = CreateRect(parent, objectName, anchorX, anchorY, width, height);
+            Image image = rect.gameObject.AddComponent<Image>();
+            image.sprite = sprite;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        private static Image CreatePill(Transform parent, string objectName, float anchorX, float anchorY, float width, float height, Sprite pill)
+        {
+            Image image = CreateImage(parent, objectName, anchorX, anchorY, width, height, pill);
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = PillPixelsPerUnit;
+            return image;
+        }
+
+        private static void Stretch(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>Полосы здоровья: синяя слева, красная справа, между ними скрещённые ракеты (ТЗ §3.12). Сегменты раскладывает HudView.</summary>
+        private static void CreateHud(GameBootstrap bootstrap, Transform canvas, Sprite pill)
+        {
+            RectTransform root = CreateRect(canvas, "Hud", 0.5f, SafeTopAnchor, HudWidth, HudHeight);
+            root.pivot = new Vector2(0.5f, 1f);
+
+            Image[] panels =
+            {
+                CreatePill(root, "PanelLeft", 0.25f, 0.5f, HudWidth * 0.5f, HudPanelHeight, pill),
+                CreatePill(root, "PanelRight", 0.75f, 0.5f, HudWidth * 0.5f, HudPanelHeight, pill)
+            };
+            Sprite castle = LoadSprite(GameTextureImport.CastlePath);
+            float frameX = HudFrameSize * 0.5f / HudWidth;
+            Image[] frames = new Image[3];
+            frames[0] = CreatePill(root, "FrameBlue", frameX, 0.5f, HudFrameSize, HudFrameSize, pill);
+            frames[1] = CreatePill(root, "FrameRed", 1f - frameX, 0.5f, HudFrameSize, HudFrameSize, pill);
+            frames[2] = CreatePill(root, "FrameCenter", 0.5f, 0.5f, HudCrossedSize, HudCrossedSize, pill);
+            bootstrap.hudCastleIcons = new[]
+            {
+                CreateImage(frames[0].transform, "IconBlue", 0.5f, 0.5f, HudIconSize, HudIconSize, castle),
+                CreateImage(frames[1].transform, "IconRed", 0.5f, 0.5f, HudIconSize, HudIconSize, castle)
+            };
+            bootstrap.hudCrossedRockets = CreateImage(frames[2].transform, "CrossedRockets", 0.5f, 0.5f, HudCrossedIconSize, HudCrossedIconSize, LoadSprite(GameTextureImport.RocketsPath));
+
+            RectTransform playerSlot = CreateRect(root, "BarSlotBlue", HudBarX / HudWidth, 0.5f, HudBarWidth, HudBarHeight);
+            RectTransform enemySlot = CreateRect(root, "BarSlotRed", 1f - HudBarX / HudWidth, 0.5f, HudBarWidth, HudBarHeight);
+            RectTransform playerBar = CreateBar(playerSlot, "BarBlue");
+            RectTransform enemyBar = CreateBar(enemySlot, "BarRed");
+
+            bootstrap.hudRoot = root;
+            bootstrap.hudBars = new[] { playerBar, enemyBar };
+            bootstrap.hudPanels = panels;
+            bootstrap.hudFrames = frames;
+            bootstrap.hudPlayerSegments = CreateSegments(playerBar, pill);
+            bootstrap.hudEnemySegments = CreateSegments(enemyBar, pill);
+        }
+
+        private static RectTransform CreateBar(RectTransform slot, string objectName)
+        {
+            RectTransform bar = CreateRect(slot, objectName, 0.5f, 0.5f, 0f, 0f);
+            Stretch(bar);
+            return bar;
+        }
+
+        private static Image[] CreateSegments(RectTransform bar, Sprite pill)
+        {
+            Image[] segments = new Image[MaxCannonSegments];
+            for (int i = 0; i < MaxCannonSegments; i++)
+            {
+                segments[i] = CreatePill(bar, "Segment" + i, 0.5f, 0.5f, 0f, 0f, pill);
+            }
+            return segments;
+        }
+
+        private static void CreateBanner(GameBootstrap bootstrap, Transform canvas, Sprite pill, Font font)
+        {
+            Image background = CreatePill(canvas, "TurnBanner", 0.5f, BannerAnchorY, BannerWidth, BannerHeight, pill);
+            bootstrap.bannerRoot = background.rectTransform;
+            bootstrap.bannerBackground = background;
+            bootstrap.bannerText = CreatePanelText(background.rectTransform, "Label", 0f, 1f, 0f, 1f, BannerFontSize, "YOUR TURN!", font);
+        }
+
+        private static void CreateHand(GameBootstrap bootstrap, Transform canvas)
+        {
+            Sprite hand = LoadSprite(GameTextureImport.HandPath);
+            RectTransform root = CreateRect(canvas, "Hand", 0.5f, 0.5f, HandSize, HandSize);
+            // Кончик пальца в точке жеста.
+            root.pivot = new Vector2(0.39f, 0.95f);
+            Image shadow = CreateImage(root, "Shadow", 0.5f, 0.5f, HandSize, HandSize, hand);
+            shadow.rectTransform.anchoredPosition = new Vector2(HandShadowOffset, -HandShadowOffset);
+            bootstrap.handRoot = root;
+            bootstrap.handImages = new[] { shadow, CreateImage(root, "Glove", 0.5f, 0.5f, HandSize, HandSize, hand) };
+        }
+
+        /// <summary>EndCard поверх всего. Тап принимает весь экран, поэтому у кнопки нет своего обработчика.</summary>
+        private static void CreateEndCard(GameBootstrap bootstrap, Transform canvas, Sprite pill, Font font)
+        {
+            RectTransform root = CreateRect(canvas, "EndCard", 0.5f, 0.5f, 0f, 0f);
+            Stretch(root);
+            Image dim = root.gameObject.AddComponent<Image>();
+            dim.raycastTarget = false;
+
+            RectTransform content = CreateRect(root, "Content", 0.5f, 0.5f, 0f, 0f);
+            Stretch(content);
+
+            RectTransform shadowRect = CreateRect(content, "LogoShadow", 0.5f, EndLogoAnchorY, EndLogoWidth, EndLogoHeight);
+            shadowRect.anchoredPosition = new Vector2(0f, -EndLogoShadow);
+            shadowRect.localRotation = Quaternion.Euler(0f, 0f, EndLogoAngle);
+            RectTransform logoRect = CreateRect(content, "Logo", 0.5f, EndLogoAnchorY, EndLogoWidth, EndLogoHeight);
+            logoRect.localRotation = Quaternion.Euler(0f, 0f, EndLogoAngle);
+            const string Title = "CASTLE\nDESTROYERS";
+            bootstrap.endCardLogoShadow = CreatePanelText(shadowRect, "Text", 0f, 1f, 0f, 1f, EndLogoFontSize, Title, font);
+            bootstrap.endCardLogo = CreatePanelText(logoRect, "Text", 0f, 1f, 0f, 1f, EndLogoFontSize, Title, font);
+
+            bootstrap.endCardIcon = CreateImage(content, "WinnerCastle", 0.5f, EndIconAnchorY, EndIconSize, EndIconSize, LoadSprite(GameTextureImport.CastlePath));
+
+            RectTransform captionRect = CreateRect(content, "Caption", 0.5f, EndCaptionAnchorY, EndLogoWidth, EndCaptionFontSize * 2f);
+            bootstrap.endCardCaption = CreatePanelText(captionRect, "Text", 0f, 1f, 0f, 1f, EndCaptionFontSize, "", font);
+
+            RectTransform button = CreateRect(content, "PlayNow", 0.5f, EndButtonAnchorY, EndButtonWidth, EndButtonHeight);
+            Image edge = CreatePill(button, "Edge", 0.5f, 0.5f, EndButtonWidth, EndButtonHeight, pill);
+            edge.rectTransform.anchoredPosition = new Vector2(0f, -EndButtonEdge);
+            Image face = CreatePill(button, "Face", 0.5f, 0.5f, EndButtonWidth, EndButtonHeight, pill);
+            bootstrap.endCardButton = button;
+            bootstrap.endCardButtonFace = face;
+            bootstrap.endCardButtonEdge = edge;
+            bootstrap.endCardButtonText = CreatePanelText(face.rectTransform, "Label", 0f, 1f, 0f, 1f, EndButtonFontSize, "PLAY NOW", font);
+
+            bootstrap.endCardRoot = root.gameObject;
+            bootstrap.endCardDim = dim;
+            bootstrap.endCardContent = content;
         }
 
         private static Text CreatePanelText(RectTransform parent, string objectName, float minX, float maxX, float minY, float maxY, int fontSize, string label, Font font)
@@ -262,6 +465,8 @@ namespace CastleDestroyers.EditorTools
         {
             GameObject canvasObject = new GameObject("DebugRoot", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            // Выше игрового канваса: RESTART должен работать и на EndCard.
+            canvasObject.GetComponent<Canvas>().sortingOrder = DebugCanvasOrder;
             CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(ReferenceWidth, ReferenceHeight);
@@ -300,8 +505,8 @@ namespace CastleDestroyers.EditorTools
             panelRect.anchorMin = new Vector2(0f, 1f);
             panelRect.anchorMax = new Vector2(0f, 1f);
             panelRect.pivot = new Vector2(0f, 1f);
-            panelRect.offsetMin = new Vector2(20f, -SafeTop - StatsHeight);
-            panelRect.offsetMax = new Vector2(20f + StatsWidth, -SafeTop);
+            panelRect.offsetMin = new Vector2(20f, -StatsTop - StatsHeight);
+            panelRect.offsetMax = new Vector2(20f + StatsWidth, -StatsTop);
             Image background = panel.GetComponent<Image>();
             background.color = new Color(0f, 0f, 0f, StatsAlpha);
             background.raycastTarget = false;

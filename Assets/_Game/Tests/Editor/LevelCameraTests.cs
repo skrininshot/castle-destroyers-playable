@@ -373,6 +373,49 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void FlightFrameGrowsUpToCoverRocketsAboveTheBooster()
+        {
+            AdvanceTo(SessionState.Flight, Side.Player);
+            director.FlightHeadX = config.centerFocus.x;
+            CameraFrame still = FrameNow();
+            float bottom = still.y - still.minHeight * 0.5f;
+
+            director.FlightTopY = 46f;
+            CameraFrame frame = FrameNow();
+            Assert.AreEqual(bottom, frame.y - frame.minHeight * 0.5f, 1e-3f, "water stays in the frame");
+            Assert.AreEqual(46f + config.cameraFlightTopMargin, frame.y + frame.minHeight * 0.5f, 1e-3f);
+        }
+
+        [Test]
+        public void LowShotKeepsTheUsualCenterFrame()
+        {
+            AdvanceTo(SessionState.Flight, Side.Player);
+            director.FlightHeadX = config.centerFocus.x;
+            director.FlightTopY = 15f;
+            CameraFrame frame = FrameNow();
+            Assert.AreEqual(config.centerFocus.y, frame.y, 1e-3f);
+            Assert.AreEqual(config.centerFrameMinHeight, frame.minHeight, 1e-3f);
+        }
+
+        [Test]
+        public void VeryHighShotDoesNotPullTheCameraOutForever()
+        {
+            AdvanceTo(SessionState.Flight, Side.Player);
+            director.FlightTopY = 500f;
+            Assert.AreEqual(config.centerFrameMaxHeight, FrameNow().minHeight, 1e-3f);
+        }
+
+        [Test]
+        public void MountainPreviewReplacesOwnCastleFrameWhileAiming()
+        {
+            AdvanceTo(SessionState.Aim, Side.Player);
+            director.ShowMountain = true;
+            Assert.AreEqual(config.centerFocus.x, FrameNow().x, 1e-4f);
+            director.ShowMountain = false;
+            Assert.AreEqual(level.PlayerFocusX + config.castleLeadX, FrameNow().x, 1e-4f);
+        }
+
+        [Test]
         public void EnemyFlightEndsOnPlayerCastle()
         {
             AdvanceTo(SessionState.Flight, Side.Enemy);

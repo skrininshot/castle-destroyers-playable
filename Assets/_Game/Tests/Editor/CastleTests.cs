@@ -1,5 +1,6 @@
 using System;
 using CastleDestroyers.CastleRig;
+using CastleDestroyers.Combat;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
@@ -292,6 +293,80 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void BlastNearTheMuzzleDetachesCannonToo()
+        {
+            int cannon = rig.Cannons.FirstCannon(Side.Enemy);
+            float muzzleX = rig.Cannons.WorldX(cannon) - CannonSystem.BarrelLength;
+            rig.Cannons.ApplyBlast(Side.Enemy, muzzleX - 0.3f, rig.Cannons.WorldY(cannon), 0.2f);
+            Assert.IsFalse(rig.Cannons.IsAlive(cannon));
+        }
+
+        [Test]
+        public void BlastJustOutsideTheHitboxLeavesCannon()
+        {
+            int cannon = rig.Cannons.FirstCannon(Side.Enemy);
+            float reach = rig.Config.cannonHitRadius + 0.2f;
+            rig.Cannons.ApplyBlast(Side.Enemy, rig.Cannons.WorldX(cannon) + reach + 0.05f, rig.Cannons.WorldY(cannon), 0.2f);
+            Assert.IsTrue(rig.Cannons.IsAlive(cannon));
+        }
+
+        [Test]
+        public void CannonDoesNotHangOnThinBridge()
+        {
+            int cannon = rig.Cannons.FirstCannon(Side.Enemy);
+            float x = rig.Cannons.LocalX(cannon);
+            float y = rig.Cannons.LocalY(cannon);
+            DestructibleMask mask = red.Mask;
+            float reach = rig.Config.cannonSupportRadius;
+            // Круг справа и слева: материал под самим креплением остаётся, вокруг почти ничего.
+            CraterStamper.StampCircle(mask, mask.TexelX(x - reach), mask.TexelY(y), 5f, 1f, 0f, 0);
+            CraterStamper.StampCircle(mask, mask.TexelX(x + reach), mask.TexelY(y), 5f, 1f, 0f, 0);
+            CraterStamper.StampCircle(mask, mask.TexelX(x), mask.TexelY(y + reach), 5f, 1f, 0f, 0);
+            CraterStamper.StampCircle(mask, mask.TexelX(x), mask.TexelY(y - reach), 5f, 1f, 0f, 0);
+            Assert.IsTrue(mask.IsSolidWorld(x, y));
+            rig.Step(Step);
+            Assert.IsFalse(rig.Cannons.IsAlive(cannon));
+        }
+
+        [Test]
+        public void DirectorLimitsPlayerLossesPerEnemySalvo()
+        {
+            rig.Cannons.BeginSalvo(Side.Enemy);
+            Assert.IsTrue(rig.Cannons.Detach(0, 0f, 0f, 0f));
+            Assert.IsFalse(rig.Cannons.Detach(1, 0f, 0f, 0f));
+            rig.Cannons.BeginSalvo(Side.Enemy);
+            Assert.IsTrue(rig.Cannons.Detach(1, 0f, 0f, 0f));
+            Assert.IsFalse(rig.Cannons.Detach(2, 0f, 0f, 0f), "last cannon");
+        }
+
+        [Test]
+        public void RescuedCannonSlidesDownToThePlatform()
+        {
+            int cannon = 0;
+            float start = rig.Cannons.LocalY(cannon);
+            rig.Cannons.DropToPlatform(cannon);
+            rig.Step(Step);
+            Assert.Less(rig.Cannons.LocalY(cannon), start);
+            Assert.Greater(rig.Cannons.LocalY(cannon), rig.Config.platformHeight);
+            for (int i = 0; i < 200; i++)
+            {
+                rig.Step(Step);
+            }
+            Assert.AreEqual(rig.Config.platformHeight, rig.Cannons.LocalY(cannon), 1e-4f);
+        }
+
+        [Test]
+        public void VictoryJumpLiftsCannonsAndComesBack()
+        {
+            rig.Cannons.Celebrate(Side.Player, 0.1f);
+            Assert.Greater(rig.Cannons.JumpY(0), 0f);
+            Assert.LessOrEqual(rig.Cannons.JumpY(0), rig.Config.victoryJumpHeight);
+            Assert.AreNotEqual(rig.Cannons.JumpY(0), rig.Cannons.JumpY(1), "phases differ");
+            rig.Cannons.Celebrate(Side.Player, 0f);
+            Assert.AreEqual(0f, rig.Cannons.JumpY(0));
+        }
+
+        [Test]
         public void FarBlastLeavesCannons()
         {
             rig.Cannons.ApplyBlast(Side.Enemy, -50f, 50f, 1f);
@@ -384,7 +459,10 @@ namespace CastleDestroyers.Tests
             float y = rig.Cannons.LocalY(0);
             DestructibleMask mask = blue.Mask;
             CraterStamper.StampCircle(mask, mask.TexelX(x), mask.TexelY(y), 16f, 2f, 0f, 0);
-            rig.Step(Step);
+            for (int i = 0; i < 200; i++)
+            {
+                rig.Step(Step);
+            }
             Assert.IsTrue(rig.Cannons.IsAlive(0));
             Assert.IsTrue(rig.Cannons.IsOnPlatform(0));
             Assert.AreEqual(rig.Config.platformHeight, rig.Cannons.LocalY(0), 1e-4f);
@@ -610,7 +688,7 @@ namespace CastleDestroyers.Tests
         public void EnemySalvoHurtsBlueCastle()
         {
             int solid = rig.Castles.Body(Side.Player).Mask.SolidCount;
-            Fire(Side.Enemy, rig.Config.stubAiAngleDeg, rig.Config.stubAiPower);
+            Fire(Side.Enemy, rig.Config.aiPresets[0].angleDeg, rig.Config.aiPresets[0].power01);
             Assert.Less(rig.Castles.Body(Side.Player).Mask.SolidCount, solid);
             Assert.GreaterOrEqual(rig.Match.PlayerAlive, 1, "director keeps the last cannon");
         }

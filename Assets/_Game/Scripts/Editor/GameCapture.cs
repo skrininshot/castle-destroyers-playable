@@ -1,21 +1,21 @@
 using System.IO;
-using CastleDestroyers.CastleRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using SessionState = CastleDestroyers.Flow.SessionState;
 
 namespace CastleDestroyers.EditorTools
 {
     /// <summary>
-    /// Снимает кадры сцены для отчёта: разрушает ландшафт по сценарию и рендерит камеру в PNG.
+    /// Снимает кадры сцены для отчёта: играет матч по подсказкам и рендерит камеру вместе с UI в PNG.
     /// Запуск без -nographics: <c>-executeMethod CastleDestroyers.EditorTools.GameCapture.CaptureAll</c>.
     /// </summary>
     public static class GameCapture
     {
         private const string OutputDir = "docs/reports/img";
-        private const string FilePrefix = "stage05_";
+        private const string FilePrefix = "stage06_";
         private const int PortraitWidth = 720;
         private const int PortraitHeight = 1280;
         private const int LandscapeWidth = 1280;
@@ -25,15 +25,12 @@ namespace CastleDestroyers.EditorTools
 
         private const int MaxSkips = 32;
         private const float MaxWaitSeconds = 12f;
-        private const int ShotX20 = 0;
-        private const int ShotX50 = 2;
-        private const int CopiesAtTrigger = 60;
+        private const float MaxMatchSeconds = 90f;
+        private const int CapturedCanvasOrder = 100;
+        private const float HonestAtTrigger = 300f;
 
-        // Кадры debug-камеры (CameraDirector.DebugView).
-        private const int ViewMountain = 1;
-        private const int ViewBlue = 2;
+        // Кадр debug-камеры (CameraDirector.DebugView).
         private const int ViewRed = 3;
-        private const int ViewAll = 4;
 
         [MenuItem("Tools/Castle Destroyers/Capture Stage Screenshots")]
         public static void CaptureAll()
@@ -42,125 +39,140 @@ namespace CastleDestroyers.EditorTools
             GameBootstrap game = Object.FindFirstObjectByType<GameBootstrap>();
             game.Boot();
             game.Aim.Scripted = true;
+            game.EndCard.Scripted = true;
             Directory.CreateDirectory(OutputDir);
 
-            // Уровень после правок: холмы выше, расщелина шире, бустеры крупнее.
+            // Матч целиком, камера по состояниям. Ход 1: рука, плашка хода, навес через x20.
             Fresh(game, ThemePreset.Night);
-            Settle(game, 0.1f);
-            Shoot(game, "01_level", ViewAll, true, ThemePreset.Night, true);
-            Shoot(game, "02_mountain", ViewMountain, false, ThemePreset.Night, true);
-            Shoot(game, "03_blue_intact", ViewBlue, false, ThemePreset.Night, true);
-            Shoot(game, "04_red_intact", ViewRed, false, ThemePreset.Night, true);
+            WaitForState(game, SessionState.Aim, Side.Player);
+            Settle(game, 0.2f);
+            Auto(game, "01_your_turn", false);
+            Settle(game, game.config.handStartDelay + game.config.handDemoDuration * 0.55f);
+            Auto(game, "02_hand_turn1", false);
+            FireHint(game);
+            WaitForHead(game, -3f);
+            Auto(game, "03_center_over_x20", false);
+            Auto(game, "04_center_landscape", true);
+            WaitForState(game, SessionState.Resolve, Side.Player);
+            Auto(game, "05_after_turn1_hud", false);
 
-            // Навес через x20: поток бьёт по красному замку, сквош, трещины, куски и пушки падают.
-            FireShot(game, ShotX20, ThemePreset.Night);
-            WaitForEnemyLoss(game, game.Match.EnemyStart - 1);
-            Shoot(game, "05_red_first_cannon", ViewRed, false, ThemePreset.Night, true);
-            Settle(game, 0.35f);
-            Shoot(game, "06_red_under_fire", ViewRed, false, ThemePreset.Night, true);
-            WaitWhileFlying(game);
-            Shoot(game, "07_red_after_x20", ViewRed, false, ThemePreset.Night, false);
+            // Ход ИИ: раздумье, дуга выше x20 в центральном кадре, попадание по синим.
+            WaitForState(game, SessionState.Aim, Side.Enemy);
+            Settle(game, 0.3f);
+            Auto(game, "06_enemy_turn", false);
+            WaitForState(game, SessionState.Flight, Side.Enemy);
+            WaitForHead(game, 3f);
+            Auto(game, "07_enemy_center_high", false);
+            WaitForState(game, SessionState.Resolve, Side.Enemy);
+            Auto(game, "08_blue_after_ai", false);
 
-            // Второй залп по тем же руинам.
-            AimRepeat(game);
-            Shoot(game, "08_red_after_second", ViewRed, false, ThemePreset.Night, false);
+            // Ход 2: показ горы с подсвеченным x50, рука, выстрел в склон.
+            WaitForState(game, SessionState.Aim, Side.Player);
+            Settle(game, 0.6f);
+            Auto(game, "09_pan_x50", false);
+            Settle(game, game.config.hintPanDuration + game.config.handStartDelay + game.config.handDemoDuration * 0.6f - 0.6f);
+            Auto(game, "10_hand_turn2", false);
+            FireHint(game);
+            WaitForHonest(game, game.Boosters.HonestTotal + HonestAtTrigger);
+            Auto(game, "11_x50_avalanche", false);
+            WaitForState(game, SessionState.Resolve, Side.Player);
+            Auto(game, "12_after_turn2", false);
+            WaitForState(game, SessionState.Resolve, Side.Enemy);
 
-            // Земля под правой гусеницей выбита: замок наклоняется и оседает (кадр 12).
+            // Ход 3 и победа.
+            WaitForState(game, SessionState.Aim, Side.Player);
+            FireHint(game);
+            WaitForState(game, SessionState.Victory, Side.Player);
+            Settle(game, 0.3f);
+            Auto(game, "13_loser", false);
+            Settle(game, game.config.victoryLoserHold + 0.5f);
+            Auto(game, "14_victory", false);
+            WaitForFinish(game);
+            Settle(game, 1f);
+            Auto(game, "15_endcard", false);
+            Auto(game, "16_endcard_landscape", true);
+
+            // Поражение при выключенном Director.
             Fresh(game, ThemePreset.Night);
-            CastleBody red = game.Castles.Body(Side.Enemy);
-            float trackX = red.TrackX(1);
-            float groundY = red.TrackY(1);
-            for (float x = trackX - 2f; x <= trackX + 3f; x += 0.7f)
-            {
-                game.Terrain.Explode(x, groundY - 1f, 1.8f);
-            }
-            Settle(game, 1.5f);
-            Shoot(game, "09_red_tilted", ViewRed, false, ThemePreset.Night, false);
-
-            // Под обеими гусеницами пусто до воды: замок тонет, все пушки падают.
-            for (float x = red.TrackX(0) - 3f; x <= red.TrackX(1) + 3f; x += 0.7f)
-            {
-                for (float y = -1f; y <= groundY + 1f; y += 0.7f)
-                {
-                    game.Terrain.Explode(x, y, 1.4f);
-                }
-            }
-            Settle(game, 0.75f);
-            Shoot(game, "10_red_sinking", ViewRed, false, ThemePreset.Night, false);
-
-            // Ответный залп красных по синему замку.
-            Fresh(game, ThemePreset.Night);
-            for (int i = 0; i < MaxSkips && !(game.Flow.State == Flow.SessionState.Aim && game.Flow.ActiveSide == Side.Enemy); i++)
+            game.config.directorEnabled = false;
+            WaitForState(game, SessionState.Aim, Side.Player);
+            for (int i = 0; i < MaxSkips && !(game.Flow.State == SessionState.Resolve && game.Flow.ActiveSide == Side.Enemy); i++)
             {
                 game.Flow.Skip();
             }
-            game.Cannons.Clear();
-            game.Rockets.Clear();
-            game.Cannons.SetAim(Side.Enemy, game.config.stubAiAngleDeg, game.config.stubAiPower);
-            game.Flow.Skip();
+            game.Cannons.StopSalvo(Side.Player);
+            game.Cannons.StopSalvo(Side.Enemy);
+            game.Match.Destroy(Side.Player, game.Match.PlayerAlive, 0);
+            WaitForFinish(game);
             Settle(game, 1f);
-            WaitWhileFlying(game);
-            Settle(game, 0.3f);
-            Debug.Log("[GameCapture] enemy salvo player cannons " + game.Match.PlayerAlive);
-            Shoot(game, "11_blue_hit", ViewBlue, false, ThemePreset.Night, false);
+            Auto(game, "17_defeat", false);
+            game.config.directorEnabled = true;
 
-            FireShot(game, ShotX50, ThemePreset.Night);
-            Shoot(game, "12_x50_trigger", ViewMountain, false, ThemePreset.Night, true);
-            WaitWhileFlying(game);
-            Shoot(game, "13_x50_result", ViewAll, true, ThemePreset.Night, false);
+            // Кратер и хитбокс пушек после правок.
+            Fresh(game, ThemePreset.Night);
+            WaitForState(game, SessionState.Aim, Side.Player);
+            FireHint(game);
+            WaitForState(game, SessionState.Resolve, Side.Player);
+            Shoot(game, "18_red_after_x20", ViewRed, false, ThemePreset.Night, true);
 
-            FireShot(game, ShotX20, ThemePreset.Sunset);
-            WaitForEnemyLoss(game, game.Match.EnemyStart - 2);
-            Settle(game, 0.3f);
-            Shoot(game, "14_sunset", ViewRed, false, ThemePreset.Sunset, true);
+            Fresh(game, ThemePreset.Sunset);
+            WaitForState(game, SessionState.Aim, Side.Player);
+            Settle(game, game.config.handStartDelay + game.config.handDemoDuration * 0.55f);
+            Auto(game, "19_sunset", false);
         }
 
-        /// <summary>Держит время, пока число живых красных пушек не упадёт до alive.</summary>
-        private static void WaitForEnemyLoss(GameBootstrap game, int alive)
+        /// <summary>Кадр авто-камеры без debug-панели.</summary>
+        private static void Auto(GameBootstrap game, string name, bool landscape)
         {
-            int steps = Mathf.RoundToInt(MaxWaitSeconds / StepSeconds);
-            for (int i = 0; i < steps && game.Match.EnemyAlive > alive; i++)
+            Shoot(game, name, 0, landscape, game.ActivePreset, true);
+        }
+
+        /// <summary>Выстрел игрока по подсказке текущего хода.</summary>
+        private static void FireHint(GameBootstrap game)
+        {
+            TurnHint hint = game.Flow.CurrentHint;
+            game.Cannons.SetAim(Side.Player, hint.handAngleDeg, hint.handPower01);
+            game.Flow.Skip();
+        }
+
+        private static void WaitForState(GameBootstrap game, SessionState state, Side side)
+        {
+            int steps = Mathf.RoundToInt(MaxMatchSeconds / StepSeconds);
+            for (int i = 0; i < steps && !(game.Flow.State == state && game.Flow.ActiveSide == side); i++)
             {
                 game.Loop.Tick(StepSeconds);
             }
         }
 
-        private static void WaitWhileFlying(GameBootstrap game)
+        private static void WaitForFinish(GameBootstrap game)
         {
-            int steps = Mathf.RoundToInt(MaxWaitSeconds / StepSeconds);
-            for (int i = 0; i < steps && (game.Rockets.ActiveCount > 0 || game.Boosters.PendingCopies > 0 || game.Cannons.IsFiring); i++)
+            int steps = Mathf.RoundToInt(MaxMatchSeconds / StepSeconds);
+            for (int i = 0; i < steps && !game.Flow.IsFinished; i++)
             {
                 game.Loop.Tick(StepSeconds);
             }
         }
 
-        /// <summary>Ещё один залп игрока той же наводкой, без хода красных.</summary>
-        private static void AimRepeat(GameBootstrap game)
-        {
-            game.Cannons.BeginSalvo(Side.Player);
-            WaitWhileFlying(game);
-            Settle(game, 0.4f);
-        }
-
-        /// <summary>Выстрел сценария кнопки SHOT с чистого уровня; возвращается, когда бустер уже выпускает копии.</summary>
-        private static void FireShot(GameBootstrap game, int shot, ThemePreset preset)
-        {
-            Fresh(game, preset);
-            AimShot(game, shot);
-            WaitForCopies(game, CopiesAtTrigger);
-        }
-
-        private static void AimShot(GameBootstrap game, int shot)
-        {
-#if GAME_DEBUG
-            game.Scenarios.Run(shot);
-#endif
-        }
-
-        private static void WaitForCopies(GameBootstrap game, int copies)
+        /// <summary>Держит время, пока голова потока активной стороны не дойдёт до x.</summary>
+        private static void WaitForHead(GameBootstrap game, float x)
         {
             int steps = Mathf.RoundToInt(MaxWaitSeconds / StepSeconds);
-            for (int i = 0; i < steps && game.Boosters.SpawnedTotal < copies; i++)
+            Side side = game.Flow.ActiveSide;
+            float facing = side == Side.Player ? 1f : -1f;
+            for (int i = 0; i < steps; i++)
+            {
+                game.Loop.Tick(StepSeconds);
+                if (game.Rockets.Count(side) > 0 && (game.Rockets.HeadX(side) - x) * facing > 0f)
+                {
+                    return;
+                }
+            }
+        }
+
+        private static void WaitForHonest(GameBootstrap game, float honest)
+        {
+            int steps = Mathf.RoundToInt(MaxWaitSeconds / StepSeconds);
+            for (int i = 0; i < steps && game.Boosters.HonestTotal < honest; i++)
             {
                 game.Loop.Tick(StepSeconds);
             }
@@ -187,7 +199,6 @@ namespace CastleDestroyers.EditorTools
 #if GAME_DEBUG
             game.CameraDirector.DebugView = view;
 #endif
-            game.CameraDirector.Snap();
             game.Parallax.Apply();
             Render(game, name, landscape, clean);
             Debug.Log("[GameCapture] " + name + " preset " + preset);
@@ -211,6 +222,8 @@ namespace CastleDestroyers.EditorTools
         {
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = camera;
+            // В режиме камеры канвас сортируется вместе с мешами, а в игре он overlay поверх всего.
+            canvas.sortingOrder = CapturedCanvasOrder;
             canvas.planeDistance = camera.nearClipPlane + 1f;
             Canvas.ForceUpdateCanvases();
         }
@@ -228,6 +241,8 @@ namespace CastleDestroyers.EditorTools
             AttachCanvas(uiCanvas, camera);
             game.CameraDirector.Snap();
             game.Parallax.Apply();
+            game.TickUi();
+            Canvas.ForceUpdateCanvases();
             camera.Render();
             uiCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
 

@@ -57,6 +57,14 @@ namespace CastleDestroyers.Combat
         private bool[] onPlatform;
         private int[] living;
         private int fallingCount;
+        private int playerLossesLeft;
+        private float[] salvoWeight;
+        private float[] poseX;
+        private float[] poseY;
+        private float[] poseCos;
+        private float[] poseSin;
+        private float[] jumpY;
+        private int droppingCount;
 
         public int TotalCannons { get { return playerCount + enemyCount; } }
         /// <summary>Положение стволов менялось в этом кадре: виду пора перестроить меш.</summary>
@@ -81,7 +89,13 @@ namespace CastleDestroyers.Combat
             hasAim = new bool[SideCount];
             firing = new bool[SideCount];
             salvoTime = new float[SideCount];
+            salvoWeight = new float[SideCount];
+            poseX = new float[SideCount];
+            poseY = new float[SideCount];
+            poseCos = new float[SideCount];
+            poseSin = new float[SideCount];
             int total = TotalCannons;
+            jumpY = new float[total];
             shots = new int[total];
             recoil = new float[total * BarrelCount];
             localX = new float[total];
@@ -109,6 +123,8 @@ namespace CastleDestroyers.Combat
                 localX[playerCount + i] = level.EnemyMountX[i] - config.enemyCastleX;
                 restLocalY[playerCount + i] = level.EnemyMountY[i] - enemyPivotY;
             }
+            salvoWeight[(int)Side.Player] = 1f;
+            salvoWeight[(int)Side.Enemy] = 1f;
             ResetCannons();
             SetBodyPose(Side.Player, config.playerCastleX, playerPivotY, 1f, 0f);
             SetBodyPose(Side.Enemy, config.enemyCastleX, enemyPivotY, 1f, 0f);
@@ -183,6 +199,12 @@ namespace CastleDestroyers.Combat
             return worldY[cannon];
         }
 
+        /// <summary>Подскок победителя над креплением, метры (ТЗ §3.11).</summary>
+        public float JumpY(int cannon)
+        {
+            return jumpY[cannon];
+        }
+
         /// <summary>Угол кувыркающейся пушки поверх угла стороны, радианы.</summary>
         public float FallAngle(int cannon)
         {
@@ -209,18 +231,53 @@ namespace CastleDestroyers.Combat
             hasAim[(int)side] = false;
         }
 
+        /// <summary>Поворачивает пушки, не задавая прицел: подсказка не должна становиться выстрелом.</summary>
+        public void PointAt(Side side, float degrees)
+        {
+            targetDeg[(int)side] = degrees;
+        }
+
+        /// <summary>Вес урона ракет следующих залпов стороны: добивающий выстрел Director (ТЗ §3.1.1).</summary>
+        public void SetSalvoWeight(Side side, float weight)
+        {
+            salvoWeight[(int)side] = weight;
+        }
+
+        /// <summary>Подскок живых пушек победителя со сдвигом фаз. time — секунды от начала; 0 ставит пушки на место.</summary>
+        public void Celebrate(Side side, float time)
+        {
+            int first = FirstCannon(side);
+            int count = CountOf(side);
+            for (int i = 0; i < count; i++)
+            {
+                int c = first + i;
+                jumpY[c] = time > 0f ? Mathf.Abs(Mathf.Sin(time * config.victoryJumpSpeed + i * config.victoryJumpPhase)) * config.victoryJumpHeight : 0f;
+            }
+            Moved = true;
+        }
+
         /// <summary>Начинает залп живых пушек по текущему прицелу.</summary>
         public void BeginSalvo(Side side)
         {
             int s = (int)side;
             firing[s] = true;
             salvoTime[s] = 0f;
+            if (side == Side.Enemy)
+            {
+                playerLossesLeft = config.directorMaxLossPerAiTurn;
+            }
             int first = FirstCannon(side);
             int count = CountOf(side);
             for (int cannon = first; cannon < first + count; cannon++)
             {
                 shots[cannon] = 0;
             }
+        }
+
+        /// <summary>Прекращает залп стороны: цель уже разбита (ТЗ §3.11).</summary>
+        public void StopSalvo(Side side)
+        {
+            firing[(int)side] = false;
         }
 
         public void Clear()
@@ -231,8 +288,10 @@ namespace CastleDestroyers.Combat
                 targetDeg[s] = 0f;
                 hasAim[s] = false;
                 firing[s] = false;
+                salvoWeight[s] = 1f;
             }
             System.Array.Clear(recoil, 0, recoil.Length);
+            System.Array.Clear(jumpY, 0, jumpY.Length);
             ResetCannons();
             Moved = true;
         }
@@ -240,6 +299,11 @@ namespace CastleDestroyers.Combat
         /// <summary>Поза замка стороны: пересчитывает крепления живых пушек в мир.</summary>
         public void SetBodyPose(Side side, float pivotX, float pivotY, float cos, float sin)
         {
+            int s = (int)side;
+            poseX[s] = pivotX;
+            poseY[s] = pivotY;
+            poseCos[s] = cos;
+            poseSin[s] = sin;
             int first = FirstCannon(side);
             int end = first + CountOf(side);
             for (int c = first; c < end; c++)
@@ -253,11 +317,17 @@ namespace CastleDestroyers.Combat
             Moved = true;
         }
 
-        /// <summary>Взрыв перекрыл хит-круг: пушка отлетает от него (ТЗ §3.3, условие 1). radius — радиус взрыва, метры.</summary>
+        /// <summary>
+        /// Взрыв задел пушку: она отлетает от него (ТЗ §3.3, условие 1). Хитбокс — капсула вдоль ствола, поэтому взрыв
+        /// рядом с дулом считается так же, как у крепления. radius — радиус взрыва, метры.
+        /// </summary>
         public void ApplyBlast(Side side, float x, float y, float radius)
         {
             float reach = config.cannonHitRadius + radius;
             float reachSq = reach * reach;
+            float radians = angleDeg[(int)side] * Mathf.Deg2Rad;
+            float barrelX = Facing(side) * Mathf.Cos(radians);
+            float barrelY = Mathf.Sin(radians);
             int first = FirstCannon(side);
             int end = first + CountOf(side);
             for (int c = first; c < end; c++)
@@ -266,8 +336,11 @@ namespace CastleDestroyers.Combat
                 {
                     continue;
                 }
-                float dx = worldX[c] - x;
-                float dy = worldY[c] - y;
+                float toBlastX = x - worldX[c];
+                float toBlastY = y - worldY[c];
+                float along = Mathf.Clamp(toBlastX * barrelX + toBlastY * barrelY, 0f, BarrelLength);
+                float dx = worldX[c] + barrelX * along - x;
+                float dy = worldY[c] + barrelY * along - y;
                 float distanceSq = dx * dx + dy * dy;
                 if (distanceSq < reachSq)
                 {
@@ -289,9 +362,13 @@ namespace CastleDestroyers.Combat
                 return false;
             }
             Side side = cannon < playerCount ? Side.Player : Side.Enemy;
-            if (config.directorEnabled && side == Side.Player && living[(int)side] <= 1)
+            if (config.directorEnabled && side == Side.Player && (living[(int)side] <= 1 || playerLossesLeft <= 0))
             {
                 return false;
+            }
+            if (side == Side.Player)
+            {
+                playerLossesLeft--;
             }
             Release(cannon, speedX, speedY, spin);
             living[(int)side]--;
@@ -318,8 +395,8 @@ namespace CastleDestroyers.Combat
         /// <summary>Спасённая Director-ом пушка без опоры съезжает на платформу и больше не проверяет материал.</summary>
         public void DropToPlatform(int cannon)
         {
-            localY[cannon] = config.platformHeight;
             onPlatform[cannon] = true;
+            droppingCount++;
         }
 
         /// <summary>X средней точки вылета живых пушек при текущем прицеле: начало пунктира.</summary>
@@ -327,6 +404,15 @@ namespace CastleDestroyers.Combat
         {
             float direction = Facing(side) * Mathf.Cos(targetDeg[(int)side] * Mathf.Deg2Rad);
             return Mean(worldX, side) + direction * BarrelLength;
+        }
+
+        /// <summary>Высшая точка дуги стороны при текущем прицеле: по ней камера заранее выбирает кадр.</summary>
+        public float SalvoApexY(Side side)
+        {
+            int s = (int)side;
+            float speed = Ballistics.Speed(power[s], config.launchSpeedMin, config.launchSpeedMax);
+            float speedY = speed * Mathf.Sin(targetDeg[s] * Mathf.Deg2Rad);
+            return MuzzleCenterY(side) + Ballistics.ApexHeight(speedY, config.gravity);
         }
 
         /// <summary>Y средней точки вылета живых пушек при текущем прицеле.</summary>
@@ -344,6 +430,10 @@ namespace CastleDestroyers.Combat
             if (fallingCount > 0)
             {
                 TickFalling(dt);
+            }
+            if (droppingCount > 0)
+            {
+                TickDropping(dt);
             }
             if (firing[(int)Side.Player])
             {
@@ -367,6 +457,8 @@ namespace CastleDestroyers.Combat
             living[(int)Side.Player] = playerCount;
             living[(int)Side.Enemy] = enemyCount;
             fallingCount = 0;
+            droppingCount = 0;
+            playerLossesLeft = int.MaxValue;
         }
 
         /// <summary>Счёт снизили снаружи (Director, тесты): лишние пушки отрываются с конца, остальное уже совпадает.</summary>
@@ -426,10 +518,34 @@ namespace CastleDestroyers.Combat
             Moved = true;
         }
 
+        /// <summary>Спасённые пушки плавно съезжают по замку до платформы.</summary>
+        private void TickDropping(float dt)
+        {
+            float floor = config.platformHeight;
+            float step = config.cannonDropSpeed * dt;
+            for (int c = 0; c < state.Length; c++)
+            {
+                if (!onPlatform[c] || state[c] != Alive || localY[c] <= floor)
+                {
+                    continue;
+                }
+                localY[c] = Mathf.MoveTowards(localY[c], floor, step);
+                int s = c < playerCount ? (int)Side.Player : (int)Side.Enemy;
+                worldX[c] = poseX[s] + localX[c] * poseCos[s] - localY[c] * poseSin[s];
+                worldY[c] = poseY[s] + localX[c] * poseSin[s] + localY[c] * poseCos[s];
+                if (localY[c] <= floor)
+                {
+                    droppingCount--;
+                }
+                Moved = true;
+            }
+        }
+
         private void Turn(int s, float dt)
         {
             float current = angleDeg[s];
-            float next = Mathf.MoveTowards(current, targetDeg[s], config.aimTurnSpeed * dt);
+            float speed = s == (int)Side.Enemy ? config.aiTurnSpeed : config.aimTurnSpeed;
+            float next = Mathf.MoveTowards(current, targetDeg[s], speed * dt);
             if (next != current)
             {
                 angleDeg[s] = next;
@@ -466,6 +582,7 @@ namespace CastleDestroyers.Combat
             float perpY = Mathf.Cos(radians);
             float speed = Ballistics.Speed(power[s], config.launchSpeedMin, config.launchSpeedMax);
             float interval = config.rocketInterval;
+            float weight = salvoWeight[s];
 
             int first = FirstCannon(side);
             int count = CountOf(side);
@@ -491,7 +608,7 @@ namespace CastleDestroyers.Combat
                     int offset = BarrelOrder[shots[cannon] % BarrelCount];
                     float x = worldX[cannon] + dirX * BarrelLength + perpX * offset * BarrelPitch;
                     float y = worldY[cannon] + dirY * BarrelLength + perpY * offset * BarrelPitch;
-                    rockets.Spawn(x, y, dirX * speed, dirY * speed, side, time - due);
+                    rockets.SpawnCopy(x, y, dirX * speed, dirY * speed, side, time - due, 0, weight);
                     particles.Spawn(x, y, 0f, 0f, config.muzzleFlashSize, config.muzzleFlashLife, 0f, flashColor);
                     recoil[cannon * BarrelCount + offset + 1] = config.recoilDistance;
                     shots[cannon]++;

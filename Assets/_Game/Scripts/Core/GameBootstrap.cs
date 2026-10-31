@@ -1,3 +1,4 @@
+using CastleDestroyers.AI;
 using CastleDestroyers.CameraRig;
 using CastleDestroyers.CastleRig;
 using CastleDestroyers.Combat;
@@ -48,6 +49,34 @@ namespace CastleDestroyers.Core
         public Text aimPowerText;
         public Text aimAngleText;
         public Text[] aimCaptions;
+        [Tooltip("HUD: корень, полосы сторон, сегменты, панели, рамки, иконки замков, скрещённые ракеты.")]
+        public RectTransform hudRoot;
+        public RectTransform[] hudBars;
+        public Image[] hudPlayerSegments;
+        public Image[] hudEnemySegments;
+        public Image[] hudPanels;
+        public Image[] hudFrames;
+        public Image[] hudCastleIcons;
+        public Image hudCrossedRockets;
+        [Tooltip("Плашка хода.")]
+        public RectTransform bannerRoot;
+        public Image bannerBackground;
+        public Text bannerText;
+        [Tooltip("Рука-подсказка: тень и сама рука.")]
+        public RectTransform handRoot;
+        public Image[] handImages;
+        [Tooltip("EndCard.")]
+        public GameObject endCardRoot;
+        public Image endCardDim;
+        public RectTransform endCardContent;
+        public RectTransform endCardButton;
+        public Image endCardIcon;
+        public Text endCardCaption;
+        public Image endCardButtonFace;
+        public Image endCardButtonEdge;
+        public Text endCardButtonText;
+        public Text endCardLogo;
+        public Text endCardLogoShadow;
         [Tooltip("Родитель тайлов земли и обломков.")]
         public Transform terrainRoot;
         public Material terrainMaterial;
@@ -79,6 +108,9 @@ namespace CastleDestroyers.Core
         public ExplosionSystem Explosions { get; private set; }
         public SmokeTrails Smoke { get; private set; }
         public AimInput Aim { get; private set; }
+        public AiController Ai { get; private set; }
+        public TurnGuide Guide { get; private set; }
+        public EndCardView EndCard { get; private set; }
         public CameraDirector CameraDirector { get; private set; }
         public ParallaxBackground Parallax { get; private set; }
         public GameLoop Loop { get; private set; }
@@ -99,6 +131,10 @@ namespace CastleDestroyers.Core
         private ScreenShake shake;
         private AimPreview aimPreview;
         private AimPanelView aimPanelView;
+        private HudView hudView;
+        private TurnBannerView bannerView;
+        private HandView handView;
+        private VictoryShow victoryShow;
         private bool booted;
 
         private void Start()
@@ -196,6 +232,8 @@ namespace CastleDestroyers.Core
             Parallax = new ParallaxBackground();
             Parallax.Init(config, mainCamera, backLayers);
 
+            Ai = new AiController();
+            Ai.Init(config, Flow, Cannons, Rng);
             TurnCombat combat = new TurnCombat();
             combat.Init(config, Flow, Cannons, Rockets, Boosters, CameraDirector);
             Aim = new AimInput();
@@ -205,6 +243,20 @@ namespace CastleDestroyers.Core
             aimDotsFilter.sharedMesh = aimPreview.Mesh;
             aimPanelView = new AimPanelView();
             aimPanelView.Init(config, Aim, Level, mainCamera, aimPanel, aimPanelBackground, aimPowerText, aimAngleText, aimCaptions);
+            Guide = new TurnGuide();
+            Guide.Init(config, Flow, Aim, Cannons, CameraDirector);
+            boosterView.Guide = Guide;
+            hudView = new HudView();
+            hudView.Init(config, Match, hudRoot, hudBars, hudPlayerSegments, hudEnemySegments, hudPanels, hudFrames, hudCastleIcons, hudCrossedRockets);
+            bannerView = new TurnBannerView();
+            bannerView.Init(config, Flow, bannerRoot, bannerBackground, bannerText);
+            handView = new HandView();
+            handView.Init(config, Guide, mainCamera, handRoot, handImages);
+            EndCard = new EndCardView();
+            EndCard.Init(config, Flow, endCardRoot, endCardDim, endCardContent, endCardButton, endCardIcon, endCardCaption, endCardButtonFace, endCardButtonEdge,
+                endCardButtonText, endCardLogo, endCardLogoShadow);
+            victoryShow = new VictoryShow();
+            victoryShow.Init(config, Flow, Cannons, Castles, levelFx, Rng);
 
             ActivePreset = config.theme.preset;
 
@@ -218,8 +270,8 @@ namespace CastleDestroyers.Core
             debugOverlay.Init(this);
             ITickable[] systems =
             {
-                Flow, Aim, Scenarios, combat, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Castles, Decor, water,
-                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, debugOverlay
+                Flow, Aim, Guide, Scenarios, Ai, combat, victoryShow, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Castles, Decor, water,
+                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard, debugOverlay
             };
 #else
             if (debugRoot != null)
@@ -228,8 +280,8 @@ namespace CastleDestroyers.Core
             }
             ITickable[] systems =
             {
-                Flow, Aim, combat, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Castles, Decor, water,
-                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView
+                Flow, Aim, Guide, Ai, combat, victoryShow, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Castles, Decor, water,
+                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard
             };
 #endif
             Loop = new GameLoop();
@@ -238,6 +290,15 @@ namespace CastleDestroyers.Core
             ApplyTheme();
             PlatformBridge.Init(OnPause, OnResume);
             booted = true;
+        }
+
+        /// <summary>Обновляет вид UI без шага времени: editor-захвату нужна раскладка под размер кадра.</summary>
+        public void TickUi()
+        {
+            hudView.Tick(0f);
+            aimPanelView.Tick(0f);
+            handView.Tick(0f);
+            bannerView.Tick(0f);
         }
 
         /// <summary>Переключает пресет палитры Night / Sunset без изменения ассета.</summary>
@@ -267,10 +328,12 @@ namespace CastleDestroyers.Core
             Smoke.Clear();
             shake.Clear();
             Aim.Cancel();
+            CameraDirector.ShowMountain = false;
 #if GAME_DEBUG
             Stress.SetActive(false);
 #endif
             CameraDirector.HeadPassedCenter = false;
+            CameraDirector.FlightTopY = 0f;
             CameraDirector.Snap();
             Parallax.Apply();
         }
@@ -295,6 +358,10 @@ namespace CastleDestroyers.Core
             Smoke.ApplyPalette(palette);
             aimPreview.ApplyPalette(palette);
             aimPanelView.ApplyPalette(palette);
+            hudView.ApplyPalette(palette);
+            bannerView.ApplyPalette(palette);
+            handView.ApplyPalette(palette);
+            EndCard.ApplyPalette(palette);
             rocketMaterial.SetColor(RocketBodyColor, palette.rocketBody);
             rocketMaterial.SetColor(RocketShadeColor, palette.rocketShade);
             mainCamera.backgroundColor = palette.sky;

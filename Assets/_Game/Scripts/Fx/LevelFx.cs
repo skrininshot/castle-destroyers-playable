@@ -22,6 +22,7 @@ namespace CastleDestroyers.Fx
         private Color32 stoneAccent;
         private Color32 splashColor;
         private Color32 splashAccent;
+        private Color32[] sparkColors;
 
         public void Init(GameConfig gameConfig, FlatParticles flatParticles, Rng random)
         {
@@ -38,6 +39,7 @@ namespace CastleDestroyers.Fx
             stoneAccent = palette.castleStoneShade;
             splashColor = palette.waterRim;
             splashAccent = palette.waterHighlight;
+            sparkColors = new[] { palette.hudGold, palette.hudHealth, palette.hudText };
         }
 
         /// <summary>Облачко пыли и комьев в круге радиуса spread.</summary>
@@ -65,6 +67,20 @@ namespace CastleDestroyers.Fx
                 bool accent = rng.Chance(AccentChance);
                 particles.Spawn(x + directionX * reach, y + directionY * reach, directionX * speed, directionY * speed, size,
                     config.dustLife * rng.Range(DustLifeFloor, 1f), accent ? 0f : config.dustGravity, accent ? accentColor : color);
+            }
+        }
+
+        /// <summary>Залп фейерверка: плоские искры кольцом, каждый залп своего цвета с белыми вкраплениями (ТЗ §3.11).</summary>
+        public void Firework(float x, float y)
+        {
+            Color32 main = sparkColors[rng.Range(0, sparkColors.Length)];
+            int count = config.fireworkSparks;
+            for (int i = 0; i < count; i++)
+            {
+                float angle = FullTurn * i / count;
+                float speed = config.fireworkSpeed * rng.Range(SplashScatterFloor, 1f);
+                particles.Spawn(x, y, Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed, config.fireworkSparkSize,
+                    config.fireworkLife * rng.Range(SplashLifeFloor, 1f), config.fireworkGravity, rng.Chance(AccentChance) ? main : sparkColors[sparkColors.Length - 1]);
             }
         }
 

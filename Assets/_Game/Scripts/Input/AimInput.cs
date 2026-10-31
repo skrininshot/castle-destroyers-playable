@@ -19,12 +19,21 @@ namespace CastleDestroyers.InputRig
         private CannonSystem cannons;
         private Camera cam;
         private bool wasPressed;
+        private bool demo;
+        private float demoAngle;
+        private float demoPower;
 
         /// <summary>Показывать пунктир и плашку.</summary>
         public bool Aiming { get { return gesture.Active && gesture.Armed; } }
         public float AngleDeg { get { return gesture.AngleDeg; } }
         public float Power01 { get { return gesture.Power01; } }
-        /// <summary>Устройство не читается: нажатия подаются через Feed (скриншоты, подсказка этапа 6).</summary>
+        /// <summary>Палец на экране: подсказка уступает игроку, даже если жест ещё не вышел из мёртвой зоны.</summary>
+        public bool GestureActive { get { return gesture.Active; } }
+        /// <summary>Показывать пунктир и плашку: жест игрока или показ подсказки.</summary>
+        public bool Showing { get { return Aiming || demo; } }
+        public float ShownAngle { get { return demo ? demoAngle : gesture.AngleDeg; } }
+        public float ShownPower { get { return demo ? demoPower : gesture.Power01; } }
+        /// <summary>Устройство не читается: нажатия подаются через Feed (скриншоты, тесты).</summary>
         public bool Scripted { get; set; }
 #if GAME_DEBUG
         /// <summary>Debug-взрывы забрали ввод.</summary>
@@ -48,6 +57,19 @@ namespace CastleDestroyers.InputRig
             }
             pointer.Read();
             Feed(pointer.Pressed, pointer.X, pointer.Y, Screen.height);
+        }
+
+        /// <summary>Подсказка показывает прицел: числа и пунктир видны, но выстрела это не даёт.</summary>
+        public void SetDemo(float angleDeg, float power01)
+        {
+            demo = true;
+            demoAngle = angleDeg;
+            demoPower = power01;
+        }
+
+        public void ClearDemo()
+        {
+            demo = false;
         }
 
         public void Cancel()

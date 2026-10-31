@@ -19,6 +19,7 @@ namespace CastleDestroyers.CastleRig
         private const uint MeshSeed = 8821u;
         private const float FullTurn = Mathf.PI * 2f;
         private const float CrackLengthFloor = 0.6f;
+        private const int SupportSamples = 8;
         public const int MaxPlatformCracks = 4;
 
         private readonly FlatMeshBuilder builder = new FlatMeshBuilder();
@@ -42,6 +43,7 @@ namespace CastleDestroyers.CastleRig
         private float[] solveTimer;
         private int[] seenRevision;
         private int seenTerrainRevision;
+        private int[] supportStart;
 
         public int ChunksActive { get { return chunks.ActiveCount; } }
         /// <summary>Поза или трещины менялись: виду шасси пора перестроить меш.</summary>
@@ -99,6 +101,16 @@ namespace CastleDestroyers.CastleRig
             }
             chunks = new CastleChunks();
             chunks.Init(config, fx, rng, template, chunkParent, chunkSortingOrder);
+            supportStart = new int[cannons.TotalCannons];
+            for (int s = 0; s < SideCount; s++)
+            {
+                Side side = (Side)s;
+                int first = cannons.FirstCannon(side);
+                for (int c = first; c < first + cannons.CountOf(side); c++)
+                {
+                    supportStart[c] = CountSupport(bodies[s].Mask, c);
+                }
+            }
             PushPoses();
         }
 
@@ -294,7 +306,7 @@ namespace CastleDestroyers.CastleRig
             int end = first + cannons.CountOf(side);
             for (int c = first; c < end; c++)
             {
-                if (!cannons.IsAlive(c) || cannons.IsOnPlatform(c) || mask.IsSolidWorld(cannons.LocalX(c), cannons.LocalY(c)))
+                if (!cannons.IsAlive(c) || cannons.IsOnPlatform(c) || IsSupported(mask, c))
                 {
                     continue;
                 }
@@ -306,6 +318,31 @@ namespace CastleDestroyers.CastleRig
                     cannons.DropToPlatform(c);
                 }
             }
+        }
+
+        /// <summary>Пушка держится, пока материал есть под креплением и вокруг него: на тонкой перемычке она не висит.</summary>
+        private bool IsSupported(DestructibleMask mask, int cannon)
+        {
+            return mask.IsSolidWorld(cannons.LocalX(cannon), cannons.LocalY(cannon))
+                && CountSupport(mask, cannon) >= supportStart[cannon] * config.cannonSupportShare;
+        }
+
+        /// <summary>Сколько точек круга вокруг крепления стоит на материале.</summary>
+        private int CountSupport(DestructibleMask mask, int cannon)
+        {
+            float x = cannons.LocalX(cannon);
+            float y = cannons.LocalY(cannon);
+            float radius = config.cannonSupportRadius;
+            int count = 0;
+            for (int i = 0; i < SupportSamples; i++)
+            {
+                float angle = FullTurn * i / SupportSamples;
+                if (mask.IsSolidWorld(x + Mathf.Cos(angle) * radius, y + Mathf.Sin(angle) * radius))
+                {
+                    count++;
+                }
+            }
+            return count;
         }
 
         private void Stamp(CastleBody body, float x, float y, float radius)

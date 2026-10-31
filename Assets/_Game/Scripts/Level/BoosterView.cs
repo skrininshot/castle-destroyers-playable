@@ -51,6 +51,8 @@ namespace CastleDestroyers.Level
         private float time;
 
         public Mesh Mesh { get; private set; }
+        /// <summary>Источник подсветки бустера-подсказки.</summary>
+        public UI.TurnGuide Guide { get; set; }
 
         public void Init(GameConfig gameConfig, BoosterSystem boosterSystem)
         {
@@ -118,6 +120,10 @@ namespace CastleDestroyers.Level
         {
             BoosterSpec spec = config.boosters[k];
             float breath = config.boosterPulse * Mathf.Sin(time * config.boosterPulseSpeed + k);
+            if (Guide != null && spec.multiplier == Guide.HighlightMultiplier)
+            {
+                breath += config.boosterHighlightPulse * (0.5f + 0.5f * Mathf.Sin(time * config.boosterHighlightSpeed));
+            }
             float squash = boosters.Squash(k) * config.boosterSquash;
             float scaleX = 1f + breath + squash;
             float scaleY = 1f + breath - squash;

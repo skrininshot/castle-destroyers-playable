@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Растеризация SVG-источников в PNG: маска ландшафта уровня 1 (ТЗ §3.8) и ракета (ТЗ §3.4).
+"""Растеризация SVG-источников в PNG: маска ландшафта уровня 1 (ТЗ §3.8), ракета (ТЗ §3.4) и формы UI.
 
 Использование: python Tools/rasterize_svg.py
 
@@ -8,6 +8,8 @@
 Нижняя строка картинки — низ уровня. Изменение PNG запекает данные в Unity (TerrainMaskBaker).
 
 Каналы Rocket.png: R — силуэт, G — детали в цвет стороны, B — теневая полоса. Цвета задаёт палитра.
+
+Формы UI (Ui*.svg) — белый силуэт с альфой, цвет задаёт палитра через Image.color.
 
 Разбирается подмножество SVG: <path> с командами M, L, C, Z в абсолютных координатах и <ellipse>.
 Этап 7 расширит скрипт на остальной арт.
@@ -25,6 +27,8 @@ SOURCE = ROOT / "Art" / "Source" / "Level1_TerrainMask.svg"
 OUTPUT = ROOT / "Assets" / "_Game" / "Art" / "Level" / "Level1_TerrainMask.png"
 ROCKET_SOURCE = ROOT / "Art" / "Source" / "Rocket.svg"
 ROCKET_OUTPUT = ROOT / "Assets" / "_Game" / "Art" / "Level" / "Rocket.png"
+UI_SOURCES = ("UiPill", "UiCastle", "UiRockets", "UiHand")
+UI_OUTPUT_DIR = ROOT / "Assets" / "_Game" / "Art" / "Ui"
 SVG_NS = "{http://www.w3.org/2000/svg}"
 
 SUPERSAMPLE = 6
@@ -141,8 +145,33 @@ def rasterize_rocket():
     print(f"{ROCKET_OUTPUT.relative_to(ROOT)}: {size[0]}x{size[1]}, {ROCKET_OUTPUT.stat().st_size} bytes")
 
 
+def rasterize_ui_shape(name):
+    """Все фигуры файла заливаются одним белым силуэтом."""
+    root = ElementTree.parse(ROOT / "Art" / "Source" / f"{name}.svg").getroot()
+    size = (int(root.get("width")), int(root.get("height")))
+    canvas = Image.new("L", (size[0] * SUPERSAMPLE, size[1] * SUPERSAMPLE), 0)
+    draw = ImageDraw.Draw(canvas)
+    for shape in root:
+        if shape.tag == f"{SVG_NS}ellipse":
+            cx = float(shape.get("cx")) * SUPERSAMPLE
+            cy = float(shape.get("cy")) * SUPERSAMPLE
+            rx = float(shape.get("rx")) * SUPERSAMPLE
+            ry = float(shape.get("ry")) * SUPERSAMPLE
+            draw.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=255)
+        else:
+            draw.polygon(scaled(flatten_path(shape.get("d"))[0]), fill=255)
+    alpha = downsample(canvas, size)
+    pixels = numpy.dstack((numpy.full(alpha.shape, 255, numpy.uint8),) * 3 + (alpha,))
+    UI_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output = UI_OUTPUT_DIR / f"{name}.png"
+    Image.fromarray(pixels, "RGBA").save(output, optimize=True)
+    print(f"{output.relative_to(ROOT)}: {size[0]}x{size[1]}, {output.stat().st_size} bytes")
+
+
 def main():
     rasterize_rocket()
+    for name in UI_SOURCES:
+        rasterize_ui_shape(name)
     root = ElementTree.parse(SOURCE).getroot()
     width = int(root.get("width"))
     height = int(root.get("height"))

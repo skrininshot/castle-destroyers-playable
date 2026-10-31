@@ -16,6 +16,7 @@ namespace CastleDestroyers.Flow
 
         private GameConfig config;
         private MatchState match;
+        private float overTime;
 
         public SessionState State { get; private set; }
         /// <summary>Чья очередь (для Victory / Defeat — победитель).</summary>
@@ -39,6 +40,10 @@ namespace CastleDestroyers.Flow
         public Side Loser { get { return Winner == Side.Player ? Side.Enemy : Side.Player; } }
         public TurnHint CurrentHint { get { return config.GetHint(PlayerTurn - 1); } }
         public bool IsFinished { get { return State == SessionState.EndCard; } }
+        /// <summary>Идёт последний разрешённый ход игрока при включённом Director: его залп добивающий (ТЗ §3.1.1).</summary>
+        public bool IsFinisherTurn { get { return ActiveSide == Side.Player && config.directorEnabled && PlayerTurn >= config.maxPlayerTurns; } }
+
+        public MatchState Match { get { return match; } }
 
         public void Init(GameConfig gameConfig, MatchState matchState)
         {
@@ -73,6 +78,12 @@ namespace CastleDestroyers.Flow
                 return;
             }
 
+            // Цель уже разбита: летящие ракеты долетают, но Victory ждёт их недолго (ТЗ §3.11).
+            if (State == SessionState.Flight && match.IsEliminated(ActiveSide == Side.Player ? Side.Enemy : Side.Player))
+            {
+                overTime += dt;
+            }
+
             for (int i = 0; i < MaxTransitionsPerTick; i++)
             {
                 float duration = Duration(State, ActiveSide);
@@ -81,7 +92,7 @@ namespace CastleDestroyers.Flow
                     return;
                 }
                 bool flight = State == SessionState.Flight;
-                if (flight && FlightBusy && StateTime < config.flightMaxDuration)
+                if (flight && FlightBusy && StateTime < config.flightMaxDuration && overTime < config.victoryFlightCap)
                 {
                     return;
                 }
@@ -212,6 +223,7 @@ namespace CastleDestroyers.Flow
             State = state;
             ActiveSide = side;
             StateTime = 0f;
+            overTime = 0f;
             if (state == SessionState.Resolve)
             {
                 ApplyFinisher();
@@ -222,10 +234,10 @@ namespace CastleDestroyers.Flow
             }
         }
 
-        /// <summary>Director: последний ход игрока добивает врага. Настоящий множитель урона — этап 6.</summary>
+        /// <summary>Director: последний ход игрока добивает врага, сколько бы пушек ни снёс его усиленный залп.</summary>
         private void ApplyFinisher()
         {
-            if (ActiveSide == Side.Player && config.directorEnabled && PlayerTurn >= config.maxPlayerTurns)
+            if (IsFinisherTurn)
             {
                 match.Destroy(Side.Enemy, match.EnemyAlive, 0);
             }

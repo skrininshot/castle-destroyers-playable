@@ -44,6 +44,7 @@ namespace CastleDestroyers.Combat
         private byte[] boosterBits;
         private int[] countBySide;
         private float[] headBySide;
+        private float[] topBySide;
         private Vector3[] vertices;
         private Color32[] colors;
         private Color32 playerColor;
@@ -88,6 +89,7 @@ namespace CastleDestroyers.Combat
             }
             countBySide = new int[SideCount];
             headBySide = new float[SideCount];
+            topBySide = new float[SideCount];
             vertices = new Vector3[capacity * VerticesPerQuad];
             colors = new Color32[capacity * VerticesPerQuad];
 
@@ -134,6 +136,12 @@ namespace CastleDestroyers.Combat
             Mesh.colors32 = colors;
         }
 
+        /// <summary>Вес урона ракеты по индексу пула.</summary>
+        public float Weight(int rocket)
+        {
+            return weight[rocket];
+        }
+
         /// <summary>Ракет стороны в полёте.</summary>
         public int Count(Side owner)
         {
@@ -144,6 +152,12 @@ namespace CastleDestroyers.Combat
         public float HeadX(Side owner)
         {
             return headBySide[(int)owner];
+        }
+
+        /// <summary>Y самой высокой ракеты стороны: по нему камера раздвигает кадр вверх. Имеет смысл, пока Count больше 0.</summary>
+        public float TopY(Side owner)
+        {
+            return topBySide[(int)owner];
         }
 
         /// <summary>Выпускает ракету из точки (x, y). startAge — время, на которое она уже опоздала внутри кадра. False, если бюджет исчерпан.</summary>
@@ -216,6 +230,8 @@ namespace CastleDestroyers.Combat
             float smokeScale = 1f + (lodStep - 1) * config.smokeLodGrowth;
             float playerHead = float.NegativeInfinity;
             float enemyHead = float.PositiveInfinity;
+            float playerTop = float.NegativeInfinity;
+            float enemyTop = float.NegativeInfinity;
             Vector3[] verts = vertices;
 
             for (int i = 0; i < pool.Capacity; i++)
@@ -279,10 +295,12 @@ namespace CastleDestroyers.Combat
                 if (side[i] == (byte)Side.Player)
                 {
                     playerHead = x > playerHead ? x : playerHead;
+                    playerTop = y > playerTop ? y : playerTop;
                 }
                 else
                 {
                     enemyHead = x < enemyHead ? x : enemyHead;
+                    enemyTop = y > enemyTop ? y : enemyTop;
                 }
 
                 float timer = smokeTimer[i] - dt;
@@ -299,6 +317,8 @@ namespace CastleDestroyers.Combat
 
             headBySide[(int)Side.Player] = playerHead;
             headBySide[(int)Side.Enemy] = enemyHead;
+            topBySide[(int)Side.Player] = playerTop;
+            topBySide[(int)Side.Enemy] = enemyTop;
             Mesh.vertices = vertices;
             dirty = pool.ActiveCount > 0;
             if (colorsDirty)

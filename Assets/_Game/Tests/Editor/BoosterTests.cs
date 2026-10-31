@@ -371,9 +371,9 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void StubAiShotFliesOverBoosters()
+        public void FirstAiPresetFliesOverBoosters()
         {
-            rig.Cannons.SetAim(Side.Enemy, rig.Config.stubAiAngleDeg, rig.Config.stubAiPower);
+            rig.Cannons.SetAim(Side.Enemy, rig.Config.aiPresets[0].angleDeg, rig.Config.aiPresets[0].power01);
             rig.Cannons.BeginSalvo(Side.Enemy);
             float nearestX = float.PositiveInfinity;
             for (int i = 0; i < MaxSteps && (rig.Cannons.IsFiring || rig.Rockets.ActiveCount > 0); i++)

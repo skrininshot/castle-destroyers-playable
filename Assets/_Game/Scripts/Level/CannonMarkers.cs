@@ -113,7 +113,7 @@ namespace CastleDestroyers.Level
                 int cannon = firstCannon + i;
                 int quad = cannon * QuadsPerCannon;
                 float x = cannons.WorldX(cannon);
-                float y = cannons.WorldY(cannon);
+                float y = cannons.WorldY(cannon) + cannons.JumpY(cannon);
                 bool falling = cannons.IsFalling(cannon);
                 float angle = falling ? radians + cannons.FallAngle(cannon) : radians;
                 float cos = Mathf.Cos(angle);

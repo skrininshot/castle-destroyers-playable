@@ -275,6 +275,38 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void DeadTargetEndsFlightSoonEvenIfRocketsStillFly()
+        {
+            while (flow.State != SessionState.Flight)
+            {
+                flow.Skip();
+            }
+            flow.FlightBusy = true;
+            flow.Tick(config.flightDuration + 0.1f);
+            Assert.AreEqual(SessionState.Flight, flow.State);
+            match.Destroy(Side.Enemy, config.enemyCannons, 0);
+            flow.Tick(config.victoryFlightCap * 0.5f);
+            Assert.AreEqual(SessionState.Flight, flow.State);
+            flow.Tick(config.victoryFlightCap * 0.6f);
+            Assert.AreEqual(SessionState.Resolve, flow.State);
+        }
+
+        [Test]
+        public void OnlyLastPlayerTurnIsFinisher()
+        {
+            config.maxPlayerTurns = 2;
+            Assert.IsFalse(flow.IsFinisherTurn);
+            while (flow.PlayerTurn < 2)
+            {
+                flow.Skip();
+                Assert.IsFalse(flow.PlayerTurn < 2 && flow.IsFinisherTurn);
+            }
+            Assert.IsTrue(flow.IsFinisherTurn);
+            config.directorEnabled = false;
+            Assert.IsFalse(flow.IsFinisherTurn);
+        }
+
+        [Test]
         public void SkipMovesToNextStateImmediately()
         {
             flow.Skip();

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace CastleDestroyers.UI
 {
     /// <summary>
-    /// Плашка POWER / ANGLE (ТЗ §3.2), greybox-версия. Висит над замком игрока и показана только во время жеста.
+    /// Плашка POWER / ANGLE (ТЗ §3.2), greybox-версия. Висит над замком игрока и показана во время жеста и показа подсказки.
     /// Строки чисел готовятся заранее, чтобы кадр не аллоцировал.
     /// </summary>
     public sealed class AimPanelView : ITickable
@@ -70,7 +70,7 @@ namespace CastleDestroyers.UI
 
         public void Tick(float dt)
         {
-            bool visible = aim.Aiming;
+            bool visible = aim.Showing;
             if (root.activeSelf != visible)
             {
                 root.SetActive(visible);
@@ -80,8 +80,8 @@ namespace CastleDestroyers.UI
                 return;
             }
 
-            int power = Mathf.RoundToInt(aim.Power01 * MaxPercent);
-            int angle = Mathf.RoundToInt(aim.AngleDeg);
+            int power = Mathf.RoundToInt(aim.ShownPower * MaxPercent);
+            int angle = Mathf.RoundToInt(aim.ShownAngle);
             if (power != shownPower)
             {
                 shownPower = power;

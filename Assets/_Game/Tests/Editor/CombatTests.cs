@@ -1,4 +1,5 @@
 using System;
+using CastleDestroyers.AI;
 using CastleDestroyers.CameraRig;
 using CastleDestroyers.CastleRig;
 using CastleDestroyers.Combat;
@@ -824,6 +825,7 @@ namespace CastleDestroyers.Tests
         private CombatRig rig;
         private CameraDirector director;
         private TurnCombat combat;
+        private AiController ai;
         private GameObject cameraObject;
 
         [SetUp]
@@ -833,6 +835,8 @@ namespace CastleDestroyers.Tests
             cameraObject = new GameObject("CombatCamera", typeof(Camera));
             director = new CameraDirector();
             director.Init(cameraObject.GetComponent<Camera>(), rig.Config, rig.Level, rig.Flow, rig.Shake);
+            ai = new AiController();
+            ai.Init(rig.Config, rig.Flow, rig.Cannons, new Rng(11u));
             combat = new TurnCombat();
             combat.Init(rig.Config, rig.Flow, rig.Cannons, rig.Rockets, rig.Boosters, director);
         }
@@ -865,9 +869,86 @@ namespace CastleDestroyers.Tests
         [Test]
         public void EnemyTurnsCannonsWhileAiming()
         {
+            rig.Config.aiTurnSpeed = 1000f;
             AdvanceTo(SessionState.Aim, Side.Enemy);
             rig.Cannons.Tick(1f);
-            Assert.AreEqual(rig.Config.stubAiAngleDeg, rig.Cannons.AngleDeg(Side.Enemy), 1e-3f);
+            float decoy = rig.Cannons.AngleDeg(Side.Enemy);
+            Assert.AreNotEqual(ai.FinalAngle, decoy, "cannons first go to a false angle");
+
+            rig.Flow.Tick(rig.Config.aiAimDuration * rig.Config.aiDecoyShare + 0.01f);
+            ai.Tick(0f);
+            rig.Cannons.Tick(1f);
+            Assert.AreEqual(ai.FinalAngle, rig.Cannons.AngleDeg(Side.Enemy), 1e-3f);
+        }
+
+        [Test]
+        public void EnemyShootsTheFinalAngleEvenIfThinkingIsSkipped()
+        {
+            rig.Config.aiTurnSpeed = 1000f;
+            AdvanceTo(SessionState.Fire, Side.Enemy);
+            rig.Cannons.Tick(1f);
+            Assert.AreEqual(ai.FinalAngle, rig.Cannons.AngleDeg(Side.Enemy), 1e-3f);
+        }
+
+        [Test]
+        public void AiFollowsPresetOrderWithinNoise()
+        {
+            rig.Config.aiPresetOrder = new[] { 2, 0 };
+            Assert.AreSame(rig.Config.aiPresets[2], AiController.PickPreset(rig.Config, 1));
+            Assert.AreSame(rig.Config.aiPresets[0], AiController.PickPreset(rig.Config, 2));
+            Assert.AreSame(rig.Config.aiPresets[2], AiController.PickPreset(rig.Config, 3));
+            AiShotPreset preset = AiController.PickPreset(rig.Config, 1);
+            AdvanceTo(SessionState.Aim, Side.Enemy);
+            Assert.AreEqual(preset.angleDeg, ai.FinalAngle, rig.Config.aiAngleNoiseDeg + 1e-3f);
+            Assert.AreEqual(preset.power01, ai.FinalPower, rig.Config.aiPowerNoise + 1e-3f);
+        }
+
+        [Test]
+        public void LastPlayerSalvoGetsFinisherWeight()
+        {
+            rig.Config.maxPlayerTurns = 1;
+            rig.Config.rocketsPerCannon = 1;
+            int craters = rig.Castles.Body(Side.Enemy).Mask.SolidCount;
+            AdvanceTo(SessionState.Fire, Side.Player);
+            rig.Cannons.Tick(1f);
+            Assert.AreEqual(rig.Config.directorFinisherWeight, HeaviestRocket(), 1e-3f);
+            Assert.AreEqual(craters, rig.Castles.Body(Side.Enemy).Mask.SolidCount);
+        }
+
+        private float HeaviestRocket()
+        {
+            float heaviest = 0f;
+            for (int i = 0; i < rig.Rockets.Capacity; i++)
+            {
+                heaviest = Mathf.Max(heaviest, rig.Rockets.Weight(i));
+            }
+            return heaviest;
+        }
+
+        [Test]
+        public void OrdinarySalvoHasUnitWeight()
+        {
+            AdvanceTo(SessionState.Fire, Side.Player);
+            rig.Cannons.Tick(1f);
+            Assert.AreEqual(1f, HeaviestRocket(), 1e-3f);
+        }
+
+        [Test]
+        public void ApexOfTheSalvoIsKnownBeforeRocketsFly()
+        {
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.AreEqual(rig.Cannons.SalvoApexY(Side.Player), director.FlightTopY, 1e-3f);
+            Assert.Greater(director.FlightTopY, 30f);
+        }
+
+        [Test]
+        public void RocketsAboveTheApexRaiseTheFrame()
+        {
+            AdvanceTo(SessionState.Flight, Side.Player);
+            rig.Rockets.Spawn(-5f, 60f, 1f, 0f, Side.Player, 0f);
+            rig.Rockets.Tick(0.01f);
+            combat.Tick(0f);
+            Assert.AreEqual(rig.Rockets.TopY(Side.Player), director.FlightTopY, 1e-3f);
         }
 
         [Test]
@@ -899,6 +980,8 @@ namespace CastleDestroyers.Tests
             rig.Rockets.Spawn(rig.Config.centerFocus.x + 3f, 45f, 1f, 0f, Side.Player, 0f);
             rig.Rockets.Tick(0.01f);
             combat.Tick(0f);
+            Assert.IsFalse(director.HeadPassedCenter, "the camera holds the mountain for a moment");
+            combat.Tick(rig.Config.cameraCenterHold + 0.01f);
             Assert.IsTrue(director.HeadPassedCenter);
         }
     }

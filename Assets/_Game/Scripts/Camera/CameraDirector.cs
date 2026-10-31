@@ -38,6 +38,10 @@ namespace CastleDestroyers.CameraRig
         public bool HeadPassedCenter { get; set; }
         /// <summary>X головы потока: за ней слегка смещается центральный кадр.</summary>
         public float FlightHeadX { get; set; }
+        /// <summary>Высшая точка залпа, известная на сейчас: центральный кадр раздвигается до неё и обратно не сжимается.</summary>
+        public float FlightTopY { get; set; }
+        /// <summary>Подсказка хода показывает гору: подсвеченный бустер не виден с замка.</summary>
+        public bool ShowMountain { get; set; }
 
         public void Init(Camera camera, GameConfig gameConfig, GreyboxLevel greyboxLevel, SessionFlow sessionFlow, ScreenShake screenShake)
         {
@@ -96,8 +100,7 @@ namespace CastleDestroyers.CameraRig
                     }
                     else
                     {
-                        SetCenterFrame(frame);
-                        frame.x += (FlightHeadX - frame.x) * config.cameraHeadFollow;
+                        SetFlightFrame(frame);
                     }
                     break;
                 case SessionState.Resolve:
@@ -126,7 +129,14 @@ namespace CastleDestroyers.CameraRig
                     }
                     break;
                 default:
-                    SetOwnFrame(frame, active);
+                    if (ShowMountain)
+                    {
+                        SetCenterFrame(frame);
+                    }
+                    else
+                    {
+                        SetOwnFrame(frame, active);
+                    }
                     break;
             }
         }
@@ -161,6 +171,23 @@ namespace CastleDestroyers.CameraRig
         {
             frame.Set(config.centerFocus.x, config.centerFocus.y, config.centerFrameWidth);
             frame.minHeight = config.centerFrameMinHeight;
+        }
+
+        /// <summary>
+        /// Кадр полёта: низ стоит на месте, верх поднимается над дугой залпа, поэтому ракеты выше бустера x20 остаются в кадре.
+        /// В портрете вместе с высотой растёт и видимая ширина.
+        /// </summary>
+        private void SetFlightFrame(CameraFrame frame)
+        {
+            SetCenterFrame(frame);
+            float bottom = frame.y - frame.minHeight * 0.5f;
+            float height = Mathf.Min(FlightTopY + config.cameraFlightTopMargin - bottom, config.centerFrameMaxHeight);
+            if (height > frame.minHeight)
+            {
+                frame.minHeight = height;
+                frame.y = bottom + height * 0.5f;
+            }
+            frame.x += (FlightHeadX - frame.x) * config.cameraHeadFollow;
         }
 
         /// <summary>Свой замок крупно, со сдвигом к противнику: замок стоит чуть в стороне от центра кадра.</summary>

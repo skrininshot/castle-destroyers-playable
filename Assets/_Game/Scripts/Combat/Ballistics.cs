@@ -11,6 +11,12 @@ namespace CastleDestroyers.Combat
             return speedMin + (speedMax - speedMin) * Mathf.Clamp01(power01);
         }
 
+        /// <summary>На сколько дуга поднимается над точкой вылета, метры.</summary>
+        public static float ApexHeight(float speedY, float gravity)
+        {
+            return speedY > 0f ? speedY * speedY / (2f * gravity) : 0f;
+        }
+
         /// <summary>Когда ракета опустится до высоты targetY, секунды. Если высота недостижима — 0.</summary>
         public static float TimeToHeight(float startY, float speedY, float gravity, float targetY)
         {

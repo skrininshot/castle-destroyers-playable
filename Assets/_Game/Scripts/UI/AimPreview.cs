@@ -78,7 +78,7 @@ namespace CastleDestroyers.UI
 
         public void Tick(float dt)
         {
-            if (!aim.Aiming)
+            if (!aim.Showing)
             {
                 if (shown)
                 {
@@ -90,8 +90,8 @@ namespace CastleDestroyers.UI
             }
             shown = true;
 
-            float radians = aim.AngleDeg * Mathf.Deg2Rad;
-            float speed = Ballistics.Speed(aim.Power01, config.launchSpeedMin, config.launchSpeedMax);
+            float radians = aim.ShownAngle * Mathf.Deg2Rad;
+            float speed = Ballistics.Speed(aim.ShownPower, config.launchSpeedMin, config.launchSpeedMax);
             float speedX = Mathf.Cos(radians) * speed;
             float speedY = Mathf.Sin(radians) * speed;
             float startX = cannons.MuzzleCenterX(Side.Player);
