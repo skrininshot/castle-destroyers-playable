@@ -367,6 +367,47 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void ThinGapCutsTheTopOffTheCastle()
+        {
+            DestructibleMask mask = red.Mask;
+            int row = mask.Height / 2;
+            // Щель в один тексель через весь замок: визуально верх уже отделён.
+            for (int x = 0; x < mask.Width; x++)
+            {
+                int index = row * mask.Width + x;
+                if (mask.Solid[index] != 0)
+                {
+                    mask.ClearTexel(index, x, row);
+                }
+            }
+            mask.MarkDirtyRect(0, row, mask.Width - 1, row);
+            mask.ConnectivityDirty = true;
+            for (int i = 0; i < 20; i++)
+            {
+                rig.Step(Step);
+            }
+            for (int i = (row + 2) * mask.Width; i < mask.Solid.Length; i++)
+            {
+                Assert.Less(mask.Solid[i], DestructibleMask.SolidThreshold, "everything above the gap falls");
+            }
+        }
+
+        [Test]
+        public void DirectorKeepsEnemyCannonsUntilTheLastTurn()
+        {
+            rig.Cannons.SparedEnemyCannons = 2;
+            int first = rig.Cannons.FirstCannon(Side.Enemy);
+            int count = rig.Cannons.CountOf(Side.Enemy);
+            for (int c = first; c < first + count; c++)
+            {
+                rig.Cannons.Detach(c, 0f, 0f, 0f);
+            }
+            Assert.AreEqual(2, rig.Match.EnemyAlive);
+            rig.Cannons.SparedEnemyCannons = 0;
+            Assert.IsTrue(rig.Cannons.Detach(first + count - 1, 0f, 0f, 0f));
+        }
+
+        [Test]
         public void FarBlastLeavesCannons()
         {
             rig.Cannons.ApplyBlast(Side.Enemy, -50f, 50f, 1f);

@@ -84,7 +84,7 @@ namespace CastleDestroyers.CastleRig
                 bodies[s] = body;
 
                 ConnectivitySolver solver = new ConnectivitySolver();
-                solver.Init(mask, config.maxIslandsPerSolve);
+                solver.Init(mask, config.maxIslandsPerSolve, config.castleLoadTexels);
                 solvers[s] = solver;
                 ChunkExtractor extractor = new ChunkExtractor();
                 extractor.Init(mask, solver, config.castleChunkTextureSize);
@@ -277,7 +277,7 @@ namespace CastleDestroyers.CastleRig
             for (int island = 0; island < solver.IslandCount; island++)
             {
                 int cells = solver.IslandSize[island];
-                bool asChunk = cells >= config.minChunkCells && chunks.HasFreeSlot;
+                bool asChunk = cells >= config.castleMinChunkCells && chunks.HasFreeSlot;
                 extractor.Cut(island, asChunk);
                 if (asChunk)
                 {

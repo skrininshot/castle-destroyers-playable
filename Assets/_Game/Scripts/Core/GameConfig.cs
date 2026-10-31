@@ -29,6 +29,9 @@ namespace CastleDestroyers.Core
         [Range(1, 3)]
         [Tooltip("Director: сколько пушек игрок теряет за один ход ИИ, не больше.")]
         public int directorMaxLossPerAiTurn = 1;
+        [Range(0, 6)]
+        [Tooltip("Director: сколько пушек врага переживает залпы до последнего хода игрока, чтобы у него были все 3 клика.")]
+        public int directorEnemyKeepCannons = 2;
         [Range(1f, 16f)]
         [Tooltip("Director: вес урона ракет последнего залпа игрока (ТЗ §3.1.1). Растит кратер.")]
         public float directorFinisherWeight = 4f;
@@ -578,6 +581,15 @@ namespace CastleDestroyers.Core
         public int smokeAlpha = 230;
 
         [Header("Замки: разрушение (ТЗ §3.6)")]
+        [Range(1, 8)]
+        [Tooltip("Размер ячейки связности замка, текселей. Мельче, чем у земли: щели в камне узкие.")]
+        public int castleConnectivityCellTexels = 2;
+        [Range(1, 16)]
+        [Tooltip("Сколько видимых текселей ячейки делают её несущей. Перемычка тоньше не удерживает кусок.")]
+        public int castleLoadTexels = 3;
+        [Range(1, 128)]
+        [Tooltip("Куски замка меньше этого числа ячеек исчезают с пылью, а не падают обломком.")]
+        public int castleMinChunkCells = 24;
         [Range(0.1f, 2f)]
         [Tooltip("Радиус кратера в замке, метры.")]
         public float craterRadiusCastle = 0.288f;

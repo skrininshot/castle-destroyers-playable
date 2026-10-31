@@ -305,11 +305,114 @@ namespace CastleDestroyers.Tests
 
     public sealed class ConnectivitySolverTests
     {
+        private const int VisibleLoad = 13;
+
         private static ConnectivitySolver Solver(DestructibleMask mask, int maxIslands = 8)
         {
             ConnectivitySolver solver = new ConnectivitySolver();
             solver.Init(mask, maxIslands);
             return solver;
+        }
+
+        private static ConnectivitySolver VisibleSolver(DestructibleMask mask)
+        {
+            ConnectivitySolver solver = new ConnectivitySolver();
+            solver.Init(mask, 8, VisibleLoad);
+            return solver;
+        }
+
+        /// <summary>Столб на земле с верхней частью-блоком: ширина столба 8 текселей, высота 4..23.</summary>
+        private static DestructibleMask Pillar()
+        {
+            DestructibleMask mask = MaskFixture.Filled(4);
+            MaskFixture.SetRect(mask, 12, 4, 19, 23, DestructibleMask.Full);
+            return mask;
+        }
+
+        [Test]
+        public void InvisibleResidueDoesNotHoldThePiece()
+        {
+            DestructibleMask mask = Pillar();
+            // Щель: остатки покрытия ниже порога не видны и держать кусок не могут.
+            for (int x = 12; x <= 19; x++)
+            {
+                mask.Solid[14 * mask.Width + x] = 40;
+            }
+            ConnectivitySolver old = Solver(mask);
+            old.Solve();
+            Assert.AreEqual(0, old.IslandCount, "the old rule kept it");
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            Assert.AreEqual(1, solver.IslandCount);
+        }
+
+        [Test]
+        public void GapNarrowerThanACellSplitsThePiece()
+        {
+            DestructibleMask mask = Pillar();
+            MaskFixture.SetRect(mask, 12, 14, 19, 14, 0);
+            ConnectivitySolver old = Solver(mask);
+            old.Solve();
+            Assert.AreEqual(0, old.IslandCount, "the old rule kept it");
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            Assert.AreEqual(1, solver.IslandCount);
+        }
+
+        [Test]
+        public void ThinBridgeDoesNotHoldThePiece()
+        {
+            DestructibleMask mask = Pillar();
+            MaskFixture.SetRect(mask, 12, 12, 15, 15, 0);
+            MaskFixture.SetRect(mask, 17, 12, 19, 15, 0);
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            Assert.AreEqual(1, solver.IslandCount);
+        }
+
+        [Test]
+        public void ThickBridgeHoldsThePiece()
+        {
+            DestructibleMask mask = Pillar();
+            MaskFixture.SetRect(mask, 16, 12, 19, 15, 0);
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            Assert.AreEqual(0, solver.IslandCount);
+        }
+
+        [Test]
+        public void FringeNextToSupportStaysAndFloatingCrumbGoes()
+        {
+            DestructibleMask mask = MaskFixture.Filled(4);
+            MaskFixture.SetRect(mask, 12, 4, 12, 7, DestructibleMask.Full);
+            MaskFixture.SetRect(mask, 30, 20, 30, 20, DestructibleMask.Full);
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            Assert.AreEqual(1, solver.IslandCount);
+            Assert.AreEqual(1, solver.IslandSize[0]);
+        }
+
+        [Test]
+        public void FallingPieceTakesItsFringe()
+        {
+            DestructibleMask mask = MaskFixture.Filled(4);
+            MaskFixture.SetRect(mask, 12, 16, 19, 23, DestructibleMask.Full);
+            MaskFixture.SetRect(mask, 20, 18, 20, 21, DestructibleMask.Full);
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            Assert.AreEqual(1, solver.IslandCount);
+            Assert.AreEqual(6, solver.IslandSize[0]);
+        }
+
+        [Test]
+        public void VisibleSolveDoesNotAllocate()
+        {
+            DestructibleMask mask = Pillar();
+            ConnectivitySolver solver = VisibleSolver(mask);
+            solver.Solve();
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            solver.Solve();
+            Assert.AreEqual(before, GC.GetAllocatedBytesForCurrentThread());
         }
 
         [Test]

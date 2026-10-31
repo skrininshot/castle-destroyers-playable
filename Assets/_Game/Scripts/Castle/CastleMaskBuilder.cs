@@ -46,7 +46,7 @@ namespace CastleDestroyers.CastleRig
             Dilate(solid, width, height);
 
             DestructibleMask mask = new DestructibleMask();
-            mask.Init(width, height, Mathf.Max(width, height), config.connectivityCellTexels, texelsPerMeter, originX, wallBase,
+            mask.Init(width, height, Mathf.Max(width, height), config.castleConnectivityCellTexels, texelsPerMeter, originX, wallBase,
                 solid, new byte[solid.Length], new byte[solid.Length]);
             return mask;
         }

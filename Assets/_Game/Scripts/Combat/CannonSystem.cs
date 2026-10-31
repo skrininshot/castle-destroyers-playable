@@ -71,6 +71,8 @@ namespace CastleDestroyers.Combat
         public bool Moved { get; private set; }
         public bool IsFiring { get { return firing[0] || firing[1]; } }
         public int FallingCount { get { return fallingCount; } }
+        /// <summary>Сколько пушек врага нельзя оторвать сейчас: Director бережёт ход до последнего залпа игрока.</summary>
+        public int SparedEnemyCannons { get; set; }
 
         public void Init(GameConfig gameConfig, GreyboxLevel level, MatchState matchState, RocketSystem rocketSystem, FlatParticles flatParticles, LevelFx levelFx, Rng random)
         {
@@ -290,6 +292,7 @@ namespace CastleDestroyers.Combat
                 firing[s] = false;
                 salvoWeight[s] = 1f;
             }
+            SparedEnemyCannons = 0;
             System.Array.Clear(recoil, 0, recoil.Length);
             System.Array.Clear(jumpY, 0, jumpY.Length);
             ResetCannons();
@@ -363,6 +366,10 @@ namespace CastleDestroyers.Combat
             }
             Side side = cannon < playerCount ? Side.Player : Side.Enemy;
             if (config.directorEnabled && side == Side.Player && (living[(int)side] <= 1 || playerLossesLeft <= 0))
+            {
+                return false;
+            }
+            if (side == Side.Enemy && living[(int)side] <= SparedEnemyCannons)
             {
                 return false;
             }

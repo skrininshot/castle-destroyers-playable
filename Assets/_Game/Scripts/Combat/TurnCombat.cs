@@ -80,6 +80,8 @@ namespace CastleDestroyers.Combat
                 headPassed = false;
                 centerHold = 0f;
                 cannons.SetSalvoWeight(side, flow.IsFinisherTurn ? config.directorFinisherWeight : 1f);
+                bool spare = config.directorEnabled && !flow.IsFinisherTurn;
+                cannons.SparedEnemyCannons = spare ? config.directorEnemyKeepCannons : 0;
                 cannons.BeginSalvo(side);
             }
         }

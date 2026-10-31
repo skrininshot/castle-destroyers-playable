@@ -926,6 +926,17 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void EnemyCannonsAreSparedUntilTheFinisher()
+        {
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.AreEqual(rig.Config.directorEnemyKeepCannons, rig.Cannons.SparedEnemyCannons);
+            rig.Flow.Restart();
+            rig.Config.maxPlayerTurns = 1;
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.AreEqual(0, rig.Cannons.SparedEnemyCannons);
+        }
+
+        [Test]
         public void OrdinarySalvoHasUnitWeight()
         {
             AdvanceTo(SessionState.Fire, Side.Player);
