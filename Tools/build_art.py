@@ -537,6 +537,10 @@ def ui_documents():
     docs["UiRestart"] = svg.document(128, 128)
 
     svg = Svg()
+    draw_ui_star(svg)
+    docs["UiStar"] = svg.document(128, 128)
+
+    svg = Svg()
     svg.open("translate(112 160) rotate(-18) scale(1.45)")
     for x, y, w, h, r in ((-11, -62, 22, 74, 11), (10, -20, 20, 46, 10), (28, -14, 18, 40, 9), (-28, -4, 18, 34, 9), (-24, 2, 66, 58, 18)):
         svg.rect(x, y, w, h, "#FFFFFF", r)
@@ -573,6 +577,20 @@ def draw_restart_icon(svg):
     tangent = (-normal[1], normal[0])
     head = ((x + normal[0] * 25, y + normal[1] * 25), (x - normal[0] * 25, y - normal[1] * 25), (x + tangent[0] * 30, y + tangent[1] * 30))
     svg.parts.append('<polygon points="%s" fill="#FFFFFF"/>' % " ".join("%.2f,%.2f" % p for p in head))
+
+
+def draw_ui_star(svg):
+    """Пятиконечная звезда: белая форма красится палитрой, правая половина граней темнее."""
+    center, outer, inner = 64.0, 60.0, 27.0
+    points = []
+    for index in range(10):
+        radius = outer if index % 2 == 0 else inner
+        angle = math.radians(-90 + index * 36)
+        points.append((center + radius * math.cos(angle), center + radius * math.sin(angle)))
+    svg.parts.append('<polygon points="%s" fill="#FFFFFF"/>' % " ".join("%.2f,%.2f" % p for p in points))
+    for index in range(0, 10, 2):
+        facet = [points[index], points[(index + 1) % 10], (center, center)]
+        svg.parts.append('<polygon points="%s" fill="#D8D8D8"/>' % " ".join("%.2f,%.2f" % p for p in facet))
 
 
 def draw_end_castle(svg, castle):

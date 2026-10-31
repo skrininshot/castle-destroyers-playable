@@ -32,6 +32,8 @@ namespace CastleDestroyers.Tests
         public readonly BoosterSystem Boosters;
         public readonly CannonSystem Cannons;
         public readonly CastleSystem Castles;
+        public readonly LevelFx Fx;
+        public GameObject CameraObject;
 
         private readonly GameObject root;
         private readonly Material material;
@@ -55,6 +57,7 @@ namespace CastleDestroyers.Tests
             LevelFx fx = new LevelFx();
             fx.Init(Config, Particles, rng);
             fx.ApplyPalette(palette);
+            Fx = fx;
 
             Mask = DestructibleMask.CreateTerrain(Config);
             MaskTileView view = new MaskTileView();
@@ -113,6 +116,10 @@ namespace CastleDestroyers.Tests
 
         public void Destroy()
         {
+            if (CameraObject != null)
+            {
+                Object.DestroyImmediate(CameraObject);
+            }
             Object.DestroyImmediate(Rockets.Mesh);
             Object.DestroyImmediate(Smoke.Mesh);
             Object.DestroyImmediate(Explosions.Mesh);

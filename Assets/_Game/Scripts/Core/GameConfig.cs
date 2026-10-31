@@ -34,7 +34,7 @@ namespace CastleDestroyers.Core
         public int directorMaxLossPerAiTurn = 1;
         [Range(0, 6)]
         [Tooltip("Director: сколько пушек врага переживает залпы до последнего хода игрока, чтобы у него были все 3 клика.")]
-        public int directorEnemyKeepCannons = 2;
+        public int directorEnemyKeepCannons = 0;
         [Range(1f, 16f)]
         [Tooltip("Director: вес урона ракет последнего залпа игрока (ТЗ §3.1.1). Растит кратер.")]
         public float directorFinisherWeight = 4f;
@@ -75,10 +75,10 @@ namespace CastleDestroyers.Core
         public float resolveDuration = 0.7f;
         [Range(0.5f, 6f)]
         [Tooltip("Victory: от победы до EndCard, секунды (ТЗ §3.11: ~2 с).")]
-        public float victoryDuration = 2.5f;
+        public float victoryDuration = 4.2f;
         [Range(0f, 3f)]
         [Tooltip("Victory/Defeat: сколько камера держит кадр на проигравшем замке, секунды.")]
-        public float victoryLoserHold = 1f;
+        public float victoryLoserHold = 2.1f;
         [Range(0.5f, 6f)]
         [Tooltip("Defeat: от поражения до EndCard, секунды.")]
         public float defeatDuration = 2f;
@@ -174,15 +174,215 @@ namespace CastleDestroyers.Core
         public float restartHitRadius = 60f;
         [Range(0f, 0.3f)]
         [Tooltip("Пульс кнопки PLAY NOW, доля размера.")]
-        public float ctaPulse = 0.07f;
+        public float ctaPulse = 0.1f;
         [Range(1f, 12f)]
         [Tooltip("Скорость пульса кнопки PLAY NOW, рад/с.")]
-        public float ctaPulseSpeed = 5f;
+        public float ctaPulseSpeed = 8f;
+        [Tooltip("Куда ведёт PLAY NOW: главная страница Google Play (D-076).")]
+        public string storeUrl = "https://play.google.com/store";
+
+        [Header("Аннигиляция замка (D-075)")]
+        [Range(1, 30)]
+        [Tooltip("Взрывов в цепи, которая выжигает камень проигравшего.")]
+        public int finaleBlasts = 12;
+        [Range(0.02f, 0.3f)]
+        [Tooltip("Пауза между взрывами цепи, секунды.")]
+        public float finaleBlastInterval = 0.09f;
+        [Range(0.3f, 4f)]
+        [Tooltip("Сколько камня выжигает один взрыв цепи: радиус, метры.")]
+        public float finaleBlastRadius = 1.5f;
+        [Range(1f, 16f)]
+        [Tooltip("Вес взрыва цепи: размер вспышки.")]
+        public float finaleBlastWeight = 4f;
+        [Range(0, 8)]
+        [Tooltip("Кратеров в земле под замком при финальном взрыве.")]
+        public int finaleCraters = 3;
+        [Range(1f, 16f)]
+        [Tooltip("Вес этих кратеров: радиус растёт как корень.")]
+        public float finaleCraterWeight = 4f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Замедление времени после финального взрыва, доля.")]
+        public float finaleSlowScale = 0.3f;
+        [Range(0f, 1.5f)]
+        [Tooltip("Длительность замедления, секунды реального времени.")]
+        public float finaleSlowTime = 0.45f;
+        [Range(0, 200)]
+        [Tooltip("Обломков платформы и гусениц.")]
+        public int finaleDebrisPieces = 70;
+        [Range(2f, 40f)]
+        [Tooltip("Скорость обломков, м/с.")]
+        public float finaleDebrisSpeed = 16f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Размер обломка, метры.")]
+        public float finaleDebrisSize = 0.7f;
+        [Range(0.2f, 3f)]
+        [Tooltip("Жизнь обломка, секунды.")]
+        public float finaleDebrisLife = 1.1f;
+        [Range(0f, 40f)]
+        [Tooltip("Гравитация обломков, м/с².")]
+        public float finaleDebrisGravity = 18f;
+
+        [Header("Вспышка, лучи, конфетти (D-075). Размеры в долях высоты экрана")]
+        [Range(0.05f, 1f)]
+        [Tooltip("Белая вспышка на весь экран, секунды.")]
+        public float finaleFlashTime = 0.25f;
+        [Range(0.2f, 2f)]
+        [Tooltip("Радиус ударной волны в конце её жизни.")]
+        public float finaleRingRadius = 1f;
+        [Range(0.01f, 0.2f)]
+        [Tooltip("Начальная толщина ударной волны.")]
+        public float finaleRingWidth = 0.05f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Жизнь ударной волны, секунды.")]
+        public float finaleRingLife = 0.6f;
+        [Range(4, 24)]
+        [Tooltip("Лучей за замком на EndCard.")]
+        public int finaleRays = 12;
+        [Range(0f, 3f)]
+        [Tooltip("Скорость вращения лучей, рад/с.")]
+        public float finaleRaySpeed = 0.6f;
+        [Range(0.5f, 3f)]
+        [Tooltip("Длина луча.")]
+        public float finaleRayLength = 1.8f;
+        [Range(0.05f, 1f)]
+        [Tooltip("За сколько лучи вырастают, секунды.")]
+        public float finaleRayGrowTime = 0.35f;
+        [Range(0.05f, 0.5f)]
+        [Tooltip("Радиус круга за замком.")]
+        public float finaleHaloRadius = 0.18f;
+        [Range(0f, 0.05f)]
+        [Tooltip("Золотой ободок круга.")]
+        public float finaleHaloRim = 0.012f;
+        [Range(0f, 0.3f)]
+        [Tooltip("Пульс круга, доля радиуса.")]
+        public float finaleHaloPulse = 0.07f;
+        [Range(0f, 20f)]
+        [Tooltip("Скорость пульса круга, рад/с.")]
+        public float finaleHaloPulseSpeed = 6f;
+        [Range(16, 400)]
+        [Tooltip("Лимит конфетти.")]
+        public int finaleConfettiCapacity = 160;
+        [Range(0, 150)]
+        [Tooltip("Конфетти на одну хлопушку из нижнего угла.")]
+        public int finaleCannonPieces = 55;
+        [Range(0, 60)]
+        [Tooltip("Конфетти на появление звезды.")]
+        public int finaleStarPieces = 12;
+        [Range(0.01f, 1f)]
+        [Tooltip("Дождь конфетти: пауза между кусочками, секунды.")]
+        public float finaleRainInterval = 0.06f;
+        [Range(0f, 3f)]
+        [Tooltip("Гравитация конфетти, высот экрана/с².")]
+        public float finaleConfettiGravity = 0.75f;
+        [Range(0f, 6f)]
+        [Tooltip("Сопротивление воздуха, 1/с.")]
+        public float finaleConfettiDrag = 1.1f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Предельная скорость падения, высот экрана/с.")]
+        public float finaleConfettiFall = 0.3f;
+        [Range(0.005f, 0.08f)]
+        [Tooltip("Размер кусочка.")]
+        public float finaleConfettiSize = 0.024f;
+
+        [Header("Анимация EndCard (D-075). Время от открытия, секунды")]
+        [Range(0.05f, 1f)]
+        [Tooltip("Логотип падает на экран.")]
+        public float endSlamTime = 0.28f;
+        [Range(1f, 5f)]
+        [Tooltip("С какого масштаба падает логотип.")]
+        public float endSlamFrom = 2.6f;
+        [Range(0f, 15f)]
+        [Tooltip("Качание логотипа, градусы.")]
+        public float endLogoWobbleDeg = 3f;
+        [Range(0f, 12f)]
+        [Tooltip("Скорость качания, рад/с.")]
+        public float endLogoWobbleSpeed = 2.6f;
+        [Range(0f, 2f)]
+        [Tooltip("Когда замок начинает падать.")]
+        public float endCastleDelay = 0.1f;
+        [Range(200f, 2000f)]
+        [Tooltip("С какой высоты падает замок, единицы канваса.")]
+        public float endCastleDrop = 1100f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Сколько замок падает с отскоками.")]
+        public float endCastleDropTime = 0.55f;
+        [Range(0f, 120f)]
+        [Tooltip("Подскок замка, единицы канваса.")]
+        public float endHopHeight = 30f;
+        [Range(0f, 20f)]
+        [Tooltip("Скорость подскоков, рад/с.")]
+        public float endHopSpeed = 6.5f;
+        [Range(0f, 0.4f)]
+        [Tooltip("Сплющивание замка у земли, доля.")]
+        public float endHopSquash = 0.12f;
+        [Range(0f, 2f)]
+        [Tooltip("Когда появляется первая звезда.")]
+        public float endStarDelay = 0.4f;
+        [Range(0.02f, 1f)]
+        [Tooltip("Пауза между звёздами.")]
+        public float endStarStep = 0.15f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Появление звезды.")]
+        public float endStarPopTime = 0.3f;
+        [Range(0f, 720f)]
+        [Tooltip("На сколько звезда докручивается при появлении, градусы.")]
+        public float endStarSpinDeg = 200f;
+        [Range(0f, 0.4f)]
+        [Tooltip("Пульс звёзд, доля.")]
+        public float endStarPulse = 0.09f;
+        [Range(0f, 20f)]
+        [Tooltip("Скорость пульса звёзд, рад/с.")]
+        public float endStarPulseSpeed = 7f;
+        [Range(0f, 3f)]
+        [Tooltip("Сдвиг фаз соседних звёзд, рад.")]
+        public float endStarPhase = 0.9f;
+        [Range(0f, 2f)]
+        [Tooltip("Когда начинает расти счётчик разрушения.")]
+        public float endCountDelay = 0.45f;
+        [Range(0.1f, 3f)]
+        [Tooltip("Счётчик от 0 до 100%.")]
+        public float endCountTime = 0.7f;
+        [Range(0f, 2f)]
+        [Tooltip("Толчок надписи на 100%, доля масштаба.")]
+        public float endCountPunch = 0.55f;
+        [Range(0f, 3f)]
+        [Tooltip("Когда появляется PLAY NOW.")]
+        public float endButtonDelay = 0.75f;
+        [Range(0f, 4f)]
+        [Tooltip("Когда появляется рестарт.")]
+        public float endRestartDelay = 1.2f;
+        [Range(0f, 5f)]
+        [Tooltip("Когда рука начинает тыкать в PLAY NOW.")]
+        public float endHandDelay = 1.3f;
+        [Range(0f, 100f)]
+        [Tooltip("Ход руки, единицы канваса.")]
+        public float endHandBob = 30f;
+        [Range(1f, 20f)]
+        [Tooltip("Скорость руки, рад/с.")]
+        public float endHandSpeed = 8f;
+        [Range(0f, 80f)]
+        [Tooltip("Тряска экрана от приземлений, единицы канваса.")]
+        public float endImpactShake = 24f;
+        [Range(1f, 30f)]
+        [Tooltip("Затухание этой тряски, 1/с.")]
+        public float endImpactDecay = 8f;
+        [Range(10f, 120f)]
+        [Tooltip("Частота этой тряски, рад/с.")]
+        public float endShakeFrequency = 70f;
+        [Range(0.5f, 6f)]
+        [Tooltip("Как часто PLAY NOW дёргается и вспыхивает, секунды.")]
+        public float ctaWigglePeriod = 1.7f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Сколько длится рывок.")]
+        public float ctaWiggleTime = 0.55f;
+        [Range(0f, 30f)]
+        [Tooltip("Угол рывка, градусы.")]
+        public float ctaWiggleDeg = 9f;
 
         [Header("Победа (ТЗ §3.11)")]
         [Range(0f, 2f)]
         [Tooltip("Высота подскока пушек победителя, метры.")]
-        public float victoryJumpHeight = 0.55f;
+        public float victoryJumpHeight = 0.8f;
         [Range(1f, 20f)]
         [Tooltip("Скорость подскока, рад/с.")]
         public float victoryJumpSpeed = 9f;
@@ -191,19 +391,19 @@ namespace CastleDestroyers.Core
         public float victoryJumpPhase = 0.8f;
         [Range(1, 8)]
         [Tooltip("Залпов фейерверка.")]
-        public int fireworkBursts = 4;
+        public int fireworkBursts = 7;
         [Range(0.1f, 1f)]
         [Tooltip("Интервал между залпами фейерверка, секунды.")]
-        public float fireworkInterval = 0.32f;
+        public float fireworkInterval = 0.24f;
         [Range(4, 48)]
         [Tooltip("Искр в залпе.")]
-        public int fireworkSparks = 18;
+        public int fireworkSparks = 26;
         [Range(1f, 20f)]
         [Tooltip("Скорость разлёта искр, м/с.")]
-        public float fireworkSpeed = 7f;
+        public float fireworkSpeed = 9f;
         [Range(0.1f, 2f)]
         [Tooltip("Размер искры, метры.")]
-        public float fireworkSparkSize = 0.6f;
+        public float fireworkSparkSize = 0.8f;
         [Range(0.2f, 2f)]
         [Tooltip("Время жизни искры, секунды.")]
         public float fireworkLife = 0.9f;

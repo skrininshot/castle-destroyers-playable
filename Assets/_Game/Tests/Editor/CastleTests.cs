@@ -595,6 +595,40 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void ScorchBurnsFarMoreStoneThanARocket()
+        {
+            int solid = red.Mask.SolidCount;
+            rig.Castles.HitWall(Side.Enemy, red.CenterX, red.PivotY + 3f, 1f);
+            int rocket = solid - red.Mask.SolidCount;
+            solid = red.Mask.SolidCount;
+            rig.Castles.ScorchStone(Side.Enemy, red.CenterX, red.PivotY + 5f, rig.Config.finaleBlastRadius);
+            Assert.Greater(solid - red.Mask.SolidCount, rocket * 4);
+        }
+
+        [Test]
+        public void VaporizeRemovesEverythingAndStopsChunks()
+        {
+            rig.Castles.ScorchStone(Side.Enemy, red.CenterX, red.PivotY + 3f, 1.5f);
+            rig.Castles.Vaporize(Side.Enemy);
+            Assert.AreEqual(CastleState.Gone, red.State);
+            Assert.AreEqual(0, rig.Match.EnemyAlive);
+            Run(1f);
+            Assert.AreEqual(0, rig.Castles.ChunksActive);
+            Assert.AreEqual(-1f, red.FirstHit(red.CenterX - 5f, red.PivotY, red.CenterX + 5f, red.PivotY, rig.Config.rocketCollisionStep));
+        }
+
+        [Test]
+        public void ResetBringsVaporizedCastleBack()
+        {
+            rig.Castles.Vaporize(Side.Enemy);
+            rig.Cannons.Clear();
+            rig.Match.Reset();
+            rig.Castles.Reset();
+            Assert.AreEqual(CastleState.Standing, red.State);
+            Assert.AreEqual(rig.Config.enemyCannons, rig.Match.EnemyAlive);
+        }
+
+        [Test]
         public void ResetRestoresCastleAndCannons()
         {
             int solid = red.Mask.SolidCount;

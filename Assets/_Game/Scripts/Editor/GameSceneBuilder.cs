@@ -49,6 +49,7 @@ namespace CastleDestroyers.EditorTools
         private const int OrderExplosions = OrderDecor + 13;
         private const int OrderAimDots = OrderDecor + 14;
         private const int OrderHud = OrderDecor + 15;
+        private const int OrderFinale = OrderDecor + 16;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
@@ -76,15 +77,14 @@ namespace CastleDestroyers.EditorTools
         private const int BannerFontSize = 42;
         private const float HandSize = 200f;
         private const float HandShadowOffset = 7f;
-        private const float EndLogoAnchorY = 0.8f;
+        private const float EndLogoAnchorY = 0.83f;
         private const float EndLogoWidth = 680f;
         private const float EndLogoHeight = 300f;
-        private const float EndIconAnchorY = 0.46f;
-        private const float EndDiscSize = 520f;
+        private const float EndIconAnchorY = 0.45f;
         private const float EndIconSize = 460f;
-        private const float EndCaptionAnchorY = 0.27f;
-        private const int EndCaptionFontSize = 30;
-        private const float EndButtonAnchorY = 0.17f;
+        private const float EndCaptionAnchorY = 0.235f;
+        private const int EndCaptionFontSize = 44;
+        private const float EndButtonAnchorY = 0.15f;
         private const float EndButtonWidth = 400f;
         private const float EndButtonHeight = 104f;
         private const float EndButtonEdge = 10f;
@@ -92,6 +92,12 @@ namespace CastleDestroyers.EditorTools
         private const float EndRestartAnchorX = 0.89f;
         private const float EndRestartSize = 104f;
         private const float EndRestartIconSize = 68f;
+        private const float EndStarSize = 124f;
+        private const float EndStarMiddleSize = 156f;
+        private const float EndStarSideX = 0.21f;
+        private const float EndStarSideY = 0.645f;
+        private const float EndStarMiddleY = 0.675f;
+        private const float EndHandSize = 170f;
         private const float PillPixelsPerUnit = 1f;
         private const int ButtonWidth = 128;
         private const int ButtonHeight = 56;
@@ -102,7 +108,7 @@ namespace CastleDestroyers.EditorTools
         private const int ToggleMargin = 8;
         private const int ToggleFontSize = 20;
         private const int SoundSources = 6;
-        private static readonly string[] SoundNames = { "Shot", "ExplosionA", "ExplosionB", "Booster", "Splash", "Victory", "Click" };
+        private static readonly string[] SoundNames = { "Shot", "ExplosionA", "ExplosionB", "Booster", "Splash", "Victory", "Click", "Blast", "Star" };
 
         [MenuItem("Tools/Castle Destroyers/Build Game Scene")]
         public static void Build()
@@ -159,6 +165,7 @@ namespace CastleDestroyers.EditorTools
             MeshFilter explosions = CreateBatch("Explosions", material, OrderExplosions);
             MeshFilter aimDots = CreateBatch("AimDots", particleMaterial, OrderAimDots);
             MeshFilter hud = CreateBatch("Hud", material, OrderHud);
+            MeshFilter finale = CreateBatch("Finale", material, OrderFinale);
 
             GameBootstrap bootstrap = new GameObject("GameBootstrap").AddComponent<GameBootstrap>();
             bootstrap.config = config;
@@ -179,6 +186,7 @@ namespace CastleDestroyers.EditorTools
             bootstrap.explosionsFilter = explosions;
             bootstrap.aimDotsFilter = aimDots;
             bootstrap.hudFilter = hud;
+            bootstrap.finaleFilter = finale;
             bootstrap.rocketMaterial = rocketMaterial;
             bootstrap.flatMaterial = material;
             CreateSounds(bootstrap);
@@ -399,13 +407,10 @@ namespace CastleDestroyers.EditorTools
         {
             RectTransform root = CreateRect(canvas, "EndCard", 0.5f, 0.5f, 0f, 0f);
             Stretch(root);
-            Image dim = root.gameObject.AddComponent<Image>();
-            dim.raycastTarget = false;
 
             RectTransform content = CreateRect(root, "Content", 0.5f, 0.5f, 0f, 0f);
             Stretch(content);
 
-            bootstrap.endCardDisc = CreateImage(content, "Disc", 0.5f, EndIconAnchorY, EndDiscSize, EndDiscSize, circle);
             bootstrap.endCardBlueCastle = LoadSprite(GameTextureImport.EndBluePath);
             bootstrap.endCardRedCastle = LoadSprite(GameTextureImport.EndRedPath);
             bootstrap.endCardIcon = CreateImage(content, "WinnerCastle", 0.5f, EndIconAnchorY, EndIconSize, EndIconSize, bootstrap.endCardBlueCastle);
@@ -428,9 +433,25 @@ namespace CastleDestroyers.EditorTools
             bootstrap.endCardRestartDisc = CreateImage(restart, "Disc", 0.5f, 0.5f, EndRestartSize, EndRestartSize, circle);
             bootstrap.endCardRestartIcon = CreateImage(restart, "Icon", 0.5f, 0.5f, EndRestartIconSize, EndRestartIconSize, LoadSprite(GameTextureImport.RestartPath));
 
-            bootstrap.endCardLayout = new[] { logo.rectTransform, bootstrap.endCardDisc.rectTransform, bootstrap.endCardIcon.rectTransform, captionRect, button, restart };
+            Sprite star = LoadSprite(GameTextureImport.StarPath);
+            Image[] stars =
+            {
+                CreateImage(content, "StarLeft", 0.5f - EndStarSideX, EndStarSideY, EndStarSize, EndStarSize, star),
+                CreateImage(content, "StarMiddle", 0.5f, EndStarMiddleY, EndStarMiddleSize, EndStarMiddleSize, star),
+                CreateImage(content, "StarRight", 0.5f + EndStarSideX, EndStarSideY, EndStarSize, EndStarSize, star)
+            };
+            bootstrap.endCardStars = stars;
+
+            Sprite hand = LoadSprite(GameTextureImport.HandPath);
+            RectTransform handRoot = CreateRect(button, "Hand", 0.72f, 0.3f, EndHandSize, EndHandSize);
+            handRoot.pivot = new Vector2(0.33f, 0.71f);
+            Image handShadow = CreateImage(handRoot, "Shadow", 0.5f, 0.5f, EndHandSize, EndHandSize, hand);
+            handShadow.rectTransform.anchoredPosition = new Vector2(HandShadowOffset, -HandShadowOffset);
+            bootstrap.endCardHand = handRoot;
+            bootstrap.endCardHandImages = new[] { handShadow, CreateImage(handRoot, "Glove", 0.5f, 0.5f, EndHandSize, EndHandSize, hand) };
+
+            bootstrap.endCardLayout = new[] { logo.rectTransform, bootstrap.endCardIcon.rectTransform, captionRect, button, restart, stars[0].rectTransform, stars[1].rectTransform, stars[2].rectTransform };
             bootstrap.endCardRoot = root.gameObject;
-            bootstrap.endCardDim = dim;
             bootstrap.endCardContent = content;
         }
 

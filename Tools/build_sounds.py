@@ -2,7 +2,7 @@
 """Звуки игры (ТЗ §3.13): синтез на numpy, свой источник, без чужих сэмплов. Mono, 22 кГц, 16 бит.
 
 Использование: python Tools/build_sounds.py
-Выстрел, взрыв ×2, бустер, всплеск, клик CTA, короткий джингл победы.
+Выстрел, взрыв ×2, бустер, всплеск, клик CTA, короткий джингл победы, финальный взрыв, звезда.
 """
 import wave
 from pathlib import Path
@@ -109,6 +109,25 @@ def victory(rng):
     return numpy.concatenate(parts)
 
 
+def blast(rng):
+    """Финальный взрыв: низкий удар, долгий гул и треск в начале."""
+    seconds = 0.85
+    thump = sine_sweep(150, 34, seconds, 0.45) * decay(seconds, 5)
+    rumble = lowpass(noise(thump.size, rng), 900, 120) * 2.8 * decay(seconds, 4)
+    crack = smooth(noise(thump.size, rng), 2) * decay(seconds, 28) * 0.9
+    return thump + rumble + crack
+
+
+def star(rng):
+    """Звонкая монетка: две высокие ноты подряд."""
+    first = 0.05
+    seconds = 0.22
+    t = time_axis(seconds)
+    low = numpy.sin(2 * numpy.pi * 1318.5 * t) * (t < first)
+    high = numpy.sin(2 * numpy.pi * 1975.5 * t) + 0.3 * numpy.sin(4 * numpy.pi * 1975.5 * t)
+    return (low + high * (t >= first) * numpy.exp(-numpy.maximum(t - first, 0.0) * 16)) * numpy.minimum(t / 0.004, 1.0)
+
+
 def save(name, signal):
     peak = numpy.abs(signal).max()
     fade = numpy.minimum((signal.size - numpy.arange(signal.size)) / (RATE * 0.01), 1.0)
@@ -133,6 +152,8 @@ def main():
         "Splash": splash(rng),
         "Victory": victory(rng),
         "Click": click(rng),
+        "Blast": blast(rng),
+        "Star": star(rng),
     }
     total = sum(save(name, signal) for name, signal in sounds.items())
     print(f"{len(sounds)} clips, {total // 1024} KB of WAV")

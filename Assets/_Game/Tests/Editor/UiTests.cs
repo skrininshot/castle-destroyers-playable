@@ -1,6 +1,7 @@
 using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
+using CastleDestroyers.Fx;
 using CastleDestroyers.InputRig;
 using CastleDestroyers.UI;
 using NUnit.Framework;
@@ -358,6 +359,9 @@ namespace CastleDestroyers.Tests
         private GameObject endRoot;
         private Text caption;
         private RectTransform restartButton;
+        private RectTransform endButton;
+        private RectTransform endHand;
+        private Image[] stars;
 
         private GameObject MakeObject(string objectName, Transform parent)
         {
@@ -398,10 +402,14 @@ namespace CastleDestroyers.Tests
             restartButton = MakeObject("Restart", endRoot.transform).GetComponent<RectTransform>();
             restartButton.anchorMin = new Vector2(RestartAnchorX, RestartAnchorY);
             endCard = new EndCardView();
-            endCard.Init(config, flow, endRoot, MakeImage(endRoot.transform), endContent,
-                MakeObject("Button", endRoot.transform).GetComponent<RectTransform>(), MakeImage(endRoot.transform), caption,
-                MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeText(endRoot.transform), MakeImage(endRoot.transform), null, null, new RectTransform[0],
-                restartButton, MakeImage(endRoot.transform), MakeImage(endRoot.transform));
+            Image castle = MakeImage(endRoot.transform);
+            stars = new[] { MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeImage(endRoot.transform) };
+            endHand = MakeObject("Hand", endRoot.transform).GetComponent<RectTransform>();
+            endButton = MakeObject("Button", endRoot.transform).GetComponent<RectTransform>();
+            RectTransform[] layout = { MakeObject("Logo", endRoot.transform).GetComponent<RectTransform>(), castle.rectTransform };
+            endCard.Init(config, flow, endRoot, endContent, endButton, castle, caption,
+                MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeText(endRoot.transform), null, null, layout,
+                restartButton, MakeImage(endRoot.transform), MakeImage(endRoot.transform), stars, endHand, new[] { MakeImage(endHand), MakeImage(endHand) });
             endCard.Scripted = true;
             PaletteSet palette = ThemePalette.CreateNight();
             banner.ApplyPalette(palette);
@@ -520,11 +528,152 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void VictoryHasNoCaption()
+        public void VictoryCountsUpToFullDestruction()
         {
             ToEndCard();
             Assert.AreEqual(EndReason.Victory, flow.EndReason);
-            Assert.AreEqual("", caption.text);
+            Assert.AreEqual("0" + EndCardView.Destroyed, caption.text);
+            endCard.Tick(config.endCountDelay + config.endCountTime + 0.01f);
+            Assert.AreEqual("100" + EndCardView.Destroyed, caption.text);
+        }
+
+        [Test]
+        public void StarsAndButtonComeOneAfterAnother()
+        {
+            ToEndCard();
+            Assert.AreEqual(Vector3.zero, stars[0].rectTransform.localScale);
+            Assert.AreEqual(Vector3.zero, endButton.localScale);
+            endCard.Tick(config.endStarDelay + 0.01f);
+            Assert.Greater(stars[0].rectTransform.localScale.x, 0f);
+            Assert.AreEqual(Vector3.zero, stars[1].rectTransform.localScale);
+            Assert.AreEqual(Vector3.zero, endButton.localScale);
+            endCard.Tick(config.endButtonDelay + config.uiPopTime);
+            Assert.Greater(stars[2].rectTransform.localScale.x, 0f);
+            Assert.Greater(endButton.localScale.x, 0f);
+        }
+
+        [Test]
+        public void HandShowsUpLateAndComesBackHiddenOnNextEndCard()
+        {
+            ToEndCard();
+            Assert.IsFalse(endHand.gameObject.activeSelf);
+            endCard.Tick(config.endHandDelay + 0.01f);
+            Assert.IsTrue(endHand.gameObject.activeSelf);
+            flow.Restart();
+            ToEndCard();
+            Assert.IsFalse(endHand.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void DefeatHasNoStars()
+        {
+            config.directorEnabled = false;
+            To(SessionState.Resolve, Side.Enemy);
+            match.Destroy(Side.Player, config.playerCannons, 0);
+            ToEndCard();
+            Assert.IsFalse(stars[0].gameObject.activeSelf);
+        }
+
+        [Test]
+        public void BounceStartsAtZeroAndLandsOnOne()
+        {
+            Assert.AreEqual(0f, UiEase.OutBounce(0f), 1e-4f);
+            Assert.AreEqual(1f, UiEase.OutBounce(1f), 1e-4f);
+            Assert.AreEqual(1f, UiEase.OutBounce(0.364f), 1e-2f);
+        }
+    }
+
+    public sealed class FinaleFxTests
+    {
+        private GameConfig config;
+        private GameObject host;
+        private GameObject cameraObject;
+        private FinaleFx finale;
+        private MeshRenderer meshRenderer;
+
+        [SetUp]
+        public void SetUp()
+        {
+            config = ScriptableObject.CreateInstance<GameConfig>();
+            cameraObject = new GameObject("Camera", typeof(Camera));
+            Camera camera = cameraObject.GetComponent<Camera>();
+            camera.orthographic = true;
+            host = new GameObject("Finale", typeof(MeshFilter), typeof(MeshRenderer));
+            meshRenderer = host.GetComponent<MeshRenderer>();
+            finale = new FinaleFx();
+            finale.Init(config, camera, host.GetComponent<MeshFilter>(), new Rng(7u));
+            finale.ApplyPalette(ThemePalette.CreateNight());
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(host);
+            Object.DestroyImmediate(cameraObject);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void IdleLayerIsNotDrawn()
+        {
+            finale.Tick(0.016f);
+            Assert.IsFalse(meshRenderer.enabled);
+        }
+
+        [Test]
+        public void FlashAndWaveEndByThemselves()
+        {
+            finale.Flash();
+            finale.Shockwave(0f, 0f);
+            finale.Tick(0.016f);
+            Assert.IsTrue(meshRenderer.enabled);
+            finale.Tick(config.finaleRingLife + config.finaleFlashTime);
+            finale.Tick(0.016f);
+            Assert.IsFalse(finale.Active);
+            Assert.IsFalse(meshRenderer.enabled);
+        }
+
+        [Test]
+        public void ConfettiStaysInsideItsLimitAndFallsOffScreen()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                finale.ConfettiCannons();
+            }
+            Assert.AreEqual(config.finaleConfettiCapacity, finale.ConfettiCount);
+            for (int i = 0; i < 2400; i++)
+            {
+                finale.Tick(0.02f);
+            }
+            Assert.AreEqual(0, finale.ConfettiCount);
+        }
+
+        [Test]
+        public void RainKeepsFallingUntilCleared()
+        {
+            finale.SetRain(true);
+            for (int i = 0; i < 300; i++)
+            {
+                finale.Tick(0.02f);
+            }
+            Assert.Greater(finale.ConfettiCount, 0);
+            finale.Clear();
+            Assert.AreEqual(0, finale.ConfettiCount);
+            finale.Tick(0.02f);
+            Assert.IsFalse(meshRenderer.enabled);
+        }
+
+        [Test]
+        public void BackdropStaysUntilRestart()
+        {
+            finale.ShowBackdrop(0.5f, 0.45f, 1f);
+            for (int i = 0; i < 300; i++)
+            {
+                finale.Tick(0.02f);
+            }
+            Assert.IsTrue(meshRenderer.enabled);
+            finale.Clear();
+            Assert.IsFalse(finale.BackdropActive);
         }
     }
 }

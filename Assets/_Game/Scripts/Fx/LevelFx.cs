@@ -25,6 +25,7 @@ namespace CastleDestroyers.Fx
         private Color32 splashColor;
         private Color32 splashAccent;
         private Color32[] sparkColors;
+        private Color32[] wreckColors;
 
         /// <summary>Звуки эффектов. В тестах не задан.</summary>
         public Platform.GameSounds Sounds { get; set; }
@@ -45,6 +46,7 @@ namespace CastleDestroyers.Fx
             splashColor = palette.waterRim;
             splashAccent = palette.waterHighlight;
             sparkColors = new[] { palette.hudGold, palette.hudHealth, palette.hudText };
+            wreckColors = new[] { palette.platform, palette.platformShade, palette.track, palette.blastMid };
         }
 
         /// <summary>Облачко пыли и комьев в круге радиуса spread.</summary>
@@ -72,6 +74,21 @@ namespace CastleDestroyers.Fx
                 bool accent = rng.Chance(AccentChance);
                 particles.Spawn(x + directionX * reach, y + directionY * reach, directionX * speed, directionY * speed, size,
                     config.dustLife * rng.Range(DustLifeFloor, 1f), accent ? 0f : config.dustGravity, accent ? accentColor : color);
+            }
+        }
+
+        /// <summary>Обломки платформы и гусениц: разлетаются веером вверх из полосы шириной width (D-075).</summary>
+        public void Wreckage(float x, float y, float width, int pieces)
+        {
+            float half = width * 0.5f;
+            for (int i = 0; i < pieces; i++)
+            {
+                float angle = rng.Range(0f, Mathf.PI);
+                float speed = config.finaleDebrisSpeed * rng.Range(ScatterFloor, 1f);
+                float size = config.finaleDebrisSize * rng.Range(ScatterFloor, 1f);
+                Color32 color = wreckColors[rng.Range(0, wreckColors.Length)];
+                particles.Spawn(x + rng.Range(-half, half), y, Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed, size,
+                    config.finaleDebrisLife * rng.Range(DustLifeFloor, 1f), config.finaleDebrisGravity, color);
             }
         }
 

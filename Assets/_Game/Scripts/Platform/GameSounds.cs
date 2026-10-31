@@ -12,7 +12,9 @@ namespace CastleDestroyers.Platform
         Booster,
         Splash,
         Victory,
-        Click
+        Click,
+        Blast,
+        Star
     }
 
     /// <summary>

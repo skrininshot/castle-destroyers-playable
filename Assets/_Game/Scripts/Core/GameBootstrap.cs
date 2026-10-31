@@ -63,7 +63,6 @@ namespace CastleDestroyers.Core
         public Image[] handImages;
         [Tooltip("EndCard.")]
         public GameObject endCardRoot;
-        public Image endCardDim;
         public RectTransform endCardContent;
         public RectTransform endCardButton;
         public Image endCardIcon;
@@ -71,15 +70,21 @@ namespace CastleDestroyers.Core
         public Image endCardButtonFace;
         public Image endCardButtonEdge;
         public Text endCardButtonText;
-        public Image endCardDisc;
         [Tooltip("Кнопка рестарта на EndCard: корень, круг, стрелка.")]
         public RectTransform endCardRestart;
         public Image endCardRestartDisc;
         public Image endCardRestartIcon;
         public Sprite endCardBlueCastle;
         public Sprite endCardRedCastle;
-        [Tooltip("Что перестраивается в ландшафте: логотип, круг, замок, надпись, кнопка, рестарт.")]
+        [Tooltip("Что перестраивается в ландшафте: логотип, замок, надпись, кнопка, рестарт, звёзды.")]
         public RectTransform[] endCardLayout;
+        [Tooltip("Звёзды EndCard: левая, средняя, правая.")]
+        public Image[] endCardStars;
+        [Tooltip("Рука у кнопки PLAY NOW: корень, тень и сама рука.")]
+        public RectTransform endCardHand;
+        public Image[] endCardHandImages;
+        [Tooltip("Экранный слой финала: задник, лучи, волна, конфетти, вспышка.")]
+        public MeshFilter finaleFilter;
         [Tooltip("Клипы в порядке SoundId и источники для них.")]
         public AudioClip[] soundClips;
         public AudioSource[] soundSources;
@@ -144,6 +149,7 @@ namespace CastleDestroyers.Core
         private TurnBannerView bannerView;
         private HandView handView;
         private VictoryShow victoryShow;
+        private FinaleFx finale;
         private RainFx rain;
         private Material[] bandMaterials;
         private bool booted;
@@ -276,12 +282,15 @@ namespace CastleDestroyers.Core
             handView = new HandView();
             handView.Init(config, Guide, mainCamera, handRoot, handImages);
             EndCard = new EndCardView();
-            EndCard.Init(config, Flow, endCardRoot, endCardDim, endCardContent, endCardButton, endCardIcon, endCardCaption, endCardButtonFace, endCardButtonEdge,
-                endCardButtonText, endCardDisc, endCardBlueCastle, endCardRedCastle, endCardLayout, endCardRestart, endCardRestartDisc, endCardRestartIcon);
+            EndCard.Init(config, Flow, endCardRoot, endCardContent, endCardButton, endCardIcon, endCardCaption, endCardButtonFace, endCardButtonEdge,
+                endCardButtonText, endCardBlueCastle, endCardRedCastle, endCardLayout, endCardRestart, endCardRestartDisc, endCardRestartIcon, endCardStars, endCardHand, endCardHandImages);
             EndCard.Sounds = Sounds;
+            finale = new FinaleFx();
+            finale.Init(config, mainCamera, finaleFilter, Rng);
+            EndCard.Finale = finale;
             EndCard.RestartPressed += Restart;
             victoryShow = new VictoryShow();
-            victoryShow.Init(config, Flow, Cannons, Castles, levelFx, Rng);
+            victoryShow.Init(config, Flow, Cannons, Castles, Explosions, shake, levelFx, finale, Rng);
             rain = new RainFx();
             rain.Init(config, Particles, mainCamera, Rng);
 
@@ -298,7 +307,7 @@ namespace CastleDestroyers.Core
             ITickable[] systems =
             {
                 Sounds, Flow, Aim, Guide, Scenarios, Ai, combat, victoryShow, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Castles, Decor, water, rain,
-                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard, debugOverlay
+                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard, finale, debugOverlay
             };
 #else
             if (debugRoot != null)
@@ -308,11 +317,12 @@ namespace CastleDestroyers.Core
             ITickable[] systems =
             {
                 Sounds, Flow, Aim, Guide, Ai, combat, victoryShow, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Castles, Decor, water, rain,
-                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard
+                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard, finale
             };
 #endif
             Loop = new GameLoop();
             Loop.Init(systems, config.maxDeltaTime);
+            victoryShow.Loop = Loop;
 
             ApplyTheme();
             PlatformBridge.Init(OnPause, OnResume);
@@ -402,6 +412,7 @@ namespace CastleDestroyers.Core
             bannerView.ApplyPalette(palette);
             handView.ApplyPalette(palette);
             EndCard.ApplyPalette(palette);
+            finale.ApplyPalette(palette);
 #if GAME_DEBUG
             debugOverlay.ApplyPalette(palette);
 #endif
@@ -415,10 +426,6 @@ namespace CastleDestroyers.Core
             if (state == SessionState.EndCard)
             {
                 PlatformBridge.GameEnded();
-            }
-            else if (state == SessionState.Victory)
-            {
-                Sounds.Play(SoundId.Victory);
             }
         }
 

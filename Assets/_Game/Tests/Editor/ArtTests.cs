@@ -103,7 +103,7 @@ namespace CastleDestroyers.Tests
             GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
             GameSounds sounds = new GameSounds();
             // Источников нет: любой реальный вызов упал бы здесь.
-            sounds.Init(config, new AudioClip[7], new AudioSource[0]);
+            sounds.Init(config, new AudioClip[9], new AudioSource[0]);
             sounds.Play(SoundId.ExplosionA);
             sounds.Tick(0.1f);
             Assert.IsFalse(sounds.Unlocked);

@@ -19,7 +19,7 @@ MonoBehaviour:
   maxDeltaTime: 0.05
   directorEnabled: 1
   directorMaxLossPerAiTurn: 1
-  directorEnemyKeepCannons: 2
+  directorEnemyKeepCannons: 0
   directorFinisherWeight: 4
   bonusPickEnabled: 0
   turnHints:
@@ -49,8 +49,8 @@ MonoBehaviour:
   flightDuration: 1
   flightMaxDuration: 12
   resolveDuration: 0.7
-  victoryDuration: 2.5
-  victoryLoserHold: 1
+  victoryDuration: 4.2
+  victoryLoserHold: 2.1
   defeatDuration: 2
   victoryFlightCap: 0.8
   aiPresets:
@@ -88,16 +88,81 @@ MonoBehaviour:
   hudLandscapeScale: 0.66
   endCardTapDelay: 0.5
   restartHitRadius: 60
-  ctaPulse: 0.07
-  ctaPulseSpeed: 5
-  victoryJumpHeight: 0.55
+  ctaPulse: 0.1
+  ctaPulseSpeed: 8
+  storeUrl: https://play.google.com/store
+  finaleBlasts: 12
+  finaleBlastInterval: 0.09
+  finaleBlastRadius: 1.5
+  finaleBlastWeight: 4
+  finaleCraters: 3
+  finaleCraterWeight: 4
+  finaleSlowScale: 0.3
+  finaleSlowTime: 0.45
+  finaleDebrisPieces: 70
+  finaleDebrisSpeed: 16
+  finaleDebrisSize: 0.7
+  finaleDebrisLife: 1.1
+  finaleDebrisGravity: 18
+  finaleFlashTime: 0.25
+  finaleRingRadius: 1
+  finaleRingWidth: 0.05
+  finaleRingLife: 0.6
+  finaleRays: 12
+  finaleRaySpeed: 0.6
+  finaleRayLength: 1.8
+  finaleRayGrowTime: 0.35
+  finaleHaloRadius: 0.18
+  finaleHaloRim: 0.012
+  finaleHaloPulse: 0.07
+  finaleHaloPulseSpeed: 6
+  finaleConfettiCapacity: 160
+  finaleCannonPieces: 55
+  finaleStarPieces: 12
+  finaleRainInterval: 0.06
+  finaleConfettiGravity: 0.75
+  finaleConfettiDrag: 1.1
+  finaleConfettiFall: 0.3
+  finaleConfettiSize: 0.024
+  endSlamTime: 0.28
+  endSlamFrom: 2.6
+  endLogoWobbleDeg: 3
+  endLogoWobbleSpeed: 2.6
+  endCastleDelay: 0.1
+  endCastleDrop: 1100
+  endCastleDropTime: 0.55
+  endHopHeight: 30
+  endHopSpeed: 6.5
+  endHopSquash: 0.12
+  endStarDelay: 0.4
+  endStarStep: 0.15
+  endStarPopTime: 0.3
+  endStarSpinDeg: 200
+  endStarPulse: 0.09
+  endStarPulseSpeed: 7
+  endStarPhase: 0.9
+  endCountDelay: 0.45
+  endCountTime: 0.7
+  endCountPunch: 0.55
+  endButtonDelay: 0.75
+  endRestartDelay: 1.2
+  endHandDelay: 1.3
+  endHandBob: 30
+  endHandSpeed: 8
+  endImpactShake: 24
+  endImpactDecay: 8
+  endShakeFrequency: 70
+  ctaWigglePeriod: 1.7
+  ctaWiggleTime: 0.55
+  ctaWiggleDeg: 9
+  victoryJumpHeight: 0.8
   victoryJumpSpeed: 9
   victoryJumpPhase: 0.8
-  fireworkBursts: 4
-  fireworkInterval: 0.32
-  fireworkSparks: 18
-  fireworkSpeed: 7
-  fireworkSparkSize: 0.6
+  fireworkBursts: 7
+  fireworkInterval: 0.24
+  fireworkSparks: 26
+  fireworkSpeed: 9
+  fireworkSparkSize: 0.8
   fireworkLife: 0.9
   fireworkGravity: 5
   fireworkLift: 1

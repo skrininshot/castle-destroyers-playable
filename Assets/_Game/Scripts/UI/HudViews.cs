@@ -12,6 +12,8 @@ namespace CastleDestroyers.UI
     public static class UiEase
     {
         private const float BackOvershoot = 1.70158f;
+        private const float BouncePower = 7.5625f;
+        private const float BounceSpan = 2.75f;
 
         /// <summary>Ease-out-back: от 0 к 1 с перелётом за единицу.</summary>
         public static float OutBack(float t)
@@ -19,6 +21,28 @@ namespace CastleDestroyers.UI
             float clamped = t < 0f ? 0f : (t > 1f ? 1f : t);
             float u = clamped - 1f;
             return 1f + (BackOvershoot + 1f) * u * u * u + BackOvershoot * u * u;
+        }
+
+        /// <summary>Падение с отскоками: от 0 к 1, первое касание на 0.364.</summary>
+        public static float OutBounce(float t)
+        {
+            float x = t < 0f ? 0f : (t > 1f ? 1f : t);
+            if (x < 1f / BounceSpan)
+            {
+                return BouncePower * x * x;
+            }
+            if (x < 2f / BounceSpan)
+            {
+                x -= 1.5f / BounceSpan;
+                return BouncePower * x * x + 0.75f;
+            }
+            if (x < 2.5f / BounceSpan)
+            {
+                x -= 2.25f / BounceSpan;
+                return BouncePower * x * x + 0.9375f;
+            }
+            x -= 2.625f / BounceSpan;
+            return BouncePower * x * x + 0.984375f;
         }
     }
 
@@ -566,26 +590,41 @@ namespace CastleDestroyers.UI
     }
 
     /// <summary>
-    /// EndCard (ТЗ §3.11): плоский оверлей, логотип, замок победителя на круге, пульсирующая PLAY NOW. Тап в любом месте после
-    /// короткой паузы ведёт в стор, тап по круглой стрелке начинает матч заново. Это единственное место, откуда вызывается CTA (ТЗ §3.1.1).
+    /// EndCard (ТЗ §3.11, D-075). Всё движется: логотип падает на экран и качается, замок падает с отскоками и прыгает, звёзды выпрыгивают по одной,
+    /// счётчик бежит до 100%, PLAY NOW бьётся и дёргается, рука тычет в неё. Задник, лучи и конфетти рисует FinaleFx. Тап в любом месте после короткой паузы
+    /// ведёт в стор, тап по круглой стрелке начинает матч заново. Это единственное место, откуда вызывается CTA (ТЗ §3.1.1).
     /// </summary>
     public sealed class EndCardView : ITickable
     {
         public const string TryAgain = "TRY AGAIN IN THE FULL GAME!";
+        public const string Destroyed = "% DESTROYED!";
 
         private const float LandscapeScale = 0.62f;
+        // Круг считается в долях высоты экрана, а замок в единицах канваса: в ландшафте канвас ниже.
+        private const float LandscapeHalo = 1.1f;
+        private const float BounceFirstLanding = 0.364f;
+        private const float BlinkShare = 0.65f;
+        private const int LogoIndex = 0;
+        private const int CastleIndex = 1;
+        private const int FullPercent = 100;
+        private const int FirstStarIndex = 5;
 
-        // Ландшафт: логотип, надпись и кнопки слева, замок на круге справа. Порядок как у layout в Init.
-        private static readonly float[] LandscapeAnchors = { 0.3f, 0.68f, 0.72f, 0.5f, 0.72f, 0.5f, 0.3f, 0.4f, 0.3f, 0.24f, 0.45f, 0.24f };
+        // Ландшафт: логотип, надпись и кнопки слева, замок и звёзды справа. Порядок как у layout в Init.
+        private static readonly float[] LandscapeAnchors = { 0.3f, 0.68f, 0.72f, 0.46f, 0.3f, 0.42f, 0.3f, 0.24f, 0.45f, 0.24f, 0.61f, 0.77f, 0.72f, 0.84f, 0.83f, 0.77f };
 
         private readonly InputRig.PointerReader pointer = new InputRig.PointerReader();
         private GameConfig config;
         private SessionFlow flow;
         private GameObject rootObject;
-        private Image dim;
         private RectTransform content;
         private RectTransform button;
         private RectTransform restart;
+        private RectTransform hand;
+        private GameObject handObject;
+        private Vector2 handRest;
+        private RectTransform[] stars;
+        private Image[] starImages;
+        private Image[] handImages;
         private Image restartDisc;
         private Image restartIcon;
         private Image winnerIcon;
@@ -593,21 +632,29 @@ namespace CastleDestroyers.UI
         private Image buttonFace;
         private Image buttonEdge;
         private Text buttonText;
-        private Image disc;
         private Sprite blueWinner;
         private Sprite redWinner;
         private RectTransform[] layout;
         private Vector2[] portraitAnchors;
+        private string[] percentTexts;
         private bool landscapeLaidOut;
         private PaletteSet palette;
-        private Color dimColor;
         private float time;
         private bool wasPressed;
+        private bool won;
+        private float impact;
+        private bool logoLanded;
+        private bool castleLanded;
+        private bool buttonLanded;
+        private int starsShown;
+        private int shownPercent;
 
         /// <summary>Устройство не читается (скриншоты, тесты): нажатия подаются через Feed.</summary>
         public bool Scripted { get; set; }
-        /// <summary>Звук нажатия CTA. В тестах не задан.</summary>
+        /// <summary>Звуки EndCard. В тестах не задан.</summary>
         public Platform.GameSounds Sounds { get; set; }
+        /// <summary>Задник, лучи и конфетти. В тестах не задан.</summary>
+        public Fx.FinaleFx Finale { get; set; }
         /// <summary>Сколько раз сработал CTA.</summary>
         public int CtaCount { get; private set; }
         /// <summary>Нажата кнопка рестарта.</summary>
@@ -617,14 +664,13 @@ namespace CastleDestroyers.UI
         public float UiBand { get; set; }
 #endif
 
-        public void Init(GameConfig gameConfig, SessionFlow sessionFlow, GameObject root, Image dimImage, RectTransform contentRoot, RectTransform ctaButton,
-            Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Image discImage, Sprite blueSprite, Sprite redSprite, RectTransform[] layoutRects,
-            RectTransform restartButton, Image restartDiscImage, Image restartIconImage)
+        public void Init(GameConfig gameConfig, SessionFlow sessionFlow, GameObject root, RectTransform contentRoot, RectTransform ctaButton,
+            Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Sprite blueSprite, Sprite redSprite, RectTransform[] layoutRects,
+            RectTransform restartButton, Image restartDiscImage, Image restartIconImage, Image[] starImageSet, RectTransform ctaHand, Image[] ctaHandImages)
         {
             config = gameConfig;
             flow = sessionFlow;
             rootObject = root;
-            dim = dimImage;
             content = contentRoot;
             button = ctaButton;
             winnerIcon = iconImage;
@@ -632,17 +678,31 @@ namespace CastleDestroyers.UI
             buttonFace = ctaFace;
             buttonEdge = ctaEdge;
             buttonText = ctaText;
-            disc = discImage;
             blueWinner = blueSprite;
             redWinner = redSprite;
             layout = layoutRects;
             restart = restartButton;
             restartDisc = restartDiscImage;
             restartIcon = restartIconImage;
+            starImages = starImageSet;
+            hand = ctaHand;
+            handObject = ctaHand.gameObject;
+            handRest = ctaHand.anchoredPosition;
+            handImages = ctaHandImages;
+            stars = new RectTransform[starImages.Length];
+            for (int i = 0; i < stars.Length; i++)
+            {
+                stars[i] = starImages[i].rectTransform;
+            }
             portraitAnchors = new Vector2[layout.Length];
             for (int i = 0; i < layout.Length; i++)
             {
                 portraitAnchors[i] = layout[i].anchorMin;
+            }
+            percentTexts = new string[FullPercent + 1];
+            for (int i = 0; i <= FullPercent; i++)
+            {
+                percentTexts[i] = i + Destroyed;
             }
             flow.StateChanged += OnStateChanged;
             rootObject.SetActive(false);
@@ -651,14 +711,17 @@ namespace CastleDestroyers.UI
         public void ApplyPalette(PaletteSet paletteSet)
         {
             palette = paletteSet;
-            dimColor = palette.hudTrack;
             buttonFace.color = palette.hudGold;
             buttonEdge.color = palette.hudGoldShade;
             buttonText.color = palette.hudTrack;
-            disc.color = palette.hudPanel;
-            caption.color = palette.hudText;
             restartDisc.color = palette.hudPanel;
             restartIcon.color = palette.hudText;
+            handImages[0].color = palette.hudPanel;
+            handImages[1].color = palette.hudText;
+            for (int i = 0; i < starImages.Length; i++)
+            {
+                starImages[i].color = palette.hudGold;
+            }
             if (rootObject.activeSelf)
             {
                 PaintWinner();
@@ -673,17 +736,168 @@ namespace CastleDestroyers.UI
             }
             time += dt;
             ApplyOrientation();
-            Color color = dimColor;
-            color.a = Mathf.Clamp01(time / config.endCardFadeTime) * config.endCardDimAlpha;
-            dim.color = color;
-            float pop = UiEase.OutBack(time / config.uiPopTime);
-            content.localScale = new Vector3(pop, pop, 1f);
-            float pulse = (1f + Mathf.Sin(time * config.ctaPulseSpeed) * config.ctaPulse) * (landscapeLaidOut ? LandscapeScale : 1f);
-            button.localScale = new Vector3(pulse, pulse, 1f);
+            float fit = landscapeLaidOut ? LandscapeScale : 1f;
+            AnimateLogo(fit);
+            AnimateCastle(fit);
+            AnimateStars(fit);
+            AnimateCaption();
+            AnimateButton(fit);
+            AnimateHand();
+            float pop = UiEase.OutBack((time - config.endRestartDelay) / config.uiPopTime) * fit;
+            restart.localScale = new Vector3(pop, pop, 1f);
+            Shake(dt);
             if (!Scripted)
             {
                 pointer.Read();
                 Feed(pointer.Pressed, pointer.X, pointer.Y, Screen.width, Screen.height);
+            }
+        }
+
+        private void AnimateLogo(float fit)
+        {
+            RectTransform logo = layout[LogoIndex];
+            float t = Mathf.Clamp01(time / config.endSlamTime);
+            float scale = Mathf.Lerp(config.endSlamFrom, 1f, t * t) * fit;
+            logo.localScale = new Vector3(scale, scale, 1f);
+            logo.localEulerAngles = new Vector3(0f, 0f, Mathf.Sin(time * config.endLogoWobbleSpeed) * config.endLogoWobbleDeg);
+            if (!logoLanded && t >= 1f)
+            {
+                logoLanded = true;
+                Impact(Platform.SoundId.Booster);
+            }
+        }
+
+        private void AnimateCastle(float fit)
+        {
+            RectTransform castle = layout[CastleIndex];
+            float t = (time - config.endCastleDelay) / config.endCastleDropTime;
+            float height;
+            float squash = 0f;
+            if (t < 1f)
+            {
+                height = (1f - UiEase.OutBounce(t)) * config.endCastleDrop;
+            }
+            else
+            {
+                float hop = Mathf.Abs(Mathf.Sin((time - config.endCastleDelay - config.endCastleDropTime) * config.endHopSpeed));
+                float near = 1f - hop;
+                height = hop * config.endHopHeight;
+                squash = near * near * near * config.endHopSquash;
+            }
+            castle.anchoredPosition = new Vector2(0f, height);
+            castle.localScale = new Vector3((1f + squash) * fit, (1f - squash) * fit, 1f);
+            if (!castleLanded && t >= BounceFirstLanding)
+            {
+                castleLanded = true;
+                Impact(Platform.SoundId.ExplosionB);
+            }
+        }
+
+        private void AnimateStars(float fit)
+        {
+            if (!won)
+            {
+                return;
+            }
+            for (int i = 0; i < stars.Length; i++)
+            {
+                float start = config.endStarDelay + config.endStarStep * i;
+                float t = (time - start) / config.endStarPopTime;
+                if (t < 0f)
+                {
+                    continue;
+                }
+                if (i >= starsShown)
+                {
+                    starsShown = i + 1;
+                    Impact(Platform.SoundId.Star);
+                    if (Finale != null)
+                    {
+                        Finale.ConfettiBurst(stars[i].anchorMin.x, stars[i].anchorMin.y);
+                    }
+                }
+                float clamped = t > 1f ? 1f : t;
+                float pulse = 1f + Mathf.Sin(time * config.endStarPulseSpeed + i * config.endStarPhase) * config.endStarPulse;
+                float scale = UiEase.OutBack(clamped) * pulse * fit;
+                stars[i].localScale = new Vector3(scale, scale, 1f);
+                stars[i].localEulerAngles = new Vector3(0f, 0f, (1f - clamped) * (1f - clamped) * config.endStarSpinDeg);
+            }
+        }
+
+        private void AnimateCaption()
+        {
+            if (!won)
+            {
+                return;
+            }
+            float t = Mathf.Clamp01((time - config.endCountDelay) / config.endCountTime);
+            int percent = (int)(t * FullPercent);
+            if (percent != shownPercent)
+            {
+                shownPercent = percent;
+                caption.text = percentTexts[percent];
+                if (percent == FullPercent)
+                {
+                    impact = 1f;
+                }
+            }
+            float scale = 1f + (percent == FullPercent ? impact * config.endCountPunch : 0f);
+            caption.rectTransform.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        private void AnimateButton(float fit)
+        {
+            float elapsed = time - config.endButtonDelay;
+            if (elapsed < 0f)
+            {
+                button.localScale = Vector3.zero;
+                return;
+            }
+            if (!buttonLanded)
+            {
+                buttonLanded = true;
+                Impact(Platform.SoundId.Click);
+            }
+            float pulse = 1f + Mathf.Sin(time * config.ctaPulseSpeed) * config.ctaPulse;
+            float scale = UiEase.OutBack(elapsed / config.uiPopTime) * pulse * fit;
+            button.localScale = new Vector3(scale, scale, 1f);
+
+            float phase = (elapsed % config.ctaWigglePeriod) / config.ctaWiggleTime;
+            float left = phase < 1f ? 1f - phase : 0f;
+            button.localEulerAngles = new Vector3(0f, 0f, Mathf.Sin(phase * Mathf.PI * 4f) * config.ctaWiggleDeg * left);
+            Color32 from = palette.hudGold;
+            Color32 to = palette.hudText;
+            buttonFace.color = Color.Lerp(from, to, left * BlinkShare);
+        }
+
+        private void AnimateHand()
+        {
+            bool visible = time >= config.endHandDelay;
+            if (handObject.activeSelf != visible)
+            {
+                handObject.SetActive(visible);
+            }
+            if (!visible)
+            {
+                return;
+            }
+            float tap = Mathf.Abs(Mathf.Sin((time - config.endHandDelay) * config.endHandSpeed));
+            hand.anchoredPosition = new Vector2(handRest.x + tap * config.endHandBob * 0.5f, handRest.y - tap * config.endHandBob);
+        }
+
+        private void Shake(float dt)
+        {
+            impact *= Mathf.Exp(-config.endImpactDecay * dt);
+            float amount = impact * config.endImpactShake;
+            content.anchoredPosition = new Vector2(Mathf.Sin(time * config.endShakeFrequency) * amount, Mathf.Cos(time * config.endShakeFrequency * 1.3f) * amount);
+        }
+
+        private void Impact(Platform.SoundId sound)
+        {
+            impact = 1f;
+            if (Sounds != null)
+            {
+                Sounds.Play(sound);
             }
         }
 
@@ -703,6 +917,16 @@ namespace CastleDestroyers.UI
                 layout[i].anchorMin = anchor;
                 layout[i].anchorMax = anchor;
                 layout[i].localScale = new Vector3(scale, scale, 1f);
+            }
+            PlaceRays();
+        }
+
+        private void PlaceRays()
+        {
+            if (Finale != null && layout.Length > CastleIndex)
+            {
+                Vector2 center = layout[CastleIndex].anchorMin;
+                Finale.SetRayCenter(center.x, center.y, landscapeLaidOut ? LandscapeHalo : 1f);
             }
         }
 
@@ -725,7 +949,7 @@ namespace CastleDestroyers.UI
                 else
                 {
                     CtaCount++;
-                    Platform.PlatformBridge.InstallFullGame();
+                    Platform.PlatformBridge.InstallFullGame(config.storeUrl);
                 }
             }
             wasPressed = pressed;
@@ -754,11 +978,46 @@ namespace CastleDestroyers.UI
             rootObject.SetActive(show);
             if (show)
             {
-                time = 0f;
-                wasPressed = true;
-                bool won = flow.HasWinner && flow.Winner == Side.Player;
-                caption.text = won ? "" : TryAgain;
-                PaintWinner();
+                Open();
+            }
+            else if (state == SessionState.Boot && Finale != null)
+            {
+                Finale.Clear();
+            }
+        }
+
+        private void Open()
+        {
+            time = 0f;
+            wasPressed = true;
+            impact = 0f;
+            logoLanded = false;
+            castleLanded = false;
+            buttonLanded = false;
+            starsShown = 0;
+            shownPercent = -1;
+            won = flow.HasWinner && flow.Winner == Side.Player;
+            caption.text = won ? percentTexts[0] : (flow.HasWinner ? TryAgain : "");
+            caption.color = won ? palette.hudGold : palette.hudText;
+            caption.rectTransform.localScale = Vector3.one;
+            for (int i = 0; i < stars.Length; i++)
+            {
+                stars[i].localScale = Vector3.zero;
+                starImages[i].gameObject.SetActive(won);
+            }
+            button.localScale = Vector3.zero;
+            restart.localScale = Vector3.zero;
+            handObject.SetActive(false);
+            PaintWinner();
+            if (Finale != null)
+            {
+                Finale.ShowBackdrop(0.5f, 0.5f, 1f);
+                PlaceRays();
+                Finale.SetRain(won);
+                if (won)
+                {
+                    Finale.ConfettiCannons();
+                }
             }
         }
 

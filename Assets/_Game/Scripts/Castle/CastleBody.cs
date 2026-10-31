@@ -172,6 +172,12 @@ namespace CastleDestroyers.CastleRig
             return wall;
         }
 
+        /// <summary>Замок уничтожен целиком (D-075): больше не рисуется, не принимает попаданий и не двигается.</summary>
+        public void Shatter()
+        {
+            State = CastleState.Gone;
+        }
+
         /// <summary>terrainChanged — маска земли менялась: пора заново посадить гусеницы.</summary>
         public void Tick(float dt, bool terrainChanged)
         {

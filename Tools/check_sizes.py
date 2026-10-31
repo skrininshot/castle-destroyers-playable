@@ -30,6 +30,12 @@ def total_size(extensions):
     return sum(p.stat().st_size for p in files)
 
 
+def shipped_audio():
+    """Бюджет ТЗ §3.13 относится к тому, что уходит в сборку: Luna кодирует WAV в MP3. Без сборки считаются исходники."""
+    files = list((PACKAGES / "develop").rglob("*.mp3"))
+    return sum(p.stat().st_size for p in files) if files else total_size(AUDIO_EXT)
+
+
 def report(name, size, budget):
     ok = size <= budget
     print(f"{'OK  ' if ok else 'OVER'} {name}: {size / KB:.1f} KB / {budget / KB:.0f} KB")
@@ -78,7 +84,7 @@ def report_archives():
 def main():
     ok = True
     texture_size = total_size(TEXTURE_EXT)
-    audio_size = total_size(AUDIO_EXT)
+    audio_size = shipped_audio()
     ok &= report("textures", texture_size, TEXTURE_BUDGET)
     ok &= report("audio", audio_size, AUDIO_BUDGET)
     print(f"     textures+audio after base64: {(texture_size + audio_size) * BASE64_FACTOR / KB:.1f} KB")

@@ -16,12 +16,13 @@ namespace CastleDestroyers.Platform
 #endif
         }
 
-        public static void InstallFullGame()
+        /// <summary>CTA. Ссылка одна на обе платформы, Luna выбирает её сама. В браузерной сборке ссылку открывает страница (D-076).</summary>
+        public static void InstallFullGame(string storeUrl)
         {
 #if UNITY_LUNA
-            Luna.Unity.Playable.InstallFullGame();
+            Luna.Unity.Playable.InstallFullGame(storeUrl, storeUrl);
 #else
-            Debug.Log("[Platform] InstallFullGame (stub)");
+            Debug.Log("[Platform] InstallFullGame (stub): " + storeUrl);
 #endif
         }
 
