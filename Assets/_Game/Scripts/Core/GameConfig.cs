@@ -272,7 +272,7 @@ namespace CastleDestroyers.Core
         public int maxTileUploadsPerFrame = 4;
         [Range(0.2f, 4f)]
         [Tooltip("Радиус кратера в земле, метры.")]
-        public float craterRadiusGround = 0.5f;
+        public float craterRadiusGround = 1.5f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина каймы кратера, метры.")]
         public float rimWidth = 0.3f;
