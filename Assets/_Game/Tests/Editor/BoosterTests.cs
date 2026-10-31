@@ -173,6 +173,21 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void FixedExitReplacesDirectionAndKeepsSpeed()
+        {
+            rig.Config.boosters[X20].fixedExit = true;
+            rig.Config.boosters[X20].exitAngleDeg = 0f;
+            rig.Rockets.Spawn(-1.5f, x20Y, 20f, -15f, Side.Player, 0f);
+            rig.Rockets.Tick(0.05f);
+            rig.Boosters.Tick(0f);
+            rig.Rockets.Tick(0.1f);
+            Vector3 center = rig.RocketCenter(0);
+            float speed = Mathf.Sqrt(20f * 20f + 15.7f * 15.7f);
+            Assert.AreEqual(rig.Config.boosterWidth * 0.5f + speed * 0.1f, center.x, 0.15f);
+            Assert.AreEqual(x20Y - 0.5f * rig.Config.gravity * 0.01f, center.y, 0.15f);
+        }
+
+        [Test]
         public void SameBoosterDoesNotMultiplyItsCopy()
         {
             byte used = 1 << X20;
@@ -361,10 +376,11 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void LowShotReachesX50()
+        public void LowShotThroughX50ReachesRedCastle()
         {
             Fire(2, Side.Player);
             Assert.GreaterOrEqual(rig.Boosters.HonestTotal, 500f);
+            Assert.Greater(farthestX, rig.Config.enemyCastleX - 4f);
         }
 
         [Test]

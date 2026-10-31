@@ -193,7 +193,7 @@ namespace CastleDestroyers.Core
         {
             new BoosterSpec(20, 0f, 13.4f),
             new BoosterSpec(10, 0f, 8.5f),
-            new BoosterSpec(50, 0f, 1.6f)
+            new BoosterSpec(50, 0f, 1.6f, 0f)
         };
         [Range(0.5f, 3f)]
         public float boosterWidth = 1f;

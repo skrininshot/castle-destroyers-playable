@@ -72,6 +72,8 @@ MonoBehaviour:
     position: {x: 0, y: 8.5}
   - multiplier: 50
     position: {x: 0, y: 1.6}
+    fixedExit: 1
+    exitAngleDeg: 0
   boosterWidth: 1
   boosterHeight: 2
   boosterSpreadDeg: 18
