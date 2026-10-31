@@ -229,7 +229,7 @@ namespace CastleDestroyers.Tests
         [Test]
         public void WaterRemovesRocketWithoutExplosion()
         {
-            rig.Rockets.Spawn(-34.9f, 3f, -1f, -20f, Side.Player, 0f);
+            rig.Rockets.Spawn(-49.5f, 3f, -1f, -20f, Side.Player, 0f);
             for (int i = 0; i < 20 && rig.Rockets.ActiveCount > 0; i++)
             {
                 rig.Rockets.Tick(0.05f);
@@ -865,11 +865,11 @@ namespace CastleDestroyers.Tests
         public void HeadPastCenterSendsCameraToTarget()
         {
             AdvanceTo(SessionState.Flight, Side.Player);
-            rig.Rockets.Spawn(rig.Config.centerFocus.x - 3f, 30f, 1f, 0f, Side.Player, 0f);
+            rig.Rockets.Spawn(rig.Config.centerFocus.x - 3f, 45f, 1f, 0f, Side.Player, 0f);
             rig.Rockets.Tick(0.01f);
             combat.Tick(0f);
             Assert.IsFalse(director.HeadPassedCenter);
-            rig.Rockets.Spawn(rig.Config.centerFocus.x + 3f, 30f, 1f, 0f, Side.Player, 0f);
+            rig.Rockets.Spawn(rig.Config.centerFocus.x + 3f, 45f, 1f, 0f, Side.Player, 0f);
             rig.Rockets.Tick(0.01f);
             combat.Tick(0f);
             Assert.IsTrue(director.HeadPassedCenter);

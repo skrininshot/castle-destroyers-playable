@@ -23,9 +23,7 @@ namespace CastleDestroyers.EditorTools
         private const float StepSeconds = 0.02f;
 
         private const int MaxSkips = 32;
-        private const float DragStartX = 500f;
-        private const float DragStartY = 700f;
-        private const float MaxWaitSeconds = 4f;
+        private const float MaxWaitSeconds = 12f;
         private const int ShotX20 = 0;
         private const int ShotX10 = 1;
         private const int ShotX50 = 2;
@@ -109,9 +107,9 @@ namespace CastleDestroyers.EditorTools
 
         private static void AimShot(GameBootstrap game, int shot)
         {
-            TurnHint hint = game.config.debugBoosterShots[shot];
-            Drag(game, hint.handAngleDeg, hint.handPower01);
-            Release(game);
+#if GAME_DEBUG
+            game.Scenarios.Run(shot);
+#endif
         }
 
         private static void WaitForCopies(GameBootstrap game, int copies)
@@ -128,25 +126,6 @@ namespace CastleDestroyers.EditorTools
             game.SetPreset(preset);
             game.Restart();
             game.Loop.TimeScale = 1f;
-        }
-
-        /// <summary>Доводит FSM до прицела игрока и тянет палец так, чтобы получить нужные угол и силу.</summary>
-        private static void Drag(GameBootstrap game, float angleDeg, float power)
-        {
-            for (int i = 0; i < MaxSkips && !(game.Flow.State == Flow.SessionState.Aim && game.Flow.ActiveSide == Side.Player); i++)
-            {
-                game.Flow.Skip();
-            }
-            float length = power * game.config.aimMaxDragScreenFraction * PortraitHeight;
-            float radians = angleDeg * Mathf.Deg2Rad;
-            game.Aim.Feed(true, DragStartX, DragStartY, PortraitHeight);
-            game.Aim.Feed(true, DragStartX - Mathf.Cos(radians) * length, DragStartY - Mathf.Sin(radians) * length, PortraitHeight);
-            Settle(game, 0.3f);
-        }
-
-        private static void Release(GameBootstrap game)
-        {
-            game.Aim.Feed(false, 0f, 0f, PortraitHeight);
         }
 
         private static void Settle(GameBootstrap game, float seconds)

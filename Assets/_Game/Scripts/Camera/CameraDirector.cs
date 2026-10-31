@@ -58,7 +58,7 @@ namespace CastleDestroyers.CameraRig
             SelectFrame(target);
             currentX = target.x;
             currentY = target.y;
-            currentSize = CameraFraming.OrthoSize(target.width, config.minFrameHeight, cam.aspect);
+            currentSize = CameraFraming.OrthoSize(target.width, Mathf.Max(target.minHeight, config.minFrameHeight), cam.aspect);
             velocityX = 0f;
             velocityY = 0f;
             velocitySize = 0f;
@@ -68,7 +68,7 @@ namespace CastleDestroyers.CameraRig
         public void Tick(float dt)
         {
             SelectFrame(target);
-            float size = CameraFraming.OrthoSize(target.width, config.minFrameHeight, cam.aspect);
+            float size = CameraFraming.OrthoSize(target.width, Mathf.Max(target.minHeight, config.minFrameHeight), cam.aspect);
             float smooth = config.cameraSmoothTime;
             currentX = Mathf.SmoothDamp(currentX, target.x, ref velocityX, smooth, Mathf.Infinity, dt);
             currentY = Mathf.SmoothDamp(currentY, target.y, ref velocityY, smooth, Mathf.Infinity, dt);
@@ -160,6 +160,7 @@ namespace CastleDestroyers.CameraRig
         private void SetCenterFrame(CameraFrame frame)
         {
             frame.Set(config.centerFocus.x, config.centerFocus.y, config.centerFrameWidth);
+            frame.minHeight = config.centerFrameMinHeight;
         }
 
         /// <summary>Свой замок крупно, со сдвигом к противнику: замок стоит чуть в стороне от центра кадра.</summary>

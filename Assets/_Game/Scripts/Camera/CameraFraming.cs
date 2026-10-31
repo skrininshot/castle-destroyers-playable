@@ -6,12 +6,15 @@ namespace CastleDestroyers.CameraRig
         public float x;
         public float y;
         public float width;
+        /// <summary>Своя минимальная высота кадра, метры; 0 — только общий предел.</summary>
+        public float minHeight;
 
         public void Set(float frameX, float frameY, float frameWidth)
         {
             x = frameX;
             y = frameY;
             width = frameWidth;
+            minHeight = 0f;
         }
     }
 

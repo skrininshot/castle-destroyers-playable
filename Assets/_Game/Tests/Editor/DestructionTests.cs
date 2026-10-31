@@ -663,20 +663,20 @@ namespace CastleDestroyers.Tests
             int stride = config.maskTileSize - 1;
             Assert.AreEqual(0, (config.terrainMask.width - 1) % stride);
             Assert.AreEqual(0, (config.terrainMask.height - 1) % stride);
-            Assert.AreEqual(9, mask.TilesX);
-            Assert.AreEqual(3, mask.TilesY);
+            Assert.AreEqual(13, mask.TilesX);
+            Assert.AreEqual(5, mask.TilesY);
         }
 
         [Test]
         public void MountainHeightMatchesSpec()
         {
             float top = 0f;
-            for (float x = -3f; x <= 3f; x += 0.05f)
+            for (float x = -6f; x <= 6f; x += 0.05f)
             {
                 top = Mathf.Max(top, mask.SurfaceHeight(x));
             }
-            Assert.GreaterOrEqual(top, 15f);
-            Assert.LessOrEqual(top, 16.5f);
+            Assert.GreaterOrEqual(top, 31f);
+            Assert.LessOrEqual(top, 33f);
         }
 
         [Test]
@@ -797,7 +797,7 @@ namespace CastleDestroyers.Tests
         /// <summary>Сквозной пропил левой половины горы слева направо на высоте y.</summary>
         private void SliceLeftPeak(float y)
         {
-            for (float x = -7f; x <= 0f; x += 0.5f)
+            for (float x = -16f; x <= 0f; x += 0.5f)
             {
                 terrain.Explode(x, y, 1f);
             }
@@ -823,26 +823,26 @@ namespace CastleDestroyers.Tests
         [Test]
         public void SlicedPeakBecomesFallingChunk()
         {
-            SliceLeftPeak(6f);
+            SliceLeftPeak(24f);
             Run(config.connectivityInterval * 2f);
             Assert.AreEqual(1, chunks.ActiveCount);
-            Assert.IsFalse(mask.IsSolidWorld(-1.2f, 11f), "peak left the mask");
-            Assert.IsTrue(mask.IsSolidWorld(1.2f, 11f), "other half is untouched");
+            Assert.IsFalse(mask.IsSolidWorld(-3f, 28f), "peak left the mask");
+            Assert.IsTrue(mask.IsSolidWorld(3f, 28f), "other half is untouched");
         }
 
         [Test]
         public void ChunkFallsIntoWaterAndIsRecycled()
         {
-            SliceLeftPeak(6f);
-            Run(4f);
+            SliceLeftPeak(24f);
+            Run(5f);
             Assert.AreEqual(0, chunks.ActiveCount);
         }
 
         [Test]
         public void ChunkMakesSplash()
         {
-            SliceLeftPeak(6f);
-            Run(1.2f);
+            SliceLeftPeak(24f);
+            Run(2.2f);
             Assert.Greater(particles.ActiveCount, 0);
         }
 
@@ -926,7 +926,7 @@ namespace CastleDestroyers.Tests
         [Test]
         public void TreesStandWhileGroundIsIntact()
         {
-            terrain.Explode(-25f, 1f, 1f);
+            terrain.Explode(-8f, 1f, 1f);
             Run(0.5f);
             Assert.AreEqual(0, decor.FallingCount);
         }

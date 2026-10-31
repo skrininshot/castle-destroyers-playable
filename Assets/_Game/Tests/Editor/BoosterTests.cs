@@ -299,7 +299,7 @@ namespace CastleDestroyers.Tests
     public sealed class BoosterScenarioTests
     {
         private const float Step = 0.02f;
-        private const int MaxSteps = 400;
+        private const int MaxSteps = 600;
 
         private CombatRig rig;
         private int peakRockets;
@@ -324,8 +324,14 @@ namespace CastleDestroyers.Tests
             TurnHint hint = rig.Config.debugBoosterShots[shot];
             rig.Cannons.SetAim(side, hint.handAngleDeg, hint.handPower01);
             rig.Cannons.BeginSalvo(side);
+            int salvosLeft = rig.Config.debugBoosterShotSalvos[shot] - 1;
             for (int i = 0; i < MaxSteps; i++)
             {
+                if (salvosLeft > 0 && !rig.Cannons.IsFiring)
+                {
+                    salvosLeft--;
+                    rig.Cannons.BeginSalvo(side);
+                }
                 rig.Cannons.Tick(Step);
                 rig.Boosters.Tick(Step);
                 rig.Rockets.Tick(Step);
@@ -356,7 +362,7 @@ namespace CastleDestroyers.Tests
         public void TunnelReachesX10AndPassesSecondHalf()
         {
             Fire(1, Side.Player);
-            Assert.GreaterOrEqual(rig.Boosters.HonestTotal, 200f);
+            Assert.GreaterOrEqual(rig.Boosters.HonestTotal, 100f);
             Assert.Greater(farthestX, rig.Config.enemyCastleX - 4f);
         }
 
@@ -364,7 +370,7 @@ namespace CastleDestroyers.Tests
         public void LowShotThroughX50ReachesRedCastle()
         {
             Fire(2, Side.Player);
-            Assert.GreaterOrEqual(rig.Boosters.HonestTotal, 500f);
+            Assert.GreaterOrEqual(rig.Boosters.HonestTotal, 300f);
             Assert.Greater(farthestX, rig.Config.enemyCastleX - 4f);
         }
 

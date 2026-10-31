@@ -23,12 +23,12 @@ MonoBehaviour:
   - label: x20 lob
     highlightBoosterMultiplier: 20
     showHand: 1
-    handAngleDeg: 42
+    handAngleDeg: 56
     handPower01: 0.65
   - label: x50 straight shot
     highlightBoosterMultiplier: 50
     showHand: 1
-    handAngleDeg: 8
+    handAngleDeg: 20
     handPower01: 0.8
   - label: free shot
     highlightBoosterMultiplier: 0
@@ -45,7 +45,7 @@ MonoBehaviour:
   victoryDuration: 2.5
   victoryLoserHold: 1
   defeatDuration: 2
-  stubEnemyLossPerPlayerTurn: 4
+  stubEnemyLossPerPlayerTurn: 3
   stubPlayerLossPerAiTurn: 1
   aimMinDeg: 5
   aimMaxDeg: 85
@@ -53,8 +53,8 @@ MonoBehaviour:
   aimDeadZone: 0.03
   aimTurnSpeed: 240
   aimPreviewFraction: 0.3
-  launchSpeedMin: 12
-  launchSpeedMax: 32
+  launchSpeedMin: 14
+  launchSpeedMax: 42
   gravity: 14
   playerCannons: 3
   enemyCannons: 12
@@ -67,22 +67,22 @@ MonoBehaviour:
   rocketWidth: 0.34
   boosters:
   - multiplier: 20
-    position: {x: 0, y: 17.8}
+    position: {x: 0, y: 33.6}
   - multiplier: 10
-    position: {x: 0, y: 12}
+    position: {x: 0, y: 19}
   - multiplier: 50
-    position: {x: 0, y: 6.5}
+    position: {x: 0, y: 13}
   boosterWidth: 1
   boosterHeight: 2
   boosterSpreadDeg: 18
   boosterSpawnStagger: 0.04
   boosterPulse: 0.03
   terrainMask: {fileID: 11400000, guid: f07d6423099f0bf4f97e65071c67d9ae, type: 2}
-  terrainMaskOrigin: {x: -35.71875, y: -3.5}
+  terrainMaskOrigin: {x: -51.59375, y: -3.5}
   maskTexelsPerMeter: 16
   maskTileSize: 128
   maxTileUploadsPerFrame: 4
-  craterRadiusGround: 0.6
+  craterRadiusGround: 0.5
   rimWidth: 0.3
   rimScallop: 0
   rimScallopTeeth: 14
@@ -125,21 +125,21 @@ MonoBehaviour:
   smokeCapacity: 2000
   smokeLodRocketThreshold: 200
   swayMaxDeg: 3
-  levelWidth: 60
+  levelWidth: 80
   waterLevel: 0
   levelBottom: -40
-  playerCastleX: -22
-  enemyCastleX: 23
+  playerCastleX: -33.75
+  enemyCastleX: 33.75
   trackHeight: 1.2
   platformHeight: 0.8
   cameraSmoothTime: 0.45
   castleFrameWidth: 14
-  centerFrameWidth: 18
+  centerFrameWidth: 22
   targetFrameWidth: 16
   minFrameHeight: 22
   castleLeadX: 2
   castleFocusLiftY: 0.5
-  centerFocus: {x: 0, y: 11}
+  centerFocus: {x: 0, y: 17}
   rainEnabled: 0
   lightBeamEnabled: 0
   showPersistentCta: 0
@@ -152,4 +152,4 @@ MonoBehaviour:
   - 0.6
   debugBlastHoldInterval: 0.08
   debugBlastUiBand: 0.26
-  debugOverviewWidth: 74
+  debugOverviewWidth: 106

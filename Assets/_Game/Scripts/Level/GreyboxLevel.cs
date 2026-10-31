@@ -19,17 +19,17 @@ namespace CastleDestroyers.Level
 
         private const int StarCount = 80;
         private const float StarMinY = 10f;
-        private const float StarMaxY = 40f;
+        private const float StarMaxY = 60f;
         private const float StarMinSize = 0.06f;
         private const float StarMaxSize = 0.14f;
-        private const float MoonX = 5.6f;
-        private const float MoonY = 19.5f;
+        private const float MoonX = 7f;
+        private const float MoonY = 31f;
         private const float MoonRadius = 2.4f;
 
-        private const float FarStep = 15f;
-        private const float FarHalfWidth = 11f;
-        private const float FarMinPeak = 15f;
-        private const float FarMaxPeak = 21f;
+        private const float FarStep = 22f;
+        private const float FarHalfWidth = 16f;
+        private const float FarMinPeak = 22f;
+        private const float FarMaxPeak = 30f;
         private const float FarTipRadius = 2f;
         private const float MidBandHeight = 3.6f;
         private const float MidStep = 1.5f;

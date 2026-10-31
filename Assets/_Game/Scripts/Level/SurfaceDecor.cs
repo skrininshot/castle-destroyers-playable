@@ -31,8 +31,8 @@ namespace CastleDestroyers.Level
         // Деревья на склонах и у подножий: X ёлки, метры.
         private static readonly float[] TreeX =
         {
-            -16.4f, -15.1f, -13.3f, -11.6f, -9.9f, -8.6f, -7.1f, -5.9f, -4.6f, -3.3f, -2.1f,
-            2.3f, 3.6f, 5f, 6.4f, 7.8f, 9.2f, 10.8f, 12.6f, 14.8f, 16f
+            -27f, -25.2f, -22.6f, -19.7f, -16.8f, -14.6f, -12.1f, -10f, -7.8f, -5.6f, -3.6f,
+            3.9f, 6.1f, 8.5f, 10.9f, 13.3f, 15.6f, 18.4f, 21.4f, 25.2f, 27f
         };
 
         private readonly FlatMeshBuilder builder = new FlatMeshBuilder();
