@@ -159,7 +159,10 @@ namespace CastleDestroyers.Core
         public float endCardFadeTime = 0.4f;
         [Range(0.3f, 1f)]
         [Tooltip("Непрозрачность затемнения: победитель виден сквозь него (ТЗ §3.11).")]
-        public float endCardDimAlpha = 0.85f;
+        public float endCardDimAlpha = 0.94f;
+        [Range(0.4f, 1f)]
+        [Tooltip("Масштаб HUD в ландшафте: кадр ниже, полоса не должна закрывать x20.")]
+        public float hudLandscapeScale = 0.66f;
         [Range(0f, 2f)]
         [Tooltip("EndCard не принимает тап первые секунды: хвост игрового жеста не должен вести в стор.")]
         public float endCardTapDelay = 0.5f;
@@ -287,10 +290,10 @@ namespace CastleDestroyers.Core
         public int stressRocketCount = 1000;
         [Range(0.2f, 2f)]
         [Tooltip("Длина квада ракеты, метры.")]
-        public float rocketLength = 1.1f;
+        public float rocketLength = 1.45f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина квада ракеты, метры.")]
-        public float rocketWidth = 0.34f;
+        public float rocketWidth = 0.45f;
         [Range(0.05f, 1f)]
         [Tooltip("Шаг проверки столкновений вдоль пути за кадр, метры. Меньше — точнее и дороже.")]
         public float rocketCollisionStep = 0.25f;
@@ -300,6 +303,21 @@ namespace CastleDestroyers.Core
         [Range(0f, 1f)]
         [Tooltip("Откат ствола при выстреле, метры.")]
         public float recoilDistance = 0.3f;
+        [Range(0f, 0.6f)]
+        [Tooltip("Сквош пушки на выстреле: на сколько толще она при полной отдаче.")]
+        public float cannonFireSquash = 0.14f;
+        [Range(0f, 0.6f)]
+        [Tooltip("Сквош пушки в момент отрыва.")]
+        public float cannonDetachSquash = 0.35f;
+        [Range(0.05f, 1f)]
+        [Tooltip("За сколько секунд спадает сквош отрыва.")]
+        public float cannonDetachSquashTime = 0.3f;
+        [Range(-0.5f, 0.5f)]
+        [Tooltip("Сквош пушки в верхней точке подскока победителя; меньше нуля — вытягивается.")]
+        public float cannonJumpSquash = -0.18f;
+        [Range(0f, 1f)]
+        [Tooltip("Какую часть сквоша получает длина: пушка сжимается, сохраняя объём.")]
+        public float cannonSquashLengthShare = 0.6f;
         [Range(0.5f, 10f)]
         [Tooltip("Скорость возврата ствола, м/с.")]
         public float recoilReturnSpeed = 3f;
@@ -687,7 +705,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Ширина всплеска от пушки, метры.")]
         public float cannonSplashWidth = 1.4f;
 
-        [Header("Уровень (ТЗ §3.8): greybox")]
+        [Header("Уровень (ТЗ §3.8)")]
         [Tooltip("Ширина уровня, метры.")]
         public float levelWidth = 80f;
         [Tooltip("Уровень воды по Y, метры.")]
@@ -708,6 +726,21 @@ namespace CastleDestroyers.Core
         [Header("Фон (ТЗ §3.10)")]
         [Tooltip("Параллакс слоёв от дальнего к ближнему: звёзды, луна, горы, лес, кусты. 0 — слой стоит на экране, 1 — движется с уровнем.")]
         public float[] parallaxFactors = { 0f, 0.05f, 0.15f, 0.3f, 0.5f };
+        [Tooltip("Низ полос фона над водой, метры: горы, лес или город, ближний план.")]
+        public float[] backBandBase = { 6f, 4f, 2f };
+        [Tooltip("Центр луны или солнца на слое, метры.")]
+        public Vector2 moonPosition = new Vector2(7f, 31f);
+        [Range(0f, 40f)]
+        [Tooltip("Шаг облаков-пилюль по X на слое луны, метры.")]
+        public float cloudStep = 23f;
+
+        [Header("Звук (ТЗ §3.13)")]
+        [Range(0f, 1f)]
+        [Tooltip("Громкость всех звуков.")]
+        public float soundVolume = 0.8f;
+        [Range(0.01f, 0.5f)]
+        [Tooltip("Минимальная пауза между одинаковыми звуками, секунды: залп не должен трещать.")]
+        public float soundCooldown = 0.07f;
 
         [Header("Камера (ТЗ §3.9)")]
         [Range(0.1f, 2f)]
@@ -752,6 +785,15 @@ namespace CastleDestroyers.Core
         [Header("Прочее")]
         [Tooltip("Дождь из ролика (по умолчанию выключен).")]
         public bool rainEnabled;
+        [Range(0f, 300f)]
+        [Tooltip("Капель дождя в секунду по ширине кадра.")]
+        public float rainPerSecond = 90f;
+        [Range(5f, 60f)]
+        [Tooltip("Скорость капли, м/с.")]
+        public float rainSpeed = 30f;
+        [Range(0.02f, 0.5f)]
+        [Tooltip("Размер капли, метры.")]
+        public float rainDropSize = 0.13f;
         [Tooltip("Декоративный луч прожектора.")]
         public bool lightBeamEnabled;
         [Tooltip("Постоянная мини-кнопка CTA во время игры.")]

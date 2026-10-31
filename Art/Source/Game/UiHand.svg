@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<g transform="translate(112 160) rotate(-18) scale(1.45)">
+<rect x="-11.00" y="-62.00" width="22.00" height="74.00" rx="11.00" fill="#FFFFFF" opacity="1"/>
+<rect x="10.00" y="-20.00" width="20.00" height="46.00" rx="10.00" fill="#FFFFFF" opacity="1"/>
+<rect x="28.00" y="-14.00" width="18.00" height="40.00" rx="9.00" fill="#FFFFFF" opacity="1"/>
+<rect x="-28.00" y="-4.00" width="18.00" height="34.00" rx="9.00" fill="#FFFFFF" opacity="1"/>
+<rect x="-24.00" y="2.00" width="66.00" height="58.00" rx="18.00" fill="#FFFFFF" opacity="1"/>
+<rect x="-20.00" y="62.00" width="58.00" height="15.00" rx="6.00" fill="var(--hudPanel)" opacity="1"/>
+</g>
+</svg>

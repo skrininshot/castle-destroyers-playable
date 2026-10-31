@@ -53,6 +53,15 @@ namespace CastleDestroyers.Level
             Mesh.MarkDynamic();
             Mesh.vertices = vertices;
             Mesh.colors32 = colors;
+            Vector2[] uv = new Vector2[vertices.Length];
+            float whiteU = ArtSprites.Uv[ArtSprites.White * 4] + (ArtSprites.Uv[ArtSprites.White * 4 + 2] - ArtSprites.Uv[ArtSprites.White * 4]) * 0.5f;
+            float whiteV = ArtSprites.Uv[ArtSprites.White * 4 + 1] + (ArtSprites.Uv[ArtSprites.White * 4 + 3] - ArtSprites.Uv[ArtSprites.White * 4 + 1]) * 0.5f;
+            for (int v = 0; v < uv.Length; v++)
+            {
+                uv[v].x = whiteU;
+                uv[v].y = whiteV;
+            }
+            Mesh.uv = uv;
             Mesh.triangles = triangles;
             float size = (extent + BoundsPadding) * 2f;
             Mesh.bounds = new Bounds(new Vector3(0f, config.waterLevel, 0f), new Vector3(size, BoundsPadding, 1f));

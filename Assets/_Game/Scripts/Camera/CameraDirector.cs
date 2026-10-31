@@ -16,7 +16,7 @@ namespace CastleDestroyers.CameraRig
         private Camera cam;
         private Transform camTransform;
         private GameConfig config;
-        private GreyboxLevel level;
+        private LevelScene level;
         private SessionFlow flow;
         private ScreenShake shake;
         private readonly CameraFrame target = new CameraFrame();
@@ -43,12 +43,12 @@ namespace CastleDestroyers.CameraRig
         /// <summary>Подсказка хода показывает гору: подсвеченный бустер не виден с замка.</summary>
         public bool ShowMountain { get; set; }
 
-        public void Init(Camera camera, GameConfig gameConfig, GreyboxLevel greyboxLevel, SessionFlow sessionFlow, ScreenShake screenShake)
+        public void Init(Camera camera, GameConfig gameConfig, LevelScene levelScene, SessionFlow sessionFlow, ScreenShake screenShake)
         {
             cam = camera;
             camTransform = camera.transform;
             config = gameConfig;
-            level = greyboxLevel;
+            level = levelScene;
             flow = sessionFlow;
             shake = screenShake;
             FlightHeadX = config.centerFocus.x;

@@ -8,7 +8,10 @@ namespace CastleDestroyers.Destruction
     {
         public static readonly int MaskTex = Shader.PropertyToID("_MaskTex");
         private static readonly int GroundColor = Shader.PropertyToID("_GroundColor");
+        private static readonly int BandColor = Shader.PropertyToID("_BandColor");
         private static readonly int RimColor = Shader.PropertyToID("_RimColor");
+        private static readonly int RimLightColor = Shader.PropertyToID("_RimLightColor");
+        private static readonly int BlobColor = Shader.PropertyToID("_BlobColor");
         private static readonly int BuriedColor = Shader.PropertyToID("_BuriedColor");
         private static readonly int CraterColor = Shader.PropertyToID("_CraterColor");
         private static readonly int EdgeSoftness = Shader.PropertyToID("_EdgeSoftness");
@@ -29,8 +32,11 @@ namespace CastleDestroyers.Destruction
         public static void ApplyPalette(Material material, PaletteSet palette)
         {
             material.SetColor(GroundColor, palette.ground);
+            material.SetColor(BandColor, palette.groundBand);
             material.SetColor(RimColor, palette.groundRim);
-            material.SetColor(BuriedColor, palette.groundShade);
+            material.SetColor(RimLightColor, palette.groundRimLight);
+            material.SetColor(BlobColor, palette.groundShade);
+            material.SetColor(BuriedColor, palette.groundBuried);
             material.SetColor(CraterColor, palette.groundCrater);
         }
     }

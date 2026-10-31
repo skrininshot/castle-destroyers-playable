@@ -126,9 +126,9 @@ namespace CastleDestroyers.Tests
         {
             DestructibleMask mask = rig.Castles.Body(Side.Player).Mask;
             float wallBase = rig.Config.platformHeight;
-            Assert.IsFalse(mask.IsSolidWorld(0f, wallBase + GreyboxCastles.BlueTowerTop - 0.5f));
-            Assert.IsTrue(mask.IsSolidWorld(-2.3f, wallBase + GreyboxCastles.BlueTowerTop - 0.5f));
-            Assert.IsTrue(mask.IsSolidWorld(2.3f, wallBase + GreyboxCastles.BlueTowerTop - 0.5f));
+            Assert.IsFalse(mask.IsSolidWorld(0f, wallBase + CastleShapes.BlueTowerTop - 0.5f));
+            Assert.IsTrue(mask.IsSolidWorld(-2.3f, wallBase + CastleShapes.BlueTowerTop - 0.5f));
+            Assert.IsTrue(mask.IsSolidWorld(2.3f, wallBase + CastleShapes.BlueTowerTop - 0.5f));
         }
 
         [Test]

@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="1024" viewBox="0 0 512 1024">
+<g transform="translate(256.0 1016.0) scale(58.0 -58.0)">
+<rect x="-4.00" y="0.00" width="8.00" height="2.60" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="1.92" y="0.00" width="2.08" height="2.60" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="2.90" y="2.19" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="2.66" y="0.28" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.45" y="1.03" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.00" y="0.39" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-2.49" y="1.08" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-2.28" y="1.10" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-3.72" y="0.29" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="1.32" y="1.03" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.13" y="1.72" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.26" y="0.23" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="1.86" y="1.40" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.70" y="0.00" width="3.40" height="6.20" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="0.82" y="0.00" width="0.88" height="6.20" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="0.21" y="3.70" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="1.07" y="2.20" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.49" y="2.24" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.03" y="3.93" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.74" y="0.60" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.30" y="4.26" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.02" y="2.70" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.17" y="1.16" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.11" y="1.98" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.64" y="1.23" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.29" y="0.67" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-4.00" y="0.00" width="0.90" height="3.10" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="-3.33" y="0.00" width="0.23" height="3.10" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-3.89" y="0.84" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-3.59" y="4.30" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M-3.51 5.00 Q-3.23 5.06 -2.89 4.90 Q-3.19 4.82 -3.51 4.62 Z" fill="var(--cannonEnemy)"/>
+<path d="M-4.20 3.10 Q-3.82 3.49 -3.60 4.40 L-3.55 4.43 L-3.55 3.10 Z" fill="var(--roofEnemy)"/>
+<path d="M-2.90 3.10 Q-3.28 3.49 -3.50 4.40 L-3.55 4.43 L-3.55 3.10 Z" fill="var(--roofEnemyShade)"/>
+<rect x="-4.00" y="2.68" width="0.90" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-4.20" y="2.88" width="1.30" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="-4.20" y="2.88" width="1.30" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M-3.76 1.85 L-3.76 2.36 Q-3.76 2.57 -3.55 2.57 Q-3.34 2.57 -3.34 2.36 L-3.34 1.85 Z" fill="var(--castleWindow)"/>
+<path d="M-3.69 1.85 L-3.69 2.36 Q-3.69 2.57 -3.55 2.57 Q-3.41 2.57 -3.41 2.36 L-3.41 1.85 Z" fill="var(--castleWindowLit)"/>
+<rect x="-3.57" y="1.85" width="0.05" height="0.72" rx="0.00" fill="var(--castleWindow)" opacity="1"/>
+<rect x="-3.86" y="1.75" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="3.10" y="0.00" width="0.90" height="3.10" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="3.77" y="0.00" width="0.23" height="3.10" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="3.34" y="2.32" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="3.51" y="4.30" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M3.59 5.00 Q3.87 5.06 4.21 4.90 Q3.91 4.82 3.59 4.62 Z" fill="var(--cannonEnemy)"/>
+<path d="M2.90 3.10 Q3.28 3.49 3.50 4.40 L3.55 4.43 L3.55 3.10 Z" fill="var(--roofEnemy)"/>
+<path d="M4.20 3.10 Q3.82 3.49 3.60 4.40 L3.55 4.43 L3.55 3.10 Z" fill="var(--roofEnemyShade)"/>
+<rect x="3.10" y="2.68" width="0.90" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="2.90" y="2.88" width="1.30" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="2.90" y="2.88" width="1.30" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M3.34 1.85 L3.34 2.36 Q3.34 2.57 3.55 2.57 Q3.76 2.57 3.76 2.36 L3.76 1.85 Z" fill="var(--castleWindow)"/>
+<rect x="3.24" y="1.75" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-2.95" y="0.00" width="1.00" height="3.90" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="-2.21" y="0.00" width="0.26" height="3.90" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-2.73" y="1.39" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-2.75" y="1.17" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-2.49" y="5.20" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M-2.41 5.90 Q-2.13 5.96 -1.79 5.80 Q-2.09 5.72 -2.41 5.52 Z" fill="var(--cannonEnemy)"/>
+<path d="M-3.15 3.90 Q-2.74 4.32 -2.50 5.30 L-2.45 5.33 L-2.45 3.90 Z" fill="var(--roofEnemy)"/>
+<path d="M-1.75 3.90 Q-2.16 4.32 -2.40 5.30 L-2.45 5.33 L-2.45 3.90 Z" fill="var(--roofEnemyShade)"/>
+<rect x="-2.95" y="3.48" width="1.00" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-3.15" y="3.68" width="1.40" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="-3.15" y="3.68" width="1.40" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M-2.66 2.65 L-2.66 3.16 Q-2.66 3.37 -2.45 3.37 Q-2.24 3.37 -2.24 3.16 L-2.24 2.65 Z" fill="var(--castleWindow)"/>
+<path d="M-2.59 2.65 L-2.59 3.16 Q-2.59 3.37 -2.45 3.37 Q-2.31 3.37 -2.31 3.16 L-2.31 2.65 Z" fill="var(--castleWindowLit)"/>
+<rect x="-2.48" y="2.65" width="0.05" height="0.72" rx="0.00" fill="var(--castleWindow)" opacity="1"/>
+<rect x="-2.76" y="2.55" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="1.95" y="0.00" width="1.00" height="3.90" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="2.69" y="0.00" width="0.26" height="3.90" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="2.32" y="2.02" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="2.14" y="0.47" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="2.41" y="5.20" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M2.49 5.90 Q2.77 5.96 3.11 5.80 Q2.81 5.72 2.49 5.52 Z" fill="var(--cannonEnemy)"/>
+<path d="M1.75 3.90 Q2.16 4.32 2.40 5.30 L2.45 5.33 L2.45 3.90 Z" fill="var(--roofEnemy)"/>
+<path d="M3.15 3.90 Q2.74 4.32 2.50 5.30 L2.45 5.33 L2.45 3.90 Z" fill="var(--roofEnemyShade)"/>
+<rect x="1.95" y="3.48" width="1.00" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="1.75" y="3.68" width="1.40" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="1.75" y="3.68" width="1.40" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M2.24 2.65 L2.24 3.16 Q2.24 3.37 2.45 3.37 Q2.66 3.37 2.66 3.16 L2.66 2.65 Z" fill="var(--castleWindow)"/>
+<rect x="2.14" y="2.55" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-1.70" y="0.00" width="1.10" height="7.00" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="-0.89" y="0.00" width="0.29" height="7.00" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-1.25" y="4.77" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.23" y="1.67" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.35" y="6.16" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.33" y="6.34" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-1.19" y="8.50" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M-1.11 9.20 Q-0.83 9.26 -0.49 9.10 Q-0.79 9.02 -1.11 8.82 Z" fill="var(--cannonEnemy)"/>
+<path d="M-1.90 7.00 Q-1.46 7.48 -1.20 8.60 L-1.15 8.63 L-1.15 7.00 Z" fill="var(--roofEnemy)"/>
+<path d="M-0.40 7.00 Q-0.83 7.48 -1.10 8.60 L-1.15 8.63 L-1.15 7.00 Z" fill="var(--roofEnemyShade)"/>
+<rect x="-1.70" y="6.58" width="1.10" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-1.90" y="6.78" width="1.50" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="-1.90" y="6.78" width="1.50" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M-1.36 5.75 L-1.36 6.26 Q-1.36 6.47 -1.15 6.47 Q-0.94 6.47 -0.94 6.26 L-0.94 5.75 Z" fill="var(--castleWindow)"/>
+<path d="M-1.29 5.75 L-1.29 6.26 Q-1.29 6.47 -1.15 6.47 Q-1.01 6.47 -1.01 6.26 L-1.01 5.75 Z" fill="var(--castleWindowLit)"/>
+<rect x="-1.17" y="5.75" width="0.05" height="0.72" rx="0.00" fill="var(--castleWindow)" opacity="1"/>
+<rect x="-1.46" y="5.65" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="0.60" y="0.00" width="1.10" height="7.00" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="1.41" y="0.00" width="0.29" height="7.00" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="0.78" y="6.54" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.73" y="2.85" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.71" y="5.44" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="1.01" y="6.53" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="1.11" y="8.50" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M1.19 9.20 Q1.47 9.26 1.81 9.10 Q1.51 9.02 1.19 8.82 Z" fill="var(--cannonEnemy)"/>
+<path d="M0.40 7.00 Q0.83 7.48 1.10 8.60 L1.15 8.63 L1.15 7.00 Z" fill="var(--roofEnemy)"/>
+<path d="M1.90 7.00 Q1.46 7.48 1.20 8.60 L1.15 8.63 L1.15 7.00 Z" fill="var(--roofEnemyShade)"/>
+<rect x="0.60" y="6.58" width="1.10" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="0.40" y="6.78" width="1.50" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="0.40" y="6.78" width="1.50" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M0.94 5.75 L0.94 6.26 Q0.94 6.47 1.15 6.47 Q1.36 6.47 1.36 6.26 L1.36 5.75 Z" fill="var(--castleWindow)"/>
+<rect x="0.84" y="5.65" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-0.62" y="0.00" width="1.25" height="11.00" rx="0.05" fill="var(--castleStone)" opacity="1"/>
+<rect x="0.30" y="0.00" width="0.33" height="11.00" rx="0.05" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-0.04" y="10.16" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.20" y="10.58" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.08" y="3.77" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.06" y="4.10" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.41" y="0.90" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.25" y="2.18" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="0.04" y="10.17" width="0.42" height="0.17" rx="0.09" fill="var(--castleBrick)" opacity="1"/>
+<rect x="-0.04" y="12.80" width="0.08" height="0.72" rx="0.04" fill="var(--castleCrack)" opacity="1"/>
+<path d="M0.04 13.50 Q0.32 13.56 0.66 13.40 Q0.36 13.32 0.04 13.12 Z" fill="var(--cannonEnemy)"/>
+<path d="M-0.82 11.00 Q-0.35 11.57 -0.05 12.90 L0.00 12.93 L0.00 11.00 Z" fill="var(--roofEnemy)"/>
+<path d="M0.82 11.00 Q0.35 11.57 0.05 12.90 L0.00 12.93 L0.00 11.00 Z" fill="var(--roofEnemyShade)"/>
+<rect x="-0.62" y="10.58" width="1.25" height="0.20" rx="0.00" fill="var(--castleStoneShade)" opacity="1"/>
+<rect x="-0.82" y="10.78" width="1.65" height="0.34" rx="0.15" fill="var(--castleStone)" opacity="1"/>
+<rect x="-0.82" y="10.78" width="1.65" height="0.12" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+<path d="M-0.21 9.75 L-0.21 10.26 Q-0.21 10.47 0.00 10.47 Q0.21 10.47 0.21 10.26 L0.21 9.75 Z" fill="var(--castleWindow)"/>
+<path d="M-0.14 9.75 L-0.14 10.26 Q-0.14 10.47 0.00 10.47 Q0.14 10.47 0.14 10.26 L0.14 9.75 Z" fill="var(--castleWindowLit)"/>
+<rect x="-0.03" y="9.75" width="0.05" height="0.72" rx="0.00" fill="var(--castleWindow)" opacity="1"/>
+<rect x="-0.31" y="9.65" width="0.62" height="0.13" rx="0.06" fill="var(--castleStoneShade)" opacity="1"/>
+</g>
+</svg>

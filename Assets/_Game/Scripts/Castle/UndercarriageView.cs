@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CastleDestroyers.CastleRig
 {
     /// <summary>
-    /// Платформы и гусеницы обоих замков (ТЗ §3.7): один меш в цветах палитры, вершины считаются здесь. Форма строится
+    /// Платформы и гусеницы обоих замков (ТЗ §3.7): спрайты атласа в одном меше, вершины считаются здесь. Форма строится
     /// при смене темы, в кадре пересчитываются только позиции и только когда поза менялась.
     /// Скрытая трещина платформы схлопнута в точку.
     /// </summary>
@@ -65,16 +65,16 @@ namespace CastleDestroyers.CastleRig
                 for (int t = 0; t < CastleBody.TrackCount; t++)
                 {
                     trackStart[s][t] = builder.VertexCount;
-                    GreyboxCastles.DrawTrack(builder, palette, config.trackHeight);
+                    builder.AddSprite(ArtSprites.Track, 0f, 0f, 1f, Color.white);
                     trackEnd[s][t] = builder.VertexCount;
                 }
                 platformStart[s] = builder.VertexCount;
-                GreyboxCastles.DrawPlatform(builder, palette, body.HalfWidth, config.platformHeight);
+                builder.AddSprite(s == (int)Side.Player ? ArtSprites.PlatformBlue : ArtSprites.PlatformRed, 0f, 0f, 1f, Color.white);
                 for (int k = 0; k < CastleSystem.MaxPlatformCracks; k++)
                 {
                     crackStart[s][k] = builder.VertexCount;
                     float place = (k + 0.5f) / CastleSystem.MaxPlatformCracks * 2f - 1f;
-                    GreyboxCastles.AddPlatformCrack(builder, palette, crackRng, place * body.PlatformHalf * CrackInsetFraction, config.platformHeight);
+                    CastleShapes.AddPlatformCrack(builder, palette, crackRng, place * body.PlatformHalf * CrackInsetFraction, config.platformHeight);
                     crackEnd[s][k] = builder.VertexCount;
                 }
                 platformEnd[s] = builder.VertexCount;

@@ -20,7 +20,7 @@ namespace CastleDestroyers.UI
     }
 
     /// <summary>
-    /// Полосы здоровья сторон (ТЗ §3.12), greybox+: сегмент = пушка. Потерянный сегмент мигает белым и трясёт полосу.
+    /// Полосы здоровья сторон (ТЗ §3.12): сегмент = пушка. Потерянный сегмент мигает белым и трясёт полосу.
     /// Цвета пишутся только при смене состояния сегмента.
     /// </summary>
     public sealed class HudView : ITickable
@@ -30,8 +30,8 @@ namespace CastleDestroyers.UI
         private const byte SegmentOn = 1;
         private const byte SegmentFlash = 2;
         private const float DesignWidth = 640f;
-        private const float SegmentGap = 3f;
-        private const byte OffAlpha = 110;
+        private const float SegmentGap = 4f;
+        private const byte PanelAlpha = 240;
 
         private GameConfig config;
         private MatchState match;
@@ -44,6 +44,7 @@ namespace CastleDestroyers.UI
         private float[] shake;
         private Image[] panels;
         private Image[] frames;
+        private Image[] frameInners;
         private Image[] icons;
         private Image crossedRockets;
         private Color32 onColor;
@@ -52,7 +53,7 @@ namespace CastleDestroyers.UI
         private float time;
 
         public void Init(GameConfig gameConfig, MatchState matchState, RectTransform hudRoot, RectTransform[] sideBars, Image[] playerSegments, Image[] enemySegments,
-            Image[] hudPanels, Image[] hudFrames, Image[] castleIcons, Image crossed)
+            Image[] hudPanels, Image[] hudFrames, Image[] hudFrameInners, Image[] castleIcons, Image crossed)
         {
             config = gameConfig;
             match = matchState;
@@ -60,6 +61,7 @@ namespace CastleDestroyers.UI
             bars = sideBars;
             panels = hudPanels;
             frames = hudFrames;
+            frameInners = hudFrameInners;
             icons = castleIcons;
             crossedRockets = crossed;
             segments = new[] { playerSegments, enemySegments };
@@ -80,20 +82,25 @@ namespace CastleDestroyers.UI
         public void ApplyPalette(PaletteSet palette)
         {
             onColor = palette.hudHealth;
-            offColor = palette.hudPanel;
-            offColor.a = OffAlpha;
+            offColor = palette.hudTrack;
             flashColor = palette.hudText;
+            Color32 panel = palette.hudPanel;
+            panel.a = PanelAlpha;
             for (int i = 0; i < panels.Length; i++)
             {
-                panels[i].color = palette.hudPanel;
+                panels[i].color = panel;
             }
             for (int i = 0; i < frames.Length; i++)
             {
                 frames[i].color = palette.hudPanel;
             }
+            for (int i = 0; i < frameInners.Length; i++)
+            {
+                frameInners[i].color = palette.hudTrack;
+            }
             icons[(int)Side.Player].color = palette.roofPlayer;
-            icons[(int)Side.Enemy].color = palette.roofEnemy;
-            crossedRockets.color = palette.hudGold;
+            icons[(int)Side.Enemy].color = palette.rocketEnemy;
+            crossedRockets.color = Color.white;
             for (int s = 0; s < SideCount; s++)
             {
                 Paint(s, true);
@@ -134,6 +141,10 @@ namespace CastleDestroyers.UI
             RectTransform parent = root.parent as RectTransform;
             float fit = parent.rect.width / DesignWidth;
             float scale = fit < 1f ? fit : 1f;
+            if (parent.rect.width > parent.rect.height)
+            {
+                scale *= config.hudLandscapeScale;
+            }
             if (root.localScale.x != scale)
             {
                 root.localScale = new Vector3(scale, scale, 1f);
@@ -205,6 +216,8 @@ namespace CastleDestroyers.UI
         public const string Victory = "VICTORY!";
         public const string Defeat = "DEFEAT";
 
+        private const byte PanelAlpha = 240;
+
         private GameConfig config;
         private SessionFlow flow;
         private RectTransform root;
@@ -229,7 +242,9 @@ namespace CastleDestroyers.UI
 
         public void ApplyPalette(PaletteSet palette)
         {
-            background.color = palette.hudPanel;
+            Color32 panel = palette.hudPanel;
+            panel.a = PanelAlpha;
+            background.color = panel;
             label.color = palette.hudText;
         }
 
@@ -334,12 +349,17 @@ namespace CastleDestroyers.UI
     }
 
     /// <summary>
-    /// EndCard (ТЗ §3.11), greybox+: затемнение, логотип, силуэт победителя, пульсирующая PLAY NOW. Тап в любом месте после
+    /// EndCard (ТЗ §3.11): плоский оверлей, логотип, замок победителя на круге, пульсирующая PLAY NOW. Тап в любом месте после
     /// короткой паузы ведёт в стор. Это единственное место, откуда вызывается CTA (ТЗ §3.1.1).
     /// </summary>
     public sealed class EndCardView : ITickable
     {
         public const string TryAgain = "TRY AGAIN IN THE FULL GAME!";
+
+        private const float LandscapeScale = 0.62f;
+
+        // Ландшафт: логотип, надпись и кнопка слева, замок на круге справа. Порядок как у layout в Init.
+        private static readonly float[] LandscapeAnchors = { 0.3f, 0.68f, 0.72f, 0.5f, 0.72f, 0.5f, 0.3f, 0.4f, 0.3f, 0.24f };
 
         private readonly InputRig.PointerReader pointer = new InputRig.PointerReader();
         private GameConfig config;
@@ -353,8 +373,12 @@ namespace CastleDestroyers.UI
         private Image buttonFace;
         private Image buttonEdge;
         private Text buttonText;
-        private Text logo;
-        private Text logoShadow;
+        private Image disc;
+        private Sprite blueWinner;
+        private Sprite redWinner;
+        private RectTransform[] layout;
+        private Vector2[] portraitAnchors;
+        private bool landscapeLaidOut;
         private PaletteSet palette;
         private Color dimColor;
         private float time;
@@ -362,11 +386,13 @@ namespace CastleDestroyers.UI
 
         /// <summary>Устройство не читается (скриншоты, тесты): нажатия подаются через Feed.</summary>
         public bool Scripted { get; set; }
+        /// <summary>Звук нажатия CTA. В тестах не задан.</summary>
+        public Platform.GameSounds Sounds { get; set; }
         /// <summary>Сколько раз сработал CTA.</summary>
         public int CtaCount { get; private set; }
 
         public void Init(GameConfig gameConfig, SessionFlow sessionFlow, GameObject root, Image dimImage, RectTransform contentRoot, RectTransform ctaButton,
-            Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Text logoText, Text logoShadowText)
+            Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Image discImage, Sprite blueSprite, Sprite redSprite, RectTransform[] layoutRects)
         {
             config = gameConfig;
             flow = sessionFlow;
@@ -379,8 +405,15 @@ namespace CastleDestroyers.UI
             buttonFace = ctaFace;
             buttonEdge = ctaEdge;
             buttonText = ctaText;
-            logo = logoText;
-            logoShadow = logoShadowText;
+            disc = discImage;
+            blueWinner = blueSprite;
+            redWinner = redSprite;
+            layout = layoutRects;
+            portraitAnchors = new Vector2[layout.Length];
+            for (int i = 0; i < layout.Length; i++)
+            {
+                portraitAnchors[i] = layout[i].anchorMin;
+            }
             flow.StateChanged += OnStateChanged;
             rootObject.SetActive(false);
         }
@@ -388,12 +421,11 @@ namespace CastleDestroyers.UI
         public void ApplyPalette(PaletteSet paletteSet)
         {
             palette = paletteSet;
-            dimColor = palette.hudPanel;
+            dimColor = palette.hudTrack;
             buttonFace.color = palette.hudGold;
-            buttonEdge.color = palette.blastEdge;
-            buttonText.color = palette.hudPanel;
-            logo.color = palette.hudText;
-            logoShadow.color = palette.castleCrack;
+            buttonEdge.color = palette.hudGoldShade;
+            buttonText.color = palette.hudTrack;
+            disc.color = palette.hudPanel;
             caption.color = palette.hudText;
             if (rootObject.activeSelf)
             {
@@ -408,17 +440,37 @@ namespace CastleDestroyers.UI
                 return;
             }
             time += dt;
+            ApplyOrientation();
             Color color = dimColor;
             color.a = Mathf.Clamp01(time / config.endCardFadeTime) * config.endCardDimAlpha;
             dim.color = color;
             float pop = UiEase.OutBack(time / config.uiPopTime);
             content.localScale = new Vector3(pop, pop, 1f);
-            float pulse = 1f + Mathf.Sin(time * config.ctaPulseSpeed) * config.ctaPulse;
+            float pulse = (1f + Mathf.Sin(time * config.ctaPulseSpeed) * config.ctaPulse) * (landscapeLaidOut ? LandscapeScale : 1f);
             button.localScale = new Vector3(pulse, pulse, 1f);
             if (!Scripted)
             {
                 pointer.Read();
                 Feed(pointer.Pressed, pointer.Y, Screen.height);
+            }
+        }
+
+        /// <summary>Раскладка под ориентацию: перестраивается только при смене, в том числе на лету.</summary>
+        public void ApplyOrientation()
+        {
+            bool landscape = content.rect.width > content.rect.height;
+            if (landscape == landscapeLaidOut)
+            {
+                return;
+            }
+            landscapeLaidOut = landscape;
+            float scale = landscape ? LandscapeScale : 1f;
+            for (int i = 0; i < layout.Length; i++)
+            {
+                Vector2 anchor = landscape ? new Vector2(LandscapeAnchors[i * 2], LandscapeAnchors[i * 2 + 1]) : portraitAnchors[i];
+                layout[i].anchorMin = anchor;
+                layout[i].anchorMax = anchor;
+                layout[i].localScale = new Vector3(scale, scale, 1f);
             }
         }
 
@@ -428,6 +480,10 @@ namespace CastleDestroyers.UI
             if (pressed && !wasPressed && time >= config.endCardTapDelay && CanTapAt(y, screenHeight))
             {
                 CtaCount++;
+                if (Sounds != null)
+                {
+                    Sounds.Play(Platform.SoundId.Click);
+                }
                 Platform.PlatformBridge.InstallFullGame();
             }
             wasPressed = pressed;
@@ -459,7 +515,7 @@ namespace CastleDestroyers.UI
         private void PaintWinner()
         {
             bool enemy = flow.HasWinner && flow.Winner == Side.Enemy;
-            winnerIcon.color = enemy ? palette.roofEnemy : palette.roofPlayer;
+            winnerIcon.sprite = enemy ? redWinner : blueWinner;
         }
     }
 }

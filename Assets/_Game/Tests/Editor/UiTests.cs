@@ -215,7 +215,7 @@ namespace CastleDestroyers.Tests
             enemy = MakeRow(bars[1], "e");
             hud = new HudView();
             hud.Init(config, match, hudRoot, bars, player, enemy, new[] { Make(hudRoot, "Panel") }, new[] { Make(hudRoot, "Frame") },
-                new[] { Make(hudRoot, "IconL"), Make(hudRoot, "IconR") }, Make(hudRoot, "Crossed"));
+                new[] { Make(hudRoot, "Inner") }, new[] { Make(hudRoot, "IconL"), Make(hudRoot, "IconR") }, Make(hudRoot, "Crossed"));
             palette = ThemePalette.CreateNight();
             hud.ApplyPalette(palette);
         }
@@ -336,7 +336,7 @@ namespace CastleDestroyers.Tests
             endCard = new EndCardView();
             endCard.Init(config, flow, endRoot, MakeImage(endRoot.transform), MakeObject("Content", endRoot.transform).GetComponent<RectTransform>(),
                 MakeObject("Button", endRoot.transform).GetComponent<RectTransform>(), MakeImage(endRoot.transform), caption,
-                MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeText(endRoot.transform), MakeText(endRoot.transform), MakeText(endRoot.transform));
+                MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeText(endRoot.transform), MakeImage(endRoot.transform), null, null, new RectTransform[0]);
             endCard.Scripted = true;
             PaletteSet palette = ThemePalette.CreateNight();
             banner.ApplyPalette(palette);

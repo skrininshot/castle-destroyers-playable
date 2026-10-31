@@ -23,6 +23,7 @@ namespace CastleDestroyers.Core
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
+        private static readonly int AtlasTex = Shader.PropertyToID("_MainTex");
         private static readonly int RocketBodyColor = Shader.PropertyToID("_BodyColor");
         private static readonly int RocketShadeColor = Shader.PropertyToID("_ShadeColor");
 
@@ -49,6 +50,7 @@ namespace CastleDestroyers.Core
         public Text aimPowerText;
         public Text aimAngleText;
         public Text[] aimCaptions;
+        public Image aimDegree;
         [Tooltip("HUD: корень, полосы сторон, сегменты, панели, рамки, иконки замков, скрещённые ракеты.")]
         public RectTransform hudRoot;
         public RectTransform[] hudBars;
@@ -56,6 +58,7 @@ namespace CastleDestroyers.Core
         public Image[] hudEnemySegments;
         public Image[] hudPanels;
         public Image[] hudFrames;
+        public Image[] hudFrameInners;
         public Image[] hudCastleIcons;
         public Image hudCrossedRockets;
         [Tooltip("Плашка хода.")]
@@ -75,11 +78,19 @@ namespace CastleDestroyers.Core
         public Image endCardButtonFace;
         public Image endCardButtonEdge;
         public Text endCardButtonText;
-        public Text endCardLogo;
-        public Text endCardLogoShadow;
+        public Image endCardDisc;
+        public Sprite endCardBlueCastle;
+        public Sprite endCardRedCastle;
+        [Tooltip("Что перестраивается в ландшафте: логотип, круг, замок, надпись, кнопка.")]
+        public RectTransform[] endCardLayout;
+        [Tooltip("Клипы в порядке SoundId и источники для них.")]
+        public AudioClip[] soundClips;
+        public AudioSource[] soundSources;
         [Tooltip("Родитель тайлов земли и обломков.")]
         public Transform terrainRoot;
         public Material terrainMaterial;
+        [Tooltip("Материал спрайтов атласа: уровень, пушки, бустеры, частицы, взрывы.")]
+        public Material flatMaterial;
         public Material rocketMaterial;
         public Material castleMaterial;
         [Tooltip("Порядок отрисовки тайлов земли.")]
@@ -97,7 +108,7 @@ namespace CastleDestroyers.Core
         public Rng Rng { get; private set; }
         public MatchState Match { get; private set; }
         public SessionFlow Flow { get; private set; }
-        public GreyboxLevel Level { get; private set; }
+        public LevelScene Level { get; private set; }
         public TerrainSystem Terrain { get; private set; }
         public SurfaceDecor Decor { get; private set; }
         public FlatParticles Particles { get; private set; }
@@ -113,6 +124,7 @@ namespace CastleDestroyers.Core
         public EndCardView EndCard { get; private set; }
         public CameraDirector CameraDirector { get; private set; }
         public ParallaxBackground Parallax { get; private set; }
+        public GameSounds Sounds { get; private set; }
         public GameLoop Loop { get; private set; }
         public ThemePreset ActivePreset { get; private set; }
 #if GAME_DEBUG
@@ -125,7 +137,7 @@ namespace CastleDestroyers.Core
         private MaskTileView tileView;
         private ChunkSystem chunks;
         private WaterStrip water;
-        private CannonMarkers cannonView;
+        private CannonView cannonView;
         private UndercarriageView undercarriageView;
         private BoosterView boosterView;
         private ScreenShake shake;
@@ -135,6 +147,8 @@ namespace CastleDestroyers.Core
         private TurnBannerView bannerView;
         private HandView handView;
         private VictoryShow victoryShow;
+        private RainFx rain;
+        private Material[] bandMaterials;
         private bool booted;
 
         private void Start()
@@ -167,13 +181,20 @@ namespace CastleDestroyers.Core
 
             DestructibleMask terrainMask = DestructibleMask.CreateTerrain(config);
 
-            Level = new GreyboxLevel();
+            Level = new LevelScene();
             Level.Init(config, terrainMask);
             Transform[] backLayers = new Transform[backFilters.Length];
+            bandMaterials = new Material[backFilters.Length - LevelScene.FirstBandLayer];
             for (int i = 0; i < backFilters.Length; i++)
             {
                 backFilters[i].sharedMesh = Level.BackLayers[i];
                 backLayers[i] = backFilters[i].transform;
+                if (i >= LevelScene.FirstBandLayer)
+                {
+                    Material band = new Material(flatMaterial);
+                    bandMaterials[i - LevelScene.FirstBandLayer] = band;
+                    backFilters[i].GetComponent<MeshRenderer>().sharedMaterial = band;
+                }
             }
             frontFilter.sharedMesh = Level.FrontMesh;
 
@@ -182,6 +203,9 @@ namespace CastleDestroyers.Core
             particlesFilter.sharedMesh = Particles.Mesh;
             levelFx = new LevelFx();
             levelFx.Init(config, Particles, Rng);
+            Sounds = new GameSounds();
+            Sounds.Init(config, soundClips, soundSources);
+            levelFx.Sounds = Sounds;
 
             tileView = new MaskTileView();
             tileView.Init(terrainMask, terrainMaterial, config.maskEdgeSoftness, terrainRoot, terrainSortingOrder);
@@ -212,13 +236,14 @@ namespace CastleDestroyers.Core
             Rockets.Init(config, terrainMask, Castles, Explosions, Smoke, levelFx, Boosters);
             rocketsFilter.sharedMesh = Rockets.Mesh;
             Boosters.Init(config, Rockets, Particles, Rng);
+            Boosters.Sounds = Sounds;
             boosterView = new BoosterView();
             boosterView.Init(config, Boosters);
             boostersFilter.sharedMesh = boosterView.Mesh;
 
             Cannons = new CannonSystem();
             Cannons.Init(config, Level, Match, Rockets, Particles, levelFx, Rng);
-            cannonView = new CannonMarkers();
+            cannonView = new CannonView();
             cannonView.Init(Match, Cannons, config);
             cannonsFilter.sharedMesh = cannonView.Mesh;
 
@@ -242,21 +267,24 @@ namespace CastleDestroyers.Core
             aimPreview.Init(config, Aim, Cannons);
             aimDotsFilter.sharedMesh = aimPreview.Mesh;
             aimPanelView = new AimPanelView();
-            aimPanelView.Init(config, Aim, Level, mainCamera, aimPanel, aimPanelBackground, aimPowerText, aimAngleText, aimCaptions);
+            aimPanelView.Init(config, Aim, Level, mainCamera, aimPanel, aimPanelBackground, aimPowerText, aimAngleText, aimCaptions, aimDegree);
             Guide = new TurnGuide();
             Guide.Init(config, Flow, Aim, Cannons, CameraDirector);
             boosterView.Guide = Guide;
             hudView = new HudView();
-            hudView.Init(config, Match, hudRoot, hudBars, hudPlayerSegments, hudEnemySegments, hudPanels, hudFrames, hudCastleIcons, hudCrossedRockets);
+            hudView.Init(config, Match, hudRoot, hudBars, hudPlayerSegments, hudEnemySegments, hudPanels, hudFrames, hudFrameInners, hudCastleIcons, hudCrossedRockets);
             bannerView = new TurnBannerView();
             bannerView.Init(config, Flow, bannerRoot, bannerBackground, bannerText);
             handView = new HandView();
             handView.Init(config, Guide, mainCamera, handRoot, handImages);
             EndCard = new EndCardView();
             EndCard.Init(config, Flow, endCardRoot, endCardDim, endCardContent, endCardButton, endCardIcon, endCardCaption, endCardButtonFace, endCardButtonEdge,
-                endCardButtonText, endCardLogo, endCardLogoShadow);
+                endCardButtonText, endCardDisc, endCardBlueCastle, endCardRedCastle, endCardLayout);
+            EndCard.Sounds = Sounds;
             victoryShow = new VictoryShow();
             victoryShow.Init(config, Flow, Cannons, Castles, levelFx, Rng);
+            rain = new RainFx();
+            rain.Init(config, Particles, mainCamera, Rng);
 
             ActivePreset = config.theme.preset;
 
@@ -270,7 +298,7 @@ namespace CastleDestroyers.Core
             debugOverlay.Init(this);
             ITickable[] systems =
             {
-                Flow, Aim, Guide, Scenarios, Ai, combat, victoryShow, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Castles, Decor, water,
+                Sounds, Flow, Aim, Guide, Scenarios, Ai, combat, victoryShow, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Castles, Decor, water, rain,
                 Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard, debugOverlay
             };
 #else
@@ -280,7 +308,7 @@ namespace CastleDestroyers.Core
             }
             ITickable[] systems =
             {
-                Flow, Aim, Guide, Ai, combat, victoryShow, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Castles, Decor, water,
+                Sounds, Flow, Aim, Guide, Ai, combat, victoryShow, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Castles, Decor, water, rain,
                 Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, hudView, bannerView, handView, EndCard
             };
 #endif
@@ -296,6 +324,7 @@ namespace CastleDestroyers.Core
         public void TickUi()
         {
             hudView.Tick(0f);
+            EndCard.ApplyOrientation();
             aimPanelView.Tick(0f);
             handView.Tick(0f);
             bannerView.Tick(0f);
@@ -341,14 +370,21 @@ namespace CastleDestroyers.Core
         private void ApplyTheme()
         {
             PaletteSet palette = Palette;
+            ThemeArt art = config.theme.ArtOf(ActivePreset);
+            flatMaterial.SetTexture(AtlasTex, art.atlas);
+            bandMaterials[0].SetTexture(AtlasTex, art.backFar);
+            bandMaterials[1].SetTexture(AtlasTex, art.backMid);
+            bandMaterials[2].SetTexture(AtlasTex, art.backNear);
+            Castles.ApplyArt(art.castleBlue, art.castleRed);
+            Terrain.ApplyDecor(art.terrain);
             Level.Build(palette);
             Decor.Build(palette);
             tileView.ApplyPalette(palette);
             chunks.ApplyPalette(palette);
             water.ApplyPalette(palette);
+            rain.ApplyPalette(palette);
             levelFx.ApplyPalette(palette);
             Cannons.ApplyPalette(palette);
-            cannonView.ApplyPalette(palette);
             Castles.ApplyPalette(palette);
             undercarriageView.ApplyPalette(palette);
             Rockets.ApplyPalette(palette);
@@ -373,16 +409,22 @@ namespace CastleDestroyers.Core
             {
                 PlatformBridge.GameEnded();
             }
+            else if (state == SessionState.Victory)
+            {
+                Sounds.Play(SoundId.Victory);
+            }
         }
 
         private void OnPause()
         {
             Loop.Paused = true;
+            Sounds.SetMuted(true);
         }
 
         private void OnResume()
         {
             Loop.Paused = false;
+            Sounds.SetMuted(false);
         }
     }
 }

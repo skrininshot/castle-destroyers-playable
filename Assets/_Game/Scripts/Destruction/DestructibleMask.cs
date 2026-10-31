@@ -66,6 +66,18 @@ namespace CastleDestroyers.Destruction
             return mask;
         }
 
+        /// <summary>Меняет кромку и декоры на вариант другой темы; материал не трогает. Все тайлы уходят в очередь.</summary>
+        public void ApplyDecor(TerrainMaskData data)
+        {
+            MaskRle.Decode(data.grassRuns, Grass);
+            MaskRle.Decode(data.buriedRuns, Buried);
+            int tiles = TilesX * TilesY;
+            for (int tile = 0; tile < tiles; tile++)
+            {
+                MarkTileDirty(tile);
+            }
+        }
+
         /// <summary>
         /// Размеры должны быть кратны шагу тайла плюс 1. Если тайл больше маски, она считается одним тайлом (маска замка).
         /// Массивы переходят во владение маски.

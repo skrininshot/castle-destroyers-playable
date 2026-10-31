@@ -433,7 +433,8 @@ namespace CastleDestroyers.Tests
         [Test]
         public void BreathStaysWithinPulse()
         {
-            float height = rig.Config.boosterHeight;
+            // Спрайт чуть выше бустера: заглушки выступают.
+            float height = ArtSprites.Rect[ArtSprites.Booster10 * 4 + 3] * 2f * rig.Config.boosterHeight / 3f;
             for (int i = 0; i < 100; i++)
             {
                 view.Tick(0.05f);

@@ -15,7 +15,7 @@ namespace CastleDestroyers.EditorTools
     public static class GameCapture
     {
         private const string OutputDir = "docs/reports/img";
-        private const string FilePrefix = "stage06_";
+        private const string FilePrefix = "stage07_";
         private const int PortraitWidth = 720;
         private const int PortraitHeight = 1280;
         private const int LandscapeWidth = 1280;

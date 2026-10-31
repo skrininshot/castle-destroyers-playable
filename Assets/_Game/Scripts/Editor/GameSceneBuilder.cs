@@ -29,10 +29,11 @@ namespace CastleDestroyers.EditorTools
         private const string RocketShaderName = "Game/Rocket";
         private const string CastleMaterialPath = "Assets/_Game/Art/Mat_Castle.mat";
         private const string CastleShaderName = "Game/Castle";
+        private const string ThemeArtFolder = "Assets/_Game/Art/Theme";
 
         // Порядок отрисовки: слои фона, деревья, земля, шасси, замки, их куски, обломки, вода, кромка воды, пушки, частицы, дым, ракеты, бустеры, взрывы, пунктир.
         // Замки и куски идут до воды: они в неё падают.
-        private const int OrderDecor = GreyboxLevel.BackLayerCount;
+        private const int OrderDecor = LevelScene.BackLayerCount;
         private const int OrderTerrain = OrderDecor + 1;
         private const int OrderUndercarriage = OrderDecor + 2;
         private const int OrderCastles = OrderDecor + 3;
@@ -63,7 +64,9 @@ namespace CastleDestroyers.EditorTools
         private const float AimPanelWidth = 250f;
         private const float AimPanelHeight = 110f;
         private const float AimCaptionShare = 0.3f;
+        private const float AimPanelRoundness = 0.58f;
         private const int AimValueFontSize = 46;
+        private const float AimDegreeSize = 15f;
         private const int AimCaptionFontSize = 18;
         private const float ScaleMatchBalanced = 0.5f;
 
@@ -71,33 +74,32 @@ namespace CastleDestroyers.EditorTools
         private const float SafeTopAnchor = 0.9f;
         private const float HudWidth = 640f;
         private const float HudHeight = 76f;
-        private const float HudPanelHeight = 46f;
+        private const float HudPanelHeight = 56f;
+        private const float HudPanelInset = 30f;
         private const float HudFrameSize = 76f;
-        private const float HudIconSize = 50f;
+        private const float HudFrameInnerSize = 62f;
+        private const float HudIconSize = 54f;
         private const float HudBarHeight = 26f;
         private const float HudBarWidth = 214f;
         private const float HudBarX = 192f;
-        private const float HudCrossedSize = 64f;
-        private const float HudCrossedIconSize = 46f;
+        private const float HudCrossedIconSize = 58f;
         private const int MaxCannonSegments = 14;
         private const float BannerWidth = 330f;
         private const float BannerHeight = 76f;
         private const float BannerAnchorY = 0.8f;
         private const int BannerFontSize = 42;
-        private const float HandSize = 150f;
+        private const float HandSize = 200f;
         private const float HandShadowOffset = 7f;
-        private const float EndLogoAnchorY = 0.76f;
-        private const float EndLogoAngle = 3f;
-        private const int EndLogoFontSize = 76;
+        private const float EndLogoAnchorY = 0.8f;
         private const float EndLogoWidth = 680f;
-        private const float EndLogoHeight = 190f;
-        private const float EndLogoShadow = 6f;
-        private const float EndIconAnchorY = 0.48f;
-        private const float EndIconSize = 200f;
-        private const float EndCaptionAnchorY = 0.33f;
+        private const float EndLogoHeight = 300f;
+        private const float EndIconAnchorY = 0.46f;
+        private const float EndDiscSize = 520f;
+        private const float EndIconSize = 460f;
+        private const float EndCaptionAnchorY = 0.27f;
         private const int EndCaptionFontSize = 30;
-        private const float EndButtonAnchorY = 0.22f;
-        private const float EndButtonWidth = 360f;
+        private const float EndButtonAnchorY = 0.17f;
+        private const float EndButtonWidth = 400f;
         private const float EndButtonHeight = 104f;
         private const float EndButtonEdge = 10f;
         private const int EndButtonFontSize = 50;
@@ -106,13 +108,17 @@ namespace CastleDestroyers.EditorTools
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
         private const int ButtonRows = 3;
+        private const int SoundSources = 6;
+        private static readonly string[] SoundNames = { "Shot", "ExplosionA", "ExplosionB", "Booster", "Splash", "Victory", "Click" };
 
         [MenuItem("Tools/Castle Destroyers/Build Game Scene")]
         public static void Build()
         {
             ProjectSetup.SetupRenderPipeline();
 
+            // Палитра в коде — источник и для растеризатора: ассет не должен от неё расходиться.
             ThemePalette theme = LoadOrCreate<ThemePalette>(ThemePath);
+            theme.ResetPresets();
             GameConfig config = LoadOrCreate<GameConfig>(ConfigPath);
             if (config.theme == null)
             {
@@ -124,7 +130,14 @@ namespace CastleDestroyers.EditorTools
                 config.terrainMask = TerrainMaskBaker.Bake();
                 EditorUtility.SetDirty(config);
             }
+            config.terrainMask = TerrainMaskBaker.Bake();
+            EditorUtility.SetDirty(config);
+            FillThemeArt(theme.nightArt, "Night", config.terrainMask);
+            FillThemeArt(theme.sunsetArt, "Sunset", AssetDatabase.LoadAssetAtPath<Destruction.TerrainMaskData>(TerrainMaskBaker.SunsetDataPath));
+            EditorUtility.SetDirty(theme);
             Material material = LoadOrCreateMaterial(MaterialPath, ShaderName);
+            material.SetTexture("_MainTex", theme.nightArt.atlas);
+            EditorUtility.SetDirty(material);
             Material terrainMaterial = LoadOrCreateMaterial(TerrainMaterialPath, TerrainShaderName);
             Material particleMaterial = LoadOrCreateMaterial(ParticleMaterialPath, ParticleShaderName);
             Material castleMaterial = LoadOrCreateMaterial(CastleMaterialPath, CastleShaderName);
@@ -134,7 +147,7 @@ namespace CastleDestroyers.EditorTools
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Camera camera = CreateCamera();
-            MeshFilter[] back = new MeshFilter[GreyboxLevel.BackLayerCount];
+            MeshFilter[] back = new MeshFilter[LevelScene.BackLayerCount];
             for (int i = 0; i < back.Length; i++)
             {
                 back[i] = CreateBatch("LevelBack" + i, material, i);
@@ -146,11 +159,11 @@ namespace CastleDestroyers.EditorTools
             MeshFilter front = CreateBatch("LevelFront", material, OrderFront);
             MeshFilter wave = CreateBatch("WaterStrip", material, OrderWave);
             MeshFilter cannons = CreateBatch("Cannons", material, OrderCannons);
-            MeshFilter particles = CreateBatch("Particles", particleMaterial, OrderParticles);
+            MeshFilter particles = CreateBatch("Particles", material, OrderParticles);
             MeshFilter smoke = CreateBatch("Smoke", particleMaterial, OrderSmoke);
             MeshFilter rockets = CreateBatch("Rockets", rocketMaterial, OrderRockets);
             MeshFilter boosters = CreateBatch("Boosters", material, OrderBoosters);
-            MeshFilter explosions = CreateBatch("Explosions", particleMaterial, OrderExplosions);
+            MeshFilter explosions = CreateBatch("Explosions", material, OrderExplosions);
             MeshFilter aimDots = CreateBatch("AimDots", particleMaterial, OrderAimDots);
 
             GameBootstrap bootstrap = new GameObject("GameBootstrap").AddComponent<GameBootstrap>();
@@ -172,6 +185,8 @@ namespace CastleDestroyers.EditorTools
             bootstrap.explosionsFilter = explosions;
             bootstrap.aimDotsFilter = aimDots;
             bootstrap.rocketMaterial = rocketMaterial;
+            bootstrap.flatMaterial = material;
+            CreateSounds(bootstrap);
             bootstrap.terrainRoot = new GameObject("Terrain").transform;
             bootstrap.terrainMaterial = terrainMaterial;
             bootstrap.terrainSortingOrder = OrderTerrain;
@@ -184,6 +199,41 @@ namespace CastleDestroyers.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
+        }
+
+        private static void FillThemeArt(ThemeArt art, string themeName, Destruction.TerrainMaskData terrain)
+        {
+            string folder = ThemeArtFolder + themeName + "/";
+            art.atlas = LoadTexture(folder, "Atlas", themeName);
+            art.castleBlue = LoadTexture(folder, "CastleBlue", themeName);
+            art.castleRed = LoadTexture(folder, "CastleRed", themeName);
+            art.backFar = LoadTexture(folder, "BackFar", themeName);
+            art.backMid = LoadTexture(folder, "BackMid", themeName);
+            art.backNear = LoadTexture(folder, "BackNear", themeName);
+            art.terrain = terrain;
+        }
+
+        private static Texture2D LoadTexture(string folder, string name, string themeName)
+        {
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(folder + name + "_" + themeName + ".png");
+        }
+
+        private static void CreateSounds(GameBootstrap bootstrap)
+        {
+            AudioClip[] clips = new AudioClip[SoundNames.Length];
+            for (int i = 0; i < clips.Length; i++)
+            {
+                clips[i] = AssetDatabase.LoadAssetAtPath<AudioClip>(GameTextureImport.AudioFolder + SoundNames[i] + ".wav");
+            }
+            AudioSource[] sources = new AudioSource[SoundSources];
+            GameObject sound = new GameObject("Sounds");
+            for (int i = 0; i < sources.Length; i++)
+            {
+                sources[i] = sound.AddComponent<AudioSource>();
+                sources[i].playOnAwake = false;
+            }
+            bootstrap.soundClips = clips;
+            bootstrap.soundSources = sources;
         }
 
         /// <summary>Возвращает обе темы ассета к значениям из кода. Правки цветов в инспекторе будут потеряны.</summary>
@@ -230,6 +280,7 @@ namespace CastleDestroyers.EditorTools
             camera.nearClipPlane = 0.1f;
             camera.farClipPlane = 50f;
             cameraObject.AddComponent<UniversalAdditionalCameraData>();
+            cameraObject.AddComponent<AudioListener>();
             return camera;
         }
 
@@ -264,12 +315,14 @@ namespace CastleDestroyers.EditorTools
             Sprite pill = LoadSprite(GameTextureImport.PillPath);
             background.sprite = pill;
             background.type = Image.Type.Sliced;
+            background.pixelsPerUnitMultiplier = AimPanelRoundness;
 
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Font font = AssetDatabase.LoadAssetAtPath<Font>(GameTextureImport.FontPath);
             bootstrap.aimPanel = rect;
             bootstrap.aimPanelBackground = background;
             bootstrap.aimPowerText = CreatePanelText(rect, "Power", 0f, 0.5f, AimCaptionShare, 1f, AimValueFontSize, "0%", font);
-            bootstrap.aimAngleText = CreatePanelText(rect, "Angle", 0.5f, 1f, AimCaptionShare, 1f, AimValueFontSize, "0°", font);
+            bootstrap.aimAngleText = CreatePanelText(rect, "Angle", 0.5f, 1f, AimCaptionShare, 1f, AimValueFontSize, "0", font);
+            bootstrap.aimDegree = CreateImage(bootstrap.aimAngleText.rectTransform, "Degree", 0.5f, 0.5f, AimDegreeSize, AimDegreeSize, LoadSprite(GameTextureImport.DegreePath));
             bootstrap.aimCaptions = new[]
             {
                 CreatePanelText(rect, "PowerCaption", 0f, 0.5f, 0f, AimCaptionShare, AimCaptionFontSize, "POWER", font),
@@ -277,10 +330,10 @@ namespace CastleDestroyers.EditorTools
             };
 
             Transform canvas = canvasObject.transform;
-            CreateHud(bootstrap, canvas, pill);
+            CreateHud(bootstrap, canvas, pill, LoadSprite(GameTextureImport.SegmentPath), LoadSprite(GameTextureImport.CirclePath));
             CreateBanner(bootstrap, canvas, pill, font);
             CreateHand(bootstrap, canvas);
-            CreateEndCard(bootstrap, canvas, pill, font);
+            CreateEndCard(bootstrap, canvas, pill, LoadSprite(GameTextureImport.CirclePath), font);
         }
 
         private static Sprite LoadSprite(string path)
@@ -327,28 +380,30 @@ namespace CastleDestroyers.EditorTools
         }
 
         /// <summary>Полосы здоровья: синяя слева, красная справа, между ними скрещённые ракеты (ТЗ §3.12). Сегменты раскладывает HudView.</summary>
-        private static void CreateHud(GameBootstrap bootstrap, Transform canvas, Sprite pill)
+        private static void CreateHud(GameBootstrap bootstrap, Transform canvas, Sprite pill, Sprite segment, Sprite circle)
         {
             RectTransform root = CreateRect(canvas, "Hud", 0.5f, SafeTopAnchor, HudWidth, HudHeight);
             root.pivot = new Vector2(0.5f, 1f);
 
-            Image[] panels =
-            {
-                CreatePill(root, "PanelLeft", 0.25f, 0.5f, HudWidth * 0.5f, HudPanelHeight, pill),
-                CreatePill(root, "PanelRight", 0.75f, 0.5f, HudWidth * 0.5f, HudPanelHeight, pill)
-            };
-            Sprite castle = LoadSprite(GameTextureImport.CastlePath);
+            Image[] panels = { CreatePill(root, "Panel", 0.5f, 0.5f, HudWidth - HudPanelInset, HudPanelHeight, pill) };
+            Sprite castle = LoadSprite(GameTextureImport.TowerPath);
             float frameX = HudFrameSize * 0.5f / HudWidth;
-            Image[] frames = new Image[3];
-            frames[0] = CreatePill(root, "FrameBlue", frameX, 0.5f, HudFrameSize, HudFrameSize, pill);
-            frames[1] = CreatePill(root, "FrameRed", 1f - frameX, 0.5f, HudFrameSize, HudFrameSize, pill);
-            frames[2] = CreatePill(root, "FrameCenter", 0.5f, 0.5f, HudCrossedSize, HudCrossedSize, pill);
+            Image[] frames =
+            {
+                CreateImage(root, "FrameBlue", frameX, 0.5f, HudFrameSize, HudFrameSize, circle),
+                CreateImage(root, "FrameRed", 1f - frameX, 0.5f, HudFrameSize, HudFrameSize, circle)
+            };
+            Image[] inners =
+            {
+                CreateImage(frames[0].transform, "InnerBlue", 0.5f, 0.5f, HudFrameInnerSize, HudFrameInnerSize, circle),
+                CreateImage(frames[1].transform, "InnerRed", 0.5f, 0.5f, HudFrameInnerSize, HudFrameInnerSize, circle)
+            };
             bootstrap.hudCastleIcons = new[]
             {
                 CreateImage(frames[0].transform, "IconBlue", 0.5f, 0.5f, HudIconSize, HudIconSize, castle),
                 CreateImage(frames[1].transform, "IconRed", 0.5f, 0.5f, HudIconSize, HudIconSize, castle)
             };
-            bootstrap.hudCrossedRockets = CreateImage(frames[2].transform, "CrossedRockets", 0.5f, 0.5f, HudCrossedIconSize, HudCrossedIconSize, LoadSprite(GameTextureImport.RocketsPath));
+            bootstrap.hudCrossedRockets = CreateImage(root, "CrossedRockets", 0.5f, 0.5f, HudCrossedIconSize, HudCrossedIconSize, LoadSprite(GameTextureImport.RocketsPath));
 
             RectTransform playerSlot = CreateRect(root, "BarSlotBlue", HudBarX / HudWidth, 0.5f, HudBarWidth, HudBarHeight);
             RectTransform enemySlot = CreateRect(root, "BarSlotRed", 1f - HudBarX / HudWidth, 0.5f, HudBarWidth, HudBarHeight);
@@ -359,8 +414,9 @@ namespace CastleDestroyers.EditorTools
             bootstrap.hudBars = new[] { playerBar, enemyBar };
             bootstrap.hudPanels = panels;
             bootstrap.hudFrames = frames;
-            bootstrap.hudPlayerSegments = CreateSegments(playerBar, pill);
-            bootstrap.hudEnemySegments = CreateSegments(enemyBar, pill);
+            bootstrap.hudFrameInners = inners;
+            bootstrap.hudPlayerSegments = CreateSegments(playerBar, segment);
+            bootstrap.hudEnemySegments = CreateSegments(enemyBar, segment);
         }
 
         private static RectTransform CreateBar(RectTransform slot, string objectName)
@@ -393,7 +449,7 @@ namespace CastleDestroyers.EditorTools
             Sprite hand = LoadSprite(GameTextureImport.HandPath);
             RectTransform root = CreateRect(canvas, "Hand", 0.5f, 0.5f, HandSize, HandSize);
             // Кончик пальца в точке жеста.
-            root.pivot = new Vector2(0.39f, 0.95f);
+            root.pivot = new Vector2(0.33f, 0.71f);
             Image shadow = CreateImage(root, "Shadow", 0.5f, 0.5f, HandSize, HandSize, hand);
             shadow.rectTransform.anchoredPosition = new Vector2(HandShadowOffset, -HandShadowOffset);
             bootstrap.handRoot = root;
@@ -401,7 +457,7 @@ namespace CastleDestroyers.EditorTools
         }
 
         /// <summary>EndCard поверх всего. Тап принимает весь экран, поэтому у кнопки нет своего обработчика.</summary>
-        private static void CreateEndCard(GameBootstrap bootstrap, Transform canvas, Sprite pill, Font font)
+        private static void CreateEndCard(GameBootstrap bootstrap, Transform canvas, Sprite pill, Sprite circle, Font font)
         {
             RectTransform root = CreateRect(canvas, "EndCard", 0.5f, 0.5f, 0f, 0f);
             Stretch(root);
@@ -411,16 +467,11 @@ namespace CastleDestroyers.EditorTools
             RectTransform content = CreateRect(root, "Content", 0.5f, 0.5f, 0f, 0f);
             Stretch(content);
 
-            RectTransform shadowRect = CreateRect(content, "LogoShadow", 0.5f, EndLogoAnchorY, EndLogoWidth, EndLogoHeight);
-            shadowRect.anchoredPosition = new Vector2(0f, -EndLogoShadow);
-            shadowRect.localRotation = Quaternion.Euler(0f, 0f, EndLogoAngle);
-            RectTransform logoRect = CreateRect(content, "Logo", 0.5f, EndLogoAnchorY, EndLogoWidth, EndLogoHeight);
-            logoRect.localRotation = Quaternion.Euler(0f, 0f, EndLogoAngle);
-            const string Title = "CASTLE\nDESTROYERS";
-            bootstrap.endCardLogoShadow = CreatePanelText(shadowRect, "Text", 0f, 1f, 0f, 1f, EndLogoFontSize, Title, font);
-            bootstrap.endCardLogo = CreatePanelText(logoRect, "Text", 0f, 1f, 0f, 1f, EndLogoFontSize, Title, font);
-
-            bootstrap.endCardIcon = CreateImage(content, "WinnerCastle", 0.5f, EndIconAnchorY, EndIconSize, EndIconSize, LoadSprite(GameTextureImport.CastlePath));
+            bootstrap.endCardDisc = CreateImage(content, "Disc", 0.5f, EndIconAnchorY, EndDiscSize, EndDiscSize, circle);
+            bootstrap.endCardBlueCastle = LoadSprite(GameTextureImport.EndBluePath);
+            bootstrap.endCardRedCastle = LoadSprite(GameTextureImport.EndRedPath);
+            bootstrap.endCardIcon = CreateImage(content, "WinnerCastle", 0.5f, EndIconAnchorY, EndIconSize, EndIconSize, bootstrap.endCardBlueCastle);
+            Image logo = CreateImage(content, "Logo", 0.5f, EndLogoAnchorY, EndLogoWidth, EndLogoHeight, LoadSprite(GameTextureImport.LogoPath));
 
             RectTransform captionRect = CreateRect(content, "Caption", 0.5f, EndCaptionAnchorY, EndLogoWidth, EndCaptionFontSize * 2f);
             bootstrap.endCardCaption = CreatePanelText(captionRect, "Text", 0f, 1f, 0f, 1f, EndCaptionFontSize, "", font);
@@ -434,6 +485,7 @@ namespace CastleDestroyers.EditorTools
             bootstrap.endCardButtonEdge = edge;
             bootstrap.endCardButtonText = CreatePanelText(face.rectTransform, "Label", 0f, 1f, 0f, 1f, EndButtonFontSize, "PLAY NOW", font);
 
+            bootstrap.endCardLayout = new[] { logo.rectTransform, bootstrap.endCardDisc.rectTransform, bootstrap.endCardIcon.rectTransform, captionRect, button };
             bootstrap.endCardRoot = root.gameObject;
             bootstrap.endCardDim = dim;
             bootstrap.endCardContent = content;
@@ -451,7 +503,6 @@ namespace CastleDestroyers.EditorTools
             Text text = textObject.GetComponent<Text>();
             text.font = font;
             text.fontSize = fontSize;
-            text.fontStyle = FontStyle.Bold;
             text.alignment = TextAnchor.MiddleCenter;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;

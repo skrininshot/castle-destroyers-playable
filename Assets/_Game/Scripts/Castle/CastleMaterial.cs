@@ -1,4 +1,5 @@
 using CastleDestroyers.Core;
+using CastleDestroyers.Level;
 using UnityEngine;
 
 namespace CastleDestroyers.CastleRig
@@ -6,6 +7,8 @@ namespace CastleDestroyers.CastleRig
     /// <summary>Параметры шейдера Game/Castle: общие для замка и его обломков.</summary>
     public static class CastleMaterial
     {
+        private static readonly int ArtTex = Shader.PropertyToID("_MainTex");
+        private static readonly int ArtRect = Shader.PropertyToID("_ArtRect");
         private static readonly int MaskTex = Shader.PropertyToID("_MaskTex");
         private static readonly int MaskRect = Shader.PropertyToID("_MaskRect");
         private static readonly int CrackColor = Shader.PropertyToID("_CrackColor");
@@ -24,6 +27,15 @@ namespace CastleDestroyers.CastleRig
         public static void ApplyPalette(Material material, PaletteSet palette)
         {
             material.SetColor(CrackColor, palette.castleCrack);
+        }
+
+        /// <summary>Рисунок замка и отображение локальных координат в его UV: низ текстуры стоит на artMinY.</summary>
+        public static void SetArt(Material material, Texture2D art, float artMinY)
+        {
+            float scaleX = 1f / ArtSprites.CastleArtWidthMeters;
+            float scaleY = 1f / ArtSprites.CastleArtHeightMeters;
+            material.SetTexture(ArtTex, art);
+            material.SetVector(ArtRect, new Vector4(0.5f, -artMinY * scaleY, scaleX, scaleY));
         }
 
         /// <summary>Отображение локальных координат в UV маски: u = x * scaleX + offsetX.</summary>

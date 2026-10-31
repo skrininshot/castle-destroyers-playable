@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CastleDestroyers.CastleRig
 {
     /// <summary>
-    /// Падающие куски замков (ТЗ §3.6): тот же меш замка, вырезанный маской этого куска, с гравитацией и лёгким вращением,
+    /// Падающие куски замков (ТЗ §3.6): тот же рисунок замка, вырезанный маской этого куска, с гравитацией и лёгким вращением,
     /// без коллизий. Слоты с текстурой созданы заранее, поэтому в бою нет аллокаций.
     /// </summary>
     public sealed class CastleChunks : ITickable
@@ -95,7 +95,7 @@ namespace CastleDestroyers.CastleRig
         }
 
         /// <summary>Создаёт кусок из результата вырезания. False, если свободных слотов нет.</summary>
-        public bool Spawn(ChunkExtractor extractor, CastleBody body, Mesh mesh)
+        public bool Spawn(ChunkExtractor extractor, CastleBody body, Mesh mesh, Texture2D art, float artMinY)
         {
             int i = pool.Alloc();
             if (i < 0)
@@ -123,6 +123,7 @@ namespace CastleDestroyers.CastleRig
             float scaleX = extractor.UvMaxX / sizeX;
             float scaleY = extractor.UvMaxY / sizeY;
             CastleMaterial.SetMaskRect(materials[i], -minX * scaleX, -minY * scaleY, scaleX, scaleY);
+            CastleMaterial.SetArt(materials[i], art, artMinY);
             Texture2D texture = textures[i];
             texture.SetPixels32(extractor.Pixels);
             texture.Apply(false, false);

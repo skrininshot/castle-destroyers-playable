@@ -3,8 +3,8 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Собирает плоские фигуры одного цвета в один меш (вершинный цвет). Используется при Init и при смене темы,
-    /// не в кадре: буферы растут по необходимости и переиспользуются между сборками.
+    /// Собирает спрайты атласа и плоские фигуры одного цвета в один меш. Фигуры берут белый участок атласа, цвет даёт вершина.
+    /// Используется при Init и при смене темы, не в кадре: буферы растут по необходимости и переиспользуются между сборками.
     /// </summary>
     public sealed class FlatMeshBuilder
     {
@@ -17,8 +17,13 @@ namespace CastleDestroyers.Level
         private const float HalfTurn = Mathf.PI;
         private const float QuarterTurn = Mathf.PI * 0.5f;
 
+        private static readonly Vector2 WhiteUv = new Vector2(
+            (ArtSprites.Uv[ArtSprites.White * 4] + ArtSprites.Uv[ArtSprites.White * 4 + 2]) * 0.5f,
+            (ArtSprites.Uv[ArtSprites.White * 4 + 1] + ArtSprites.Uv[ArtSprites.White * 4 + 3]) * 0.5f);
+
         private Vector3[] vertices = new Vector3[InitialVertices];
         private Color32[] colors = new Color32[InitialVertices];
+        private Vector2[] uvs = new Vector2[InitialVertices];
         private int[] triangles = new int[InitialVertices * 3];
         private int vertexCount;
         private int triangleIndexCount;
@@ -81,6 +86,39 @@ namespace CastleDestroyers.Level
             AddPie(cx, cy, radiusX, radiusY, 0f, FullTurn, CircleSegments, color);
         }
 
+        /// <summary>Спрайт атласа: точка привязки (x, y), оси right и up задают масштаб и поворот в метрах на единицу.</summary>
+        public void AddSprite(int sprite, float x, float y, float rightX, float rightY, float upX, float upY, Color32 color)
+        {
+            int r = sprite * 4;
+            float[] rect = ArtSprites.Rect;
+            float[] uv = ArtSprites.Uv;
+            float minX = rect[r];
+            float minY = rect[r + 1];
+            float maxX = rect[r + 2];
+            float maxY = rect[r + 3];
+            int v = vertexCount;
+            AddQuad(
+                x + rightX * minX + upX * minY, y + rightY * minX + upY * minY,
+                x + rightX * maxX + upX * minY, y + rightY * maxX + upY * minY,
+                x + rightX * maxX + upX * maxY, y + rightY * maxX + upY * maxY,
+                x + rightX * minX + upX * maxY, y + rightY * minX + upY * maxY, color);
+            SetQuadUv(v, uv[r], uv[r + 1], uv[r + 2], uv[r + 3]);
+        }
+
+        /// <summary>Спрайт без поворота с равномерным масштабом.</summary>
+        public void AddSprite(int sprite, float x, float y, float scale, Color32 color)
+        {
+            AddSprite(sprite, x, y, scale, 0f, 0f, scale, color);
+        }
+
+        /// <summary>Прямоугольник со своими UV: полосы фона, которые тайлятся за пределы 0..1.</summary>
+        public void AddTexturedRect(float minX, float minY, float maxX, float maxY, float minU, float minV, float maxU, float maxV, Color32 color)
+        {
+            int v = vertexCount;
+            AddRect(minX, minY, maxX, maxY, color);
+            SetQuadUv(v, minU, minV, maxU, maxV);
+        }
+
         /// <summary>Прямоугольник со скруглёнными углами; радиус ограничен половиной меньшей стороны.</summary>
         public void AddRoundedRect(float minX, float minY, float maxX, float maxY, float radius, Color32 color)
         {
@@ -136,6 +174,9 @@ namespace CastleDestroyers.Level
             mesh.Clear();
             mesh.vertices = outVertices;
             mesh.colors32 = outColors;
+            Vector2[] outUvs = new Vector2[vertexCount];
+            System.Array.Copy(uvs, outUvs, vertexCount);
+            mesh.uv = outUvs;
             mesh.triangles = outTriangles;
             mesh.RecalculateBounds();
         }
@@ -153,10 +194,30 @@ namespace CastleDestroyers.Level
             }
         }
 
+        /// <summary>Копирует UV в массив-приёмник: меши, у которых спрайт меняется в кадре. Поля по одному, см. CopyVertices.</summary>
+        public void CopyUvs(Vector2[] target)
+        {
+            for (int i = 0; i < vertexCount; i++)
+            {
+                target[i].x = uvs[i].x;
+                target[i].y = uvs[i].y;
+            }
+        }
+
         private void SetVertex(int index, float x, float y, Color32 color)
         {
             vertices[index] = new Vector3(x, y, 0f);
             colors[index] = color;
+            uvs[index] = WhiteUv;
+        }
+
+        /// <summary>Порядок вершин как в AddQuad: левый низ, правый низ, правый верх, левый верх.</summary>
+        private void SetQuadUv(int v, float minU, float minV, float maxU, float maxV)
+        {
+            uvs[v] = new Vector2(minU, minV);
+            uvs[v + 1] = new Vector2(maxU, minV);
+            uvs[v + 2] = new Vector2(maxU, maxV);
+            uvs[v + 3] = new Vector2(minU, maxV);
         }
 
         private void EnsureCapacity(int addVertices, int addIndices)
@@ -170,6 +231,7 @@ namespace CastleDestroyers.Level
             {
                 System.Array.Resize(ref vertices, size);
                 System.Array.Resize(ref colors, size);
+                System.Array.Resize(ref uvs, size);
             }
             int indexSize = triangles.Length;
             while (triangleIndexCount + addIndices > indexSize)

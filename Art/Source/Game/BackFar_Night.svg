@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+<g transform="translate(-1024 0)">
+<path d="M-130.0 512.0 L131.0 98.4 Q170.0 42.0 209.0 98.4 L470.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M-130.0 512.0 L57.5 211.2 L282.5 211.2 L470.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="80.00" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="122.75" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="165.50" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="208.25" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="251.00" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<path d="M220.0 512.0 L515.8 142.4 Q560.0 92.0 604.2 142.4 L900.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M220.0 512.0 L432.5 243.2 L687.5 243.2 L900.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="458.00" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="506.45" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="554.90" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="603.35" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="651.80" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<path d="M580.0 512.0 L823.6 80.8 Q860.0 22.0 896.4 80.8 L1140.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M580.0 512.0 L755.0 198.4 L965.0 198.4 L1140.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="776.00" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="815.90" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="855.80" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="895.70" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="935.60" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+</g>
+<g transform="translate(0 0)">
+<path d="M-130.0 512.0 L131.0 98.4 Q170.0 42.0 209.0 98.4 L470.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M-130.0 512.0 L57.5 211.2 L282.5 211.2 L470.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="80.00" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="122.75" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="165.50" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="208.25" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="251.00" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<path d="M220.0 512.0 L515.8 142.4 Q560.0 92.0 604.2 142.4 L900.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M220.0 512.0 L432.5 243.2 L687.5 243.2 L900.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="458.00" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="506.45" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="554.90" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="603.35" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="651.80" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<path d="M580.0 512.0 L823.6 80.8 Q860.0 22.0 896.4 80.8 L1140.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M580.0 512.0 L755.0 198.4 L965.0 198.4 L1140.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="776.00" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="815.90" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="855.80" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="895.70" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="935.60" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+</g>
+<g transform="translate(1024 0)">
+<path d="M-130.0 512.0 L131.0 98.4 Q170.0 42.0 209.0 98.4 L470.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M-130.0 512.0 L57.5 211.2 L282.5 211.2 L470.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="80.00" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="122.75" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="165.50" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="208.25" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="251.00" cy="211.20" r="22.50" fill="var(--backgroundFar)" opacity="1"/>
+<path d="M220.0 512.0 L515.8 142.4 Q560.0 92.0 604.2 142.4 L900.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M220.0 512.0 L432.5 243.2 L687.5 243.2 L900.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="458.00" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="506.45" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="554.90" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="603.35" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="651.80" cy="243.20" r="25.50" fill="var(--backgroundFar)" opacity="1"/>
+<path d="M580.0 512.0 L823.6 80.8 Q860.0 22.0 896.4 80.8 L1140.0 512.0 Z" fill="var(--backgroundFar)"/>
+<path d="M580.0 512.0 L755.0 198.4 L965.0 198.4 L1140.0 512.0 Z" fill="var(--backgroundFarShade)"/>
+<circle cx="776.00" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="815.90" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="855.80" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="895.70" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+<circle cx="935.60" cy="198.40" r="21.00" fill="var(--backgroundFar)" opacity="1"/>
+</g>
+<rect x="0.00" y="488.00" width="1024.00" height="24.00" rx="0.00" fill="var(--backgroundFarShade)" opacity="1"/>
+</svg>

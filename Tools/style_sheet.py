@@ -376,19 +376,20 @@ def cannon(svg, x, y, angle, side, size, mirrored=False):
     svg.close()
 
 
-def blue_castle(svg):
+def blue_castle(svg, with_platform=True):
     rng = random.Random(11)
     wall(svg, rng, -3.5, 3.5, 0, 3.6)
     for cx, lit in ((-2.3, True), (2.3, False)):
         wall(svg, rng, cx - 1.2, cx + 1.2, 0, 6.6)
-        roof(svg, cx, 2.9, 6.72, 2.5, var("roofPlayer"), var("roofPlayerShade"), var("cannonPlayer"))
+        roof(svg, cx, 2.8, 6.6, 2.5, var("roofPlayer"), var("roofPlayerShade"), var("cannonPlayer"))
         collar(svg, cx, 2.4, 6.6)
         window(svg, cx, 4.7, 0.8, 1.15, lit)
     window(svg, 0, 1.2, 0.8, 1.15, True)
-    platform(svg, 3.85, 1.0)
+    if with_platform:
+        platform(svg, 3.85, 1.0)
 
 
-def red_castle(svg):
+def red_castle(svg, with_platform=True):
     rng = random.Random(23)
     wall(svg, rng, -4.0, 4.0, 0, 2.6)
     wall(svg, rng, -1.7, 1.7, 0, 6.2)
@@ -399,10 +400,11 @@ def red_castle(svg):
     for i, cx in enumerate(offsets):
         w = widths[i]
         wall(svg, rng, cx - w * 0.5, cx + w * 0.5, 0, tops[i])
-        roof(svg, cx, w + 0.4, tops[i] + 0.12, heights[i], var("roofEnemy"), var("roofEnemyShade"), var("cannonEnemy"))
+        roof(svg, cx, w + 0.4, tops[i], heights[i], var("roofEnemy"), var("roofEnemyShade"), var("cannonEnemy"))
         collar(svg, cx, w, tops[i])
         window(svg, cx, tops[i] - 1.25, 0.42, 0.72, i % 2 == 0)
-    platform(svg, 4.35, 1.0)
+    if with_platform:
+        platform(svg, 4.35, 1.0)
 
 
 def on_platform(svg, draw_castle, x, ground_y, scale, tilt=0.0):

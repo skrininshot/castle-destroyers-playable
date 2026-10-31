@@ -20,7 +20,7 @@ namespace CastleDestroyers.Tests
     {
         public readonly GameConfig Config;
         public readonly DestructibleMask Mask;
-        public readonly GreyboxLevel Level;
+        public readonly LevelScene Level;
         public readonly MatchState Match;
         public readonly SessionFlow Flow;
         public readonly TerrainSystem Terrain;
@@ -64,7 +64,7 @@ namespace CastleDestroyers.Tests
             Terrain = new TerrainSystem();
             Terrain.Init(Config, Mask, view, chunks, fx);
 
-            Level = new GreyboxLevel();
+            Level = new LevelScene();
             Level.Init(Config, Mask);
             Match = new MatchState();
             Match.Init(Config.playerCannons, Config.enemyCannons);

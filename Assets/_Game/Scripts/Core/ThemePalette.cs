@@ -1,4 +1,5 @@
 using System;
+using CastleDestroyers.Destruction;
 using UnityEngine;
 
 namespace CastleDestroyers.Core
@@ -28,6 +29,7 @@ namespace CastleDestroyers.Core
         public Color32 ground;
         public Color32 groundShade;
         public Color32 groundBuried;
+        public Color32 groundBand;
         public Color32 groundRim;
         public Color32 groundRimLight;
         public Color32 groundCrater;
@@ -88,7 +90,21 @@ namespace CastleDestroyers.Core
         public Color32 hudText;
     }
 
-    /// <summary>Палитра с пресетами Night / Sunset (ТЗ §4.2). HEX уточняются на этапе 7 по скриншотам.</summary>
+    /// <summary>Текстуры темы, их собирает Tools/build_art.py. Раскладка атласа общая (ArtSprites).</summary>
+    [Serializable]
+    public sealed class ThemeArt
+    {
+        public Texture2D atlas;
+        public Texture2D castleBlue;
+        public Texture2D castleRed;
+        public Texture2D backFar;
+        public Texture2D backMid;
+        public Texture2D backNear;
+        [Tooltip("Кромка и декоры земли этой темы; форма уровня общая.")]
+        public TerrainMaskData terrain;
+    }
+
+    /// <summary>Палитра с пресетами Night / Sunset (ТЗ §4.2): HEX сняты пипеткой со скриншотов Bowmasters (D-054).</summary>
     [CreateAssetMenu(fileName = "ThemePalette", menuName = "Castle Destroyers/Theme Palette")]
     public sealed class ThemePalette : ScriptableObject
     {
@@ -100,6 +116,8 @@ namespace CastleDestroyers.Core
         public ThemePreset preset = ThemePreset.Night;
         public PaletteSet night = CreateNight();
         public PaletteSet sunset = CreateSunset();
+        public ThemeArt nightArt = new ThemeArt();
+        public ThemeArt sunsetArt = new ThemeArt();
 
         public PaletteSet Current
         {
@@ -109,6 +127,11 @@ namespace CastleDestroyers.Core
         public PaletteSet Get(ThemePreset requested)
         {
             return requested == ThemePreset.Night ? night : sunset;
+        }
+
+        public ThemeArt ArtOf(ThemePreset requested)
+        {
+            return requested == ThemePreset.Night ? nightArt : sunsetArt;
         }
 
         /// <summary>Возвращает пресеты к значениям по умолчанию.</summary>
@@ -142,6 +165,7 @@ namespace CastleDestroyers.Core
             set.ground = Hex(0x00A988);
             set.groundShade = Hex(0x00997C);
             set.groundBuried = Hex(0x008F75);
+            set.groundBand = Hex(0x31E18C);
             set.groundRim = Hex(0x31E18C);
             set.groundRimLight = Hex(0x77E9A6);
             set.groundCrater = Hex(0x007F6C);
@@ -178,6 +202,7 @@ namespace CastleDestroyers.Core
             set.ground = Hex(0xF65157);
             set.groundShade = Hex(0xF14448);
             set.groundBuried = Hex(0xFF656B);
+            set.groundBand = Hex(0xF14448);
             set.groundRim = Hex(0xC81A1D);
             set.groundRimLight = Hex(0xDE2E2C);
             set.groundCrater = Hex(0xC92F3A);

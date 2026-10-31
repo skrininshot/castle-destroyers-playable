@@ -76,9 +76,9 @@ namespace CastleDestroyers.CastleRig
             HalfWidth = halfWidth;
             restGroundY = groundY;
             Mask = castleMask;
-            PlatformHalf = GreyboxCastles.PlatformHalfWidth(halfWidth);
-            TrackCenter = GreyboxCastles.TrackCenter(halfWidth);
-            trackHalfLength = GreyboxCastles.TrackHalfLength();
+            PlatformHalf = CastleShapes.PlatformHalfWidth(halfWidth);
+            TrackCenter = CastleShapes.TrackCenter(halfWidth);
+            trackHalfLength = CastleShapes.TrackHalfLength();
             Height = Mask.WorldY(Mask.Height - 1);
             // Запас по X на наклон: верх замка уходит вбок.
             float tilt = (config.castleMaxTiltDeg + config.swayMaxDeg) * Mathf.Deg2Rad;

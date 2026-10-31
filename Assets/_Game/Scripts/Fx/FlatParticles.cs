@@ -1,10 +1,11 @@
 using CastleDestroyers.Core;
+using CastleDestroyers.Level;
 using UnityEngine;
 
 namespace CastleDestroyers.Fx
 {
     /// <summary>
-    /// Плоские круглые частицы (ТЗ §4.1): SoA, один динамический меш. Тают размером, а не альфой,
+    /// Плоские частицы (ТЗ §4.1): круги и 4-лучевые звёзды из атласа, SoA, один динамический меш. Тают размером, а не альфой,
     /// поэтому цвета заливаются только при спавне. Сверх capacity спавн молча отбрасывается.
     /// </summary>
     public sealed class FlatParticles : ITickable
@@ -24,6 +25,9 @@ namespace CastleDestroyers.Fx
         private float[] life;
         private Vector3[] vertices;
         private Color32[] colors;
+        private Vector2[] uv;
+        private byte[] star;
+        private bool uvDirty;
         private bool colorsDirty;
         private bool verticesDirty;
 
@@ -45,15 +49,13 @@ namespace CastleDestroyers.Fx
             vertices = new Vector3[capacity * VerticesPerQuad];
             colors = new Color32[capacity * VerticesPerQuad];
 
-            Vector2[] uv = new Vector2[vertices.Length];
+            uv = new Vector2[vertices.Length];
+            star = new byte[capacity];
             int[] triangles = new int[capacity * IndicesPerQuad];
             for (int i = 0; i < capacity; i++)
             {
                 int v = i * VerticesPerQuad;
-                uv[v + 1].x = 1f;
-                uv[v + 2].y = 1f;
-                uv[v + 3].x = 1f;
-                uv[v + 3].y = 1f;
+                AtlasUv.SetStrip(uv, v, ArtSprites.Circle);
                 int t = i * IndicesPerQuad;
                 triangles[t] = v;
                 triangles[t + 1] = v + 2;
@@ -73,12 +75,31 @@ namespace CastleDestroyers.Fx
             Mesh.bounds = new Bounds(Vector3.zero, new Vector3(BoundsSize, BoundsSize, 1f));
         }
 
-        public void Spawn(float x, float y, float speedX, float speedY, float startSize, float lifetime, float fall, Color32 color)
+        /// <summary>Искра-звезда (фейерверк, ТЗ §3.11): как круглая частица, другая форма.</summary>
+        public void SpawnStar(float x, float y, float speedX, float speedY, float startSize, float lifetime, float fall, Color32 color)
+        {
+            int i = Spawn(x, y, speedX, speedY, startSize, lifetime, fall, color);
+            if (i >= 0)
+            {
+                star[i] = 1;
+                AtlasUv.SetStrip(uv, i * VerticesPerQuad, ArtSprites.Spark);
+                uvDirty = true;
+            }
+        }
+
+        /// <summary>Возвращает слот частицы или -1, если пул полон.</summary>
+        public int Spawn(float x, float y, float speedX, float speedY, float startSize, float lifetime, float fall, Color32 color)
         {
             int i = pool.Alloc();
             if (i < 0)
             {
-                return;
+                return -1;
+            }
+            if (star[i] != 0)
+            {
+                star[i] = 0;
+                AtlasUv.SetStrip(uv, i * VerticesPerQuad, ArtSprites.Circle);
+                uvDirty = true;
             }
             posX[i] = x;
             posY[i] = y;
@@ -94,6 +115,7 @@ namespace CastleDestroyers.Fx
             colors[v + 2] = color;
             colors[v + 3] = color;
             colorsDirty = true;
+            return i;
         }
 
         public void Tick(float dt)
@@ -140,6 +162,11 @@ namespace CastleDestroyers.Fx
             {
                 Mesh.colors32 = colors;
                 colorsDirty = false;
+            }
+            if (uvDirty)
+            {
+                Mesh.uv = uv;
+                uvDirty = false;
             }
         }
 

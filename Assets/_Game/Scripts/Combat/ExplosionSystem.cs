@@ -2,12 +2,13 @@ using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Fx;
+using CastleDestroyers.Level;
 using UnityEngine;
 
 namespace CastleDestroyers.Combat
 {
     /// <summary>
-    /// Взрывы (ТЗ §3.4, §4.1, §5.4): три плоских круга в одном меше и осколки в общем пуле частиц.
+    /// Взрывы (ТЗ §3.4, §4.1, §5.4): две плоских звезды и круг-ядро в одном меше, осколки в общем пуле частиц.
     /// Кратер штампуется на каждый взрыв, а близкие взрывы одного кадра сливаются в один визуальный.
     /// </summary>
     public sealed class ExplosionSystem : ITickable
@@ -35,6 +36,8 @@ namespace CastleDestroyers.Combat
         private float[] posY;
         private float[] age;
         private float[] strength;
+        private float[] turnCos;
+        private float[] turnSin;
         private int[] frameSlots;
         private int frameCount;
         private Vector3[] vertices;
@@ -63,6 +66,8 @@ namespace CastleDestroyers.Combat
             posY = new float[capacity];
             age = new float[capacity];
             strength = new float[capacity];
+            turnCos = new float[capacity];
+            turnSin = new float[capacity];
             frameSlots = new int[capacity];
 
             int quads = capacity * QuadsPerExplosion;
@@ -73,10 +78,8 @@ namespace CastleDestroyers.Combat
             for (int i = 0; i < quads; i++)
             {
                 int v = i * VerticesPerQuad;
-                uv[v + 1].x = 1f;
-                uv[v + 2].y = 1f;
-                uv[v + 3].x = 1f;
-                uv[v + 3].y = 1f;
+                int ring = i % QuadsPerExplosion;
+                AtlasUv.SetStrip(uv, v, ring == 0 ? ArtSprites.StarEdge : (ring == 1 ? ArtSprites.StarMid : ArtSprites.Circle));
                 int t = i * IndicesPerQuad;
                 triangles[t] = v;
                 triangles[t + 1] = v + 2;
@@ -145,10 +148,14 @@ namespace CastleDestroyers.Combat
             posY[i] = y;
             age[i] = 0f;
             strength[i] = Mathf.Min(scale, config.explosionMaxStrength);
+            float turn = rng.Range(0f, FullTurn);
+            turnCos[i] = Mathf.Cos(turn);
+            turnSin[i] = Mathf.Sin(turn);
             frameSlots[frameCount] = i;
             frameCount++;
 
             shake.Add(config.shakePerExplosion);
+            fx.Play(pool.ActiveCount % 2 == 0 ? Platform.SoundId.ExplosionA : Platform.SoundId.ExplosionB);
             SpawnShards(x, y);
             if (hit)
             {
@@ -181,9 +188,11 @@ namespace CastleDestroyers.Combat
                 }
                 float size = radius * strength[i] * Pulse(t / life);
                 int quad = i * QuadsPerExplosion;
-                WriteCircle(quad, posX[i], posY[i], size);
-                WriteCircle(quad + 1, posX[i], posY[i], size * MidRing);
-                WriteCircle(quad + 2, posX[i], posY[i], size * CoreRing);
+                float cos = turnCos[i];
+                float sin = turnSin[i];
+                WriteCircle(quad, posX[i], posY[i], size, cos, sin);
+                WriteCircle(quad + 1, posX[i], posY[i], size * MidRing, sin, cos);
+                WriteCircle(quad + 2, posX[i], posY[i], size * CoreRing, 1f, 0f);
             }
             Mesh.vertices = vertices;
             dirty = pool.ActiveCount > 0;
@@ -220,18 +229,21 @@ namespace CastleDestroyers.Combat
             }
         }
 
-        private void WriteCircle(int quad, float x, float y, float radius)
+        /// <summary>Квад радиуса radius, повёрнутый на угол с косинусом cos и синусом sin.</summary>
+        private void WriteCircle(int quad, float x, float y, float radius, float cos, float sin)
         {
             int v = quad * VerticesPerQuad;
             Vector3[] verts = vertices;
-            verts[v].x = x - radius;
-            verts[v].y = y - radius;
-            verts[v + 1].x = x + radius;
-            verts[v + 1].y = y - radius;
-            verts[v + 2].x = x - radius;
-            verts[v + 2].y = y + radius;
-            verts[v + 3].x = x + radius;
-            verts[v + 3].y = y + radius;
+            float a = radius * (cos - sin);
+            float b = radius * (cos + sin);
+            verts[v].x = x - a;
+            verts[v].y = y - b;
+            verts[v + 1].x = x + b;
+            verts[v + 1].y = y - a;
+            verts[v + 2].x = x - b;
+            verts[v + 2].y = y + a;
+            verts[v + 3].x = x + a;
+            verts[v + 3].y = y + b;
         }
 
         private void Collapse(int i)
@@ -239,7 +251,7 @@ namespace CastleDestroyers.Combat
             int quad = i * QuadsPerExplosion;
             for (int q = 0; q < QuadsPerExplosion; q++)
             {
-                WriteCircle(quad + q, 0f, 0f, 0f);
+                WriteCircle(quad + q, 0f, 0f, 0f, 1f, 0f);
             }
         }
     }

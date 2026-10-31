@@ -79,16 +79,16 @@ namespace CastleDestroyers.Tests
         }
     }
 
-    public sealed class GreyboxLevelTests
+    public sealed class LevelSceneTests
     {
         private GameConfig config;
-        private GreyboxLevel level;
+        private LevelScene level;
 
         [SetUp]
         public void SetUp()
         {
             config = MaskFixture.LevelConfig();
-            level = new GreyboxLevel();
+            level = new LevelScene();
             level.Init(config, DestructibleMask.CreateTerrain(config));
         }
 
@@ -187,22 +187,22 @@ namespace CastleDestroyers.Tests
         [Test]
         public void MountTablesCoverMaximumCannonCount()
         {
-            Assert.GreaterOrEqual(GreyboxCastles.BlueMounts.Length, 14 * 2);
-            Assert.GreaterOrEqual(GreyboxCastles.RedMounts.Length, 14 * 2);
+            Assert.GreaterOrEqual(CastleShapes.BlueMounts.Length, 14 * 2);
+            Assert.GreaterOrEqual(CastleShapes.RedMounts.Length, 14 * 2);
         }
 
         [Test]
         public void MountsStayOnTheCastleSilhouette()
         {
-            for (int i = 0; i < GreyboxCastles.RedMounts.Length; i += 2)
+            for (int i = 0; i < CastleShapes.RedMounts.Length; i += 2)
             {
-                Assert.LessOrEqual(Mathf.Abs(GreyboxCastles.RedMounts[i]), GreyboxCastles.RedHalfWidth, "red " + i);
-                Assert.LessOrEqual(GreyboxCastles.RedMounts[i + 1], GreyboxCastles.RedTop, "red " + i);
+                Assert.LessOrEqual(Mathf.Abs(CastleShapes.RedMounts[i]), CastleShapes.RedHalfWidth, "red " + i);
+                Assert.LessOrEqual(CastleShapes.RedMounts[i + 1], CastleShapes.RedTop, "red " + i);
             }
-            for (int i = 0; i < GreyboxCastles.BlueMounts.Length; i += 2)
+            for (int i = 0; i < CastleShapes.BlueMounts.Length; i += 2)
             {
-                Assert.LessOrEqual(Mathf.Abs(GreyboxCastles.BlueMounts[i]), GreyboxCastles.BlueHalfWidth, "blue " + i);
-                Assert.LessOrEqual(GreyboxCastles.BlueMounts[i + 1], GreyboxCastles.BlueTowerTop, "blue " + i);
+                Assert.LessOrEqual(Mathf.Abs(CastleShapes.BlueMounts[i]), CastleShapes.BlueHalfWidth, "blue " + i);
+                Assert.LessOrEqual(CastleShapes.BlueMounts[i + 1], CastleShapes.BlueTowerTop, "blue " + i);
             }
         }
 
@@ -272,7 +272,7 @@ namespace CastleDestroyers.Tests
         public void DefaultFactorsCoverEveryLayerAndGrowTowardViewer()
         {
             GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
-            Assert.AreEqual(GreyboxLevel.BackLayerCount, config.parallaxFactors.Length);
+            Assert.AreEqual(LevelScene.BackLayerCount, config.parallaxFactors.Length);
             for (int i = 1; i < config.parallaxFactors.Length; i++)
             {
                 Assert.Greater(config.parallaxFactors[i], config.parallaxFactors[i - 1]);
@@ -286,7 +286,7 @@ namespace CastleDestroyers.Tests
         private GameConfig config;
         private MatchState match;
         private SessionFlow flow;
-        private GreyboxLevel level;
+        private LevelScene level;
         private CameraDirector director;
         private ScreenShake shake;
         private GameObject cameraObject;
@@ -308,7 +308,7 @@ namespace CastleDestroyers.Tests
             match.Init(config.playerCannons, config.enemyCannons);
             flow = new SessionFlow();
             flow.Init(config, match);
-            level = new GreyboxLevel();
+            level = new LevelScene();
             level.Init(config, DestructibleMask.CreateTerrain(config));
             cameraObject = new GameObject("TestCamera", typeof(Camera));
             director = new CameraDirector();

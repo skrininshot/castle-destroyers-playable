@@ -53,6 +53,7 @@ namespace CastleDestroyers.Combat
         private float[] fallVelY;
         private float[] fallAngle;
         private float[] fallSpin;
+        private float[] fallAge;
         private byte[] state;
         private bool[] onPlatform;
         private int[] living;
@@ -74,7 +75,7 @@ namespace CastleDestroyers.Combat
         /// <summary>Сколько пушек врага нельзя оторвать сейчас: Director бережёт ход до последнего залпа игрока.</summary>
         public int SparedEnemyCannons { get; set; }
 
-        public void Init(GameConfig gameConfig, GreyboxLevel level, MatchState matchState, RocketSystem rocketSystem, FlatParticles flatParticles, LevelFx levelFx, Rng random)
+        public void Init(GameConfig gameConfig, LevelScene level, MatchState matchState, RocketSystem rocketSystem, FlatParticles flatParticles, LevelFx levelFx, Rng random)
         {
             config = gameConfig;
             match = matchState;
@@ -109,6 +110,7 @@ namespace CastleDestroyers.Combat
             fallVelY = new float[total];
             fallAngle = new float[total];
             fallSpin = new float[total];
+            fallAge = new float[total];
             state = new byte[total];
             onPlatform = new bool[total];
             living = new int[SideCount];
@@ -205,6 +207,17 @@ namespace CastleDestroyers.Combat
         public float JumpY(int cannon)
         {
             return jumpY[cannon];
+        }
+
+        /// <summary>Толчок отрыва: 1 в момент отрыва, спадает до 0 за cannonDetachSquashTime.</summary>
+        public float DetachKick(int cannon)
+        {
+            if (state[cannon] != Falling)
+            {
+                return 0f;
+            }
+            float left = 1f - fallAge[cannon] / config.cannonDetachSquashTime;
+            return left > 0f ? left : 0f;
         }
 
         /// <summary>Угол кувыркающейся пушки поверх угла стороны, радианы.</summary>
@@ -497,6 +510,7 @@ namespace CastleDestroyers.Combat
             fallVelX[cannon] = speedX;
             fallVelY[cannon] = speedY;
             fallSpin[cannon] = spin;
+            fallAge[cannon] = 0f;
             fallingCount++;
             Moved = true;
         }
@@ -515,6 +529,7 @@ namespace CastleDestroyers.Combat
                 worldX[c] += fallVelX[c] * dt;
                 worldY[c] += fallVelY[c] * dt;
                 fallAngle[c] += fallSpin[c] * dt;
+                fallAge[c] += dt;
                 if (worldY[c] < water)
                 {
                     fx.Splash(worldX[c], water, config.cannonSplashWidth);
@@ -617,6 +632,7 @@ namespace CastleDestroyers.Combat
                     float y = worldY[cannon] + dirY * BarrelLength + perpY * offset * BarrelPitch;
                     rockets.SpawnCopy(x, y, dirX * speed, dirY * speed, side, time - due, 0, weight);
                     particles.Spawn(x, y, 0f, 0f, config.muzzleFlashSize, config.muzzleFlashLife, 0f, flashColor);
+                    fx.Play(Platform.SoundId.Shot);
                     recoil[cannon * BarrelCount + offset + 1] = config.recoilDistance;
                     shots[cannon]++;
                 }

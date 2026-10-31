@@ -14,16 +14,16 @@ namespace CastleDestroyers.DebugTools
     public sealed class DebugRocketStress : ITickable
     {
         private GameConfig config;
-        private GreyboxLevel level;
+        private LevelScene level;
         private RocketSystem rockets;
         private int nextMount;
 
         public bool Active { get; private set; }
 
-        public void Init(GameConfig gameConfig, GreyboxLevel greyboxLevel, RocketSystem rocketSystem)
+        public void Init(GameConfig gameConfig, LevelScene levelScene, RocketSystem rocketSystem)
         {
             config = gameConfig;
-            level = greyboxLevel;
+            level = levelScene;
             rockets = rocketSystem;
         }
 

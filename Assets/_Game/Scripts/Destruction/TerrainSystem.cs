@@ -69,6 +69,13 @@ namespace CastleDestroyers.Destruction
             view.UploadDirty(config.maxTileUploadsPerFrame);
         }
 
+        /// <summary>Кромка и декоры другой темы. Срезы и кайма остаются.</summary>
+        public void ApplyDecor(TerrainMaskData data)
+        {
+            Mask.ApplyDecor(data);
+            view.UploadAll();
+        }
+
         /// <summary>Возвращает ландшафт к исходному: рестарт сессии.</summary>
         public void Reset()
         {

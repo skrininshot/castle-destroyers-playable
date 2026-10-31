@@ -121,12 +121,15 @@ namespace CastleDestroyers.Combat
         {
             for (int k = 0; k < count; k++)
             {
-                puffColor[k] = GreyboxBoosters.GlassColor(palette, multiplier[k]);
+                puffColor[k] = BoosterView.GlassColor(palette, multiplier[k]);
                 puffAccent[k] = palette.hudText;
             }
         }
 
         /// <summary>Сквош бустера 0..1.</summary>
+        /// <summary>Звук срабатывания. В тестах не задан.</summary>
+        public Platform.GameSounds Sounds { get; set; }
+
         public float Squash(int booster)
         {
             return squash[booster];
@@ -175,6 +178,10 @@ namespace CastleDestroyers.Combat
             int copies = CopyCount(factor, free);
             float honest = factor * weight;
             HonestTotal += honest;
+            if (Sounds != null)
+            {
+                Sounds.Play(Platform.SoundId.Booster);
+            }
             popupValue[booster] += honest;
             popupAge[booster] = 0f;
             if (squash[booster] < SquashRetrigger)

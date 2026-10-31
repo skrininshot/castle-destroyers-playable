@@ -16,14 +16,12 @@ namespace CastleDestroyers.CastleRig
     {
         private const int SideCount = 2;
         private const int MaxTeeth = 16;
-        private const uint MeshSeed = 8821u;
         private const float FullTurn = Mathf.PI * 2f;
         private const float CrackLengthFloor = 0.6f;
         private const int SupportSamples = 8;
         public const int MaxPlatformCracks = 4;
 
         private readonly FlatMeshBuilder builder = new FlatMeshBuilder();
-        private readonly Rng meshRng = new Rng(MeshSeed);
         private readonly float[] teeth = new float[MaxTeeth];
 
         private GameConfig config;
@@ -44,6 +42,8 @@ namespace CastleDestroyers.CastleRig
         private int[] seenRevision;
         private int seenTerrainRevision;
         private int[] supportStart;
+        private Texture2D[] art;
+        private float artMinY;
 
         public int ChunksActive { get { return chunks.ActiveCount; } }
         /// <summary>Поза или трещины менялись: виду шасси пора перестроить меш.</summary>
@@ -51,7 +51,7 @@ namespace CastleDestroyers.CastleRig
         /// <summary>Последний FirstHit пришёлся в платформу или гусеницы.</summary>
         public bool LastHitPlatform { get; private set; }
 
-        public void Init(GameConfig gameConfig, GreyboxLevel level, DestructibleMask terrainMask, CannonSystem cannonSystem, LevelFx levelFx, Rng random,
+        public void Init(GameConfig gameConfig, LevelScene level, DestructibleMask terrainMask, CannonSystem cannonSystem, LevelFx levelFx, Rng random,
             Material template, MeshFilter[] filters, Transform chunkParent, int chunkSortingOrder)
         {
             config = gameConfig;
@@ -71,15 +71,16 @@ namespace CastleDestroyers.CastleRig
             seenRevision = new int[SideCount];
             seenTerrainRevision = terrain.Revision;
 
-            PaletteSet silhouette = new PaletteSet();
+            art = new Texture2D[SideCount];
+            artMinY = config.platformHeight - ArtSprites.CastleArtBaseMeters;
             for (int s = 0; s < SideCount; s++)
             {
                 Side side = (Side)s;
-                DrawBody(side, silhouette);
+                DrawBody(side);
                 DestructibleMask mask = CastleMaskBuilder.Create(builder, config, config.platformHeight);
                 CastleBody body = new CastleBody();
                 float centerX = side == Side.Player ? config.playerCastleX : config.enemyCastleX;
-                float halfWidth = side == Side.Player ? GreyboxCastles.BlueHalfWidth : GreyboxCastles.RedHalfWidth;
+                float halfWidth = side == Side.Player ? CastleShapes.BlueHalfWidth : CastleShapes.RedHalfWidth;
                 body.Init(config, terrain, side, centerX, level.CastleGround(side), halfWidth, mask);
                 bodies[s] = body;
 
@@ -91,8 +92,7 @@ namespace CastleDestroyers.CastleRig
                 extractors[s] = extractor;
                 seenRevision[s] = mask.Revision;
 
-                meshes[s] = new Mesh();
-                meshes[s].name = "CastleBody";
+                meshes[s] = CreateArtQuad(artMinY);
                 filters[s].sharedMesh = meshes[s];
                 transforms[s] = filters[s].transform;
                 renderers[s] = filters[s].GetComponent<MeshRenderer>();
@@ -119,20 +119,21 @@ namespace CastleDestroyers.CastleRig
             return bodies[(int)side];
         }
 
+        /// <summary>Рисунки замков темы: красит и стоящие замки, и новые куски.</summary>
+        public void ApplyArt(Texture2D blue, Texture2D red)
+        {
+            art[(int)Side.Player] = blue;
+            art[(int)Side.Enemy] = red;
+            for (int s = 0; s < SideCount; s++)
+            {
+                CastleMaterial.SetArt(views[s].Material, art[s], artMinY);
+            }
+        }
+
         public void ApplyPalette(PaletteSet palette)
         {
             for (int s = 0; s < SideCount; s++)
             {
-                DrawBody((Side)s, palette);
-                builder.Apply(meshes[s]);
-                Vector3[] vertices = meshes[s].vertices;
-                Vector2[] local = new Vector2[vertices.Length];
-                for (int v = 0; v < vertices.Length; v++)
-                {
-                    local[v].x = vertices[v].x;
-                    local[v].y = vertices[v].y;
-                }
-                meshes[s].uv = local;
                 CastleMaterial.ApplyPalette(views[s].Material, palette);
             }
             chunks.ApplyPalette(palette);
@@ -281,7 +282,7 @@ namespace CastleDestroyers.CastleRig
                 extractor.Cut(island, asChunk);
                 if (asChunk)
                 {
-                    chunks.Spawn(extractor, body, meshes[s]);
+                    chunks.Spawn(extractor, body, meshes[s], art[s], artMinY);
                     ReleaseUnsupported(s, true, chunks.LastDrift, chunks.LastSpin);
                 }
                 else
@@ -376,18 +377,32 @@ namespace CastleDestroyers.CastleRig
             }
         }
 
-        private void DrawBody(Side side, PaletteSet palette)
+        /// <summary>Силуэт из простых фигур: по нему строится маска, рисунок совпадает с ним по геометрии.</summary>
+        private void DrawBody(Side side)
         {
             builder.Clear();
-            meshRng.Reset(MeshSeed + (uint)side);
             if (side == Side.Player)
             {
-                GreyboxCastles.DrawBlue(builder, palette, meshRng, config.platformHeight);
+                CastleShapes.DrawBlue(builder, config.platformHeight);
             }
             else
             {
-                GreyboxCastles.DrawRed(builder, palette, meshRng, config.platformHeight);
+                CastleShapes.DrawRed(builder, config.platformHeight);
             }
+        }
+
+        /// <summary>Квад под рисунок замка. UV — локальные координаты, в UV маски и рисунка их переводит шейдер.</summary>
+        private static Mesh CreateArtQuad(float minY)
+        {
+            float halfWidth = ArtSprites.CastleArtWidthMeters * 0.5f;
+            float maxY = minY + ArtSprites.CastleArtHeightMeters;
+            Mesh mesh = new Mesh();
+            mesh.name = "CastleBody";
+            mesh.vertices = new[] { new Vector3(-halfWidth, minY, 0f), new Vector3(halfWidth, minY, 0f), new Vector3(-halfWidth, maxY, 0f), new Vector3(halfWidth, maxY, 0f) };
+            mesh.uv = new[] { new Vector2(-halfWidth, minY), new Vector2(halfWidth, minY), new Vector2(-halfWidth, maxY), new Vector2(halfWidth, maxY) };
+            mesh.triangles = new[] { 0, 2, 1, 2, 3, 1 };
+            mesh.RecalculateBounds();
+            return mesh;
         }
 
         private void PushPoses()

@@ -5,38 +5,21 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Вид бустеров (ТЗ §3.5): один меш с корпусами и поп-апами «+N». Форма строится при смене темы, в кадре пишутся
-    /// только позиции вершин: «дыхание», сквош и цифры. Поп-ап тает размером, цвета в кадре не меняются (ТЗ §4.1).
+    /// Вид бустеров (ТЗ §3.5): спрайты атласа и поп-апы «+N» из глифов в одном меше. Форма строится при смене темы, в кадре
+    /// пишутся только позиции вершин: «дыхание», сквош и цифры. Поп-ап тает размером, цвета в кадре не меняются (ТЗ §4.1).
     /// </summary>
     public sealed class BoosterView : ITickable
     {
         private const int VerticesPerQuad = 4;
         private const int PopupPasses = 2;
         private const int PopupDigits = 5;
+        private const int PopupQuads = 1 + PopupDigits;
         private const int MaxPopupValue = 99999;
         private const int DecimalBase = 10;
-        private const int SegmentsPerDigit = 7;
-        private const int PlusQuads = 2;
-        private const int PopupQuads = PlusQuads + PopupDigits * SegmentsPerDigit;
+        private const int MultiplierMid = 20;
+        private const int MultiplierHigh = 50;
         private const float BoundsSize = 500f;
-        // Пропорции цифр в долях высоты.
-        private const float GlyphWidth = 0.56f;
-        private const float GlyphStroke = 0.2f;
-        private const float GlyphGap = 0.16f;
-        private const float PlusSize = 0.6f;
         private const float ShadowShare = 0.09f;
-
-        // Сегменты цифры на единичной высоте (minX, minY, maxX, maxY); порядок как в GreyboxBoosters.
-        private static readonly float[] Segments =
-        {
-            0f, 1f - GlyphStroke, GlyphWidth, 1f,
-            0f, 0.5f - GlyphStroke * 0.5f, GlyphStroke, 1f,
-            GlyphWidth - GlyphStroke, 0.5f - GlyphStroke * 0.5f, GlyphWidth, 1f,
-            0f, 0.5f - GlyphStroke * 0.5f, GlyphWidth, 0.5f + GlyphStroke * 0.5f,
-            0f, 0f, GlyphStroke, 0.5f + GlyphStroke * 0.5f,
-            GlyphWidth - GlyphStroke, 0f, GlyphWidth, 0.5f + GlyphStroke * 0.5f,
-            0f, 0f, GlyphWidth, GlyphStroke
-        };
 
         private readonly FlatMeshBuilder builder = new FlatMeshBuilder();
         private readonly int[] digits = new int[PopupDigits];
@@ -46,8 +29,11 @@ namespace CastleDestroyers.Level
         private int[] bodyEnd;
         private int[] popupStart;
         private bool[] popupShown;
+        private int[] popupValue;
         private Vector3[] baseVertices;
         private Vector3[] vertices;
+        private Vector2[] uvs;
+        private bool uvDirty;
         private float time;
 
         public Mesh Mesh { get; private set; }
@@ -63,9 +49,37 @@ namespace CastleDestroyers.Level
             bodyEnd = new int[count];
             popupStart = new int[count];
             popupShown = new bool[count];
+            popupValue = new int[count];
             Mesh = new Mesh();
             Mesh.name = "Boosters";
             Mesh.MarkDynamic();
+        }
+
+        public static Color32 GlassColor(PaletteSet palette, int multiplier)
+        {
+            if (multiplier >= MultiplierHigh)
+            {
+                return palette.booster50;
+            }
+            return multiplier >= MultiplierMid ? palette.booster20 : palette.booster10;
+        }
+
+        public static Color32 CapColor(PaletteSet palette, int multiplier)
+        {
+            if (multiplier >= MultiplierHigh)
+            {
+                return palette.booster50Cap;
+            }
+            return multiplier >= MultiplierMid ? palette.booster20Cap : palette.booster10Cap;
+        }
+
+        private static int BodySprite(int multiplier)
+        {
+            if (multiplier >= MultiplierHigh)
+            {
+                return ArtSprites.Booster50;
+            }
+            return multiplier >= MultiplierMid ? ArtSprites.Booster20 : ArtSprites.Booster10;
         }
 
         /// <summary>Перестраивает меш в цветах палитры. Первым вызовом создаёт буферы.</summary>
@@ -75,14 +89,15 @@ namespace CastleDestroyers.Level
             int count = boosters.Count;
             for (int k = 0; k < count; k++)
             {
+                BoosterSpec spec = config.boosters[k];
                 bodyStart[k] = builder.VertexCount;
-                GreyboxBoosters.Draw(builder, palette, config, k);
+                builder.AddSprite(BodySprite(spec.multiplier), spec.position.x, spec.position.y, config.boosterWidth / ArtBoosterWidth, 0f, 0f, config.boosterHeight / ArtBoosterHeight, Color.white);
                 bodyEnd[k] = builder.VertexCount;
             }
             for (int k = 0; k < count; k++)
             {
                 popupStart[k] = builder.VertexCount;
-                AddPopupQuads(GreyboxBoosters.CapColor(palette, config.boosters[k].multiplier));
+                AddPopupQuads(CapColor(palette, config.boosters[k].multiplier));
                 AddPopupQuads(palette.hudText);
             }
             builder.Apply(Mesh);
@@ -91,10 +106,13 @@ namespace CastleDestroyers.Level
             {
                 baseVertices = new Vector3[builder.VertexCount];
                 vertices = new Vector3[builder.VertexCount];
+                uvs = new Vector2[builder.VertexCount];
             }
             builder.CopyVertices(baseVertices);
             builder.CopyVertices(vertices);
+            builder.CopyUvs(uvs);
             System.Array.Clear(popupShown, 0, popupShown.Length);
+            System.Array.Clear(popupValue, 0, popupValue.Length);
         }
 
         public void Tick(float dt)
@@ -106,13 +124,22 @@ namespace CastleDestroyers.Level
                 WritePopup(k);
             }
             Mesh.vertices = vertices;
+            if (uvDirty)
+            {
+                uvDirty = false;
+                Mesh.uv = uvs;
+            }
         }
+
+        // Размер бустера, под который нарисован спрайт, метры.
+        private const float ArtBoosterWidth = 1.5f;
+        private const float ArtBoosterHeight = 3f;
 
         private void AddPopupQuads(Color32 color)
         {
             for (int q = 0; q < PopupQuads; q++)
             {
-                builder.AddRect(0f, 0f, 0f, 0f, color);
+                builder.AddSprite(q == 0 ? ArtSprites.GlyphPlus : ArtSprites.Glyph0, 0f, 0f, 0f, color);
             }
         }
 
@@ -147,6 +174,7 @@ namespace CastleDestroyers.Level
                 if (popupShown[k])
                 {
                     popupShown[k] = false;
+                    popupValue[k] = 0;
                     int quads = PopupPasses * PopupQuads;
                     for (int q = 0; q < quads; q++)
                     {
@@ -165,11 +193,19 @@ namespace CastleDestroyers.Level
             float y = spec.position.y + config.boosterHeight * 0.5f + config.boosterPopupOffsetY + config.boosterPopupRise * age;
 
             int digitCount = SplitDigits(value);
-            float width = height * (PlusSize + GlyphGap + digitCount * (GlyphWidth + GlyphGap) - GlyphGap);
+            float width = TextWidth(digitCount) * height;
             float left = spec.position.x - width * 0.5f;
             int first = popupStart[k];
+            int shadow = first + PopupQuads * VerticesPerQuad;
+            if (popupValue[k] != value)
+            {
+                popupValue[k] = value;
+                WriteGlyphUvs(first, digitCount);
+                WriteGlyphUvs(shadow, digitCount);
+                uvDirty = true;
+            }
             WriteGlyphs(first, digitCount, left, y - height * ShadowShare, height);
-            WriteGlyphs(first + PopupQuads * VerticesPerQuad, digitCount, left, y, height);
+            WriteGlyphs(shadow, digitCount, left, y, height);
         }
 
         /// <summary>Раскладывает число в digits от старшего разряда, возвращает их количество.</summary>
@@ -189,35 +225,59 @@ namespace CastleDestroyers.Level
             return count;
         }
 
+        private static float GlyphAspect(int sprite)
+        {
+            return ArtSprites.Rect[sprite * VerticesPerQuad + 2];
+        }
+
+        /// <summary>Ширина строки «+digits» в долях высоты.</summary>
+        private float TextWidth(int digitCount)
+        {
+            float width = GlyphAspect(ArtSprites.GlyphPlus);
+            for (int i = 0; i < digitCount; i++)
+            {
+                width += GlyphAspect(ArtSprites.Glyph0 + digits[i]);
+            }
+            return width;
+        }
+
+        private void WriteGlyphUvs(int vertex, int digitCount)
+        {
+            int v = vertex + VerticesPerQuad;
+            for (int i = 0; i < digitCount; i++)
+            {
+                int r = (ArtSprites.Glyph0 + digits[i]) * VerticesPerQuad;
+                float[] source = ArtSprites.Uv;
+                uvs[v].x = source[r];
+                uvs[v].y = source[r + 1];
+                uvs[v + 1].x = source[r + 2];
+                uvs[v + 1].y = source[r + 1];
+                uvs[v + 2].x = source[r + 2];
+                uvs[v + 2].y = source[r + 3];
+                uvs[v + 3].x = source[r];
+                uvs[v + 3].y = source[r + 3];
+                v += VerticesPerQuad;
+            }
+        }
+
         private void WriteGlyphs(int vertex, int digitCount, float left, float bottom, float height)
         {
-            float stroke = height * GlyphStroke;
-            float plus = height * PlusSize;
-            float middleY = bottom + height * 0.5f;
-            float middleX = left + plus * 0.5f;
-            SetQuad(vertex, left, middleY - stroke * 0.5f, left + plus, middleY + stroke * 0.5f);
-            SetQuad(vertex + VerticesPerQuad, middleX - stroke * 0.5f, middleY - plus * 0.5f, middleX + stroke * 0.5f, middleY + plus * 0.5f);
-
-            int v = vertex + PlusQuads * VerticesPerQuad;
-            float cursor = left + height * (PlusSize + GlyphGap);
+            float cursor = left + GlyphAspect(ArtSprites.GlyphPlus) * height;
+            SetQuad(vertex, left, bottom, cursor, bottom + height);
+            int v = vertex + VerticesPerQuad;
             for (int i = 0; i < PopupDigits; i++)
             {
-                int mask = i < digitCount ? GreyboxBoosters.DigitMask(digits[i]) : 0;
-                for (int s = 0; s < SegmentsPerDigit; s++)
+                if (i < digitCount)
                 {
-                    if ((mask & (1 << s)) != 0)
-                    {
-                        int r = s * VerticesPerQuad;
-                        SetQuad(v, cursor + Segments[r] * height, bottom + Segments[r + 1] * height,
-                            cursor + Segments[r + 2] * height, bottom + Segments[r + 3] * height);
-                    }
-                    else
-                    {
-                        SetQuad(v, 0f, 0f, 0f, 0f);
-                    }
-                    v += VerticesPerQuad;
+                    float next = cursor + GlyphAspect(ArtSprites.Glyph0 + digits[i]) * height;
+                    SetQuad(v, cursor, bottom, next, bottom + height);
+                    cursor = next;
                 }
-                cursor += height * (GlyphWidth + GlyphGap);
+                else
+                {
+                    SetQuad(v, 0f, 0f, 0f, 0f);
+                }
+                v += VerticesPerQuad;
             }
         }
 

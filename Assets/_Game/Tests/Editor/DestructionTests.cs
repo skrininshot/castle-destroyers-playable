@@ -804,8 +804,8 @@ namespace CastleDestroyers.Tests
         [Test]
         public void MaskCoversBothCastles()
         {
-            Assert.Less(mask.OriginX, config.playerCastleX - GreyboxCastles.BlueHalfWidth);
-            Assert.Greater(mask.WorldX(mask.Width - 1), config.enemyCastleX + GreyboxCastles.RedHalfWidth);
+            Assert.Less(mask.OriginX, config.playerCastleX - CastleShapes.BlueHalfWidth);
+            Assert.Greater(mask.WorldX(mask.Width - 1), config.enemyCastleX + CastleShapes.RedHalfWidth);
         }
 
         [Test]
@@ -827,16 +827,57 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void RimAndBuriedShapesAreInsideMaterial()
+        public void BuriedShapesAreInsideMaterial()
         {
             for (int i = 0; i < mask.Solid.Length; i++)
             {
                 if (mask.Solid[i] == 0)
                 {
-                    Assert.AreEqual(0, mask.Grass[i]);
                     Assert.AreEqual(0, mask.Buried[i]);
                 }
             }
+        }
+
+        [Test]
+        public void RimOutsideMaterialStaysCloseToTheSurface()
+        {
+            // Лента заходит выше контура не больше чем на RIM_LIFT = 0.4 м: порог в шейдере не должен зависеть от края.
+            int reach = Mathf.CeilToInt(mask.TexelsPerMeter * 0.5f);
+            for (int y = 0; y < mask.Height - reach; y++)
+            {
+                for (int x = 0; x < mask.Width; x++)
+                {
+                    int i = y * mask.Width + x;
+                    if (mask.Solid[i] == 0 && mask.Grass[i] != 0)
+                    {
+                        bool near = false;
+                        for (int down = 1; down <= reach && !near; down++)
+                        {
+                            near = y >= down && mask.Solid[i - down * mask.Width] != 0;
+                        }
+                        Assert.IsTrue(near, "rim floats at " + x + ", " + y);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void ApplyDecorKeepsMaterialAndQueuesTiles()
+        {
+            byte[] solid = (byte[])mask.Solid.Clone();
+            while (mask.PopDirtyTile() >= 0)
+            {
+            }
+            TerrainMaskData sunset = ScriptableObject.CreateInstance<TerrainMaskData>();
+            sunset.width = mask.Width;
+            sunset.height = mask.Height;
+            sunset.grassRuns = MaskRle.Encode(new byte[mask.Solid.Length]);
+            sunset.buriedRuns = MaskRle.Encode(new byte[mask.Solid.Length]);
+            mask.ApplyDecor(sunset);
+            CollectionAssert.AreEqual(solid, mask.Solid);
+            Assert.AreEqual(0, System.Array.FindIndex(mask.Grass, value => value != 0) + 1);
+            Assert.AreEqual(mask.TilesX * mask.TilesY, mask.DirtyCount);
+            Object.DestroyImmediate(sunset);
         }
     }
 

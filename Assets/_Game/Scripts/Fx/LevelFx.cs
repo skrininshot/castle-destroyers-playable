@@ -12,6 +12,8 @@ namespace CastleDestroyers.Fx
         private const float DustLifeFloor = 0.5f;
         private const float SplashScatterFloor = 0.4f;
         private const float SplashLifeFloor = 0.6f;
+        private const int FireworkStarStep = 2;
+        private const float FireworkStarSize = 2.2f;
 
         private GameConfig config;
         private FlatParticles particles;
@@ -23,6 +25,9 @@ namespace CastleDestroyers.Fx
         private Color32 splashColor;
         private Color32 splashAccent;
         private Color32[] sparkColors;
+
+        /// <summary>Звуки эффектов. В тестах не задан.</summary>
+        public Platform.GameSounds Sounds { get; set; }
 
         public void Init(GameConfig gameConfig, FlatParticles flatParticles, Rng random)
         {
@@ -79,14 +84,31 @@ namespace CastleDestroyers.Fx
             {
                 float angle = FullTurn * i / count;
                 float speed = config.fireworkSpeed * rng.Range(SplashScatterFloor, 1f);
-                particles.Spawn(x, y, Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed, config.fireworkSparkSize,
-                    config.fireworkLife * rng.Range(SplashLifeFloor, 1f), config.fireworkGravity, rng.Chance(AccentChance) ? main : sparkColors[sparkColors.Length - 1]);
+                float life = config.fireworkLife * rng.Range(SplashLifeFloor, 1f);
+                Color32 color = rng.Chance(AccentChance) ? main : sparkColors[sparkColors.Length - 1];
+                if (i % FireworkStarStep == 0)
+                {
+                    particles.SpawnStar(x, y, Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed, config.fireworkSparkSize * FireworkStarSize, life, config.fireworkGravity, color);
+                }
+                else
+                {
+                    particles.Spawn(x, y, Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed, config.fireworkSparkSize, life, config.fireworkGravity, color);
+                }
+            }
+        }
+
+        public void Play(Platform.SoundId sound)
+        {
+            if (Sounds != null)
+            {
+                Sounds.Play(sound);
             }
         }
 
         /// <summary>Всплеск на воде шириной width: капли летят вверх и падают обратно.</summary>
         public void Splash(float x, float waterY, float width)
         {
+            Play(Platform.SoundId.Splash);
             int drops = config.splashDrops + (int)(width * config.splashDropsPerMeter);
             float half = width * 0.5f;
             for (int i = 0; i < drops; i++)
