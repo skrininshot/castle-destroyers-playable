@@ -33,9 +33,13 @@ namespace CastleDestroyers.Tests
         private readonly GameObject root;
         private readonly Material material;
 
-        public CombatRig()
+        public CombatRig(Action<GameConfig> tune = null)
         {
             Config = MaskFixture.LevelConfig();
+            if (tune != null)
+            {
+                tune(Config);
+            }
             root = new GameObject("CombatTest");
             material = new Material(Shader.Find("Game/Terrain"));
             Rng rng = new Rng(1u);

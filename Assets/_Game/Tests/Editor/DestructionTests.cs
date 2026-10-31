@@ -664,7 +664,7 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(0, (config.terrainMask.width - 1) % stride);
             Assert.AreEqual(0, (config.terrainMask.height - 1) % stride);
             Assert.AreEqual(9, mask.TilesX);
-            Assert.AreEqual(2, mask.TilesY);
+            Assert.AreEqual(3, mask.TilesY);
         }
 
         [Test]
@@ -675,8 +675,8 @@ namespace CastleDestroyers.Tests
             {
                 top = Mathf.Max(top, mask.SurfaceHeight(x));
             }
-            Assert.GreaterOrEqual(top, 11f);
-            Assert.LessOrEqual(top, 12f);
+            Assert.GreaterOrEqual(top, 15f);
+            Assert.LessOrEqual(top, 16.5f);
         }
 
         [Test]

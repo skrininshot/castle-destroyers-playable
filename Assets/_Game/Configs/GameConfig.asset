@@ -23,13 +23,13 @@ MonoBehaviour:
   - label: x20 lob
     highlightBoosterMultiplier: 20
     showHand: 1
-    handAngleDeg: 45
-    handPower01: 0.37
+    handAngleDeg: 42
+    handPower01: 0.65
   - label: x50 straight shot
     highlightBoosterMultiplier: 50
     showHand: 1
-    handAngleDeg: 20
-    handPower01: 0.9
+    handAngleDeg: 8
+    handPower01: 0.8
   - label: free shot
     highlightBoosterMultiplier: 0
     showHand: 0
@@ -67,13 +67,11 @@ MonoBehaviour:
   rocketWidth: 0.34
   boosters:
   - multiplier: 20
-    position: {x: 0, y: 13.4}
+    position: {x: 0, y: 17.8}
   - multiplier: 10
-    position: {x: 0, y: 8.5}
+    position: {x: 0, y: 12}
   - multiplier: 50
-    position: {x: 0, y: 1.6}
-    fixedExit: 1
-    exitAngleDeg: 0
+    position: {x: 0, y: 6.5}
   boosterWidth: 1
   boosterHeight: 2
   boosterSpreadDeg: 18
@@ -84,7 +82,7 @@ MonoBehaviour:
   maskTexelsPerMeter: 16
   maskTileSize: 128
   maxTileUploadsPerFrame: 4
-  craterRadiusGround: 1.2
+  craterRadiusGround: 0.6
   rimWidth: 0.3
   rimScallop: 0
   rimScallopTeeth: 14
@@ -141,7 +139,7 @@ MonoBehaviour:
   minFrameHeight: 22
   castleLeadX: 2
   castleFocusLiftY: 0.5
-  centerFocus: {x: 0, y: 9}
+  centerFocus: {x: 0, y: 11}
   rainEnabled: 0
   lightBeamEnabled: 0
   showPersistentCta: 0

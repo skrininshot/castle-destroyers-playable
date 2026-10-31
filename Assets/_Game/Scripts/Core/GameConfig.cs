@@ -31,8 +31,8 @@ namespace CastleDestroyers.Core
         [Tooltip("Подсказки к ходам игрока по порядку. Если ходов больше, чем подсказок, используется последняя.")]
         public TurnHint[] turnHints =
         {
-            new TurnHint("x20 lob", 20, true, 45f, 0.37f),
-            new TurnHint("x50 straight shot", 50, true, 20f, 0.9f),
+            new TurnHint("x20 lob", 20, true, 42f, 0.65f),
+            new TurnHint("x50 straight shot", 50, true, 8f, 0.8f),
             new TurnHint("free shot", 0, false, 40f, 0.85f)
         };
 
@@ -80,10 +80,10 @@ namespace CastleDestroyers.Core
         public int stubPlayerLossPerAiTurn = 1;
         [Range(0f, 90f)]
         [Tooltip("Угол выстрела ИИ, градусы.")]
-        public float stubAiAngleDeg = 50f;
+        public float stubAiAngleDeg = 55f;
         [Range(0f, 1f)]
         [Tooltip("Сила выстрела ИИ, доля от максимума.")]
-        public float stubAiPower = 0.62f;
+        public float stubAiPower = 0.65f;
 
         [Header("Прицел (ТЗ §3.2)")]
         [Range(0f, 90f)]
@@ -191,9 +191,9 @@ namespace CastleDestroyers.Core
         [Tooltip("Бустеры уровня: множитель и положение.")]
         public BoosterSpec[] boosters =
         {
-            new BoosterSpec(20, 0f, 13.4f),
-            new BoosterSpec(10, 0f, 8.5f),
-            new BoosterSpec(50, 0f, 1.6f, 0f)
+            new BoosterSpec(20, 0f, 17.8f),
+            new BoosterSpec(10, 0f, 12f),
+            new BoosterSpec(50, 0f, 6.5f)
         };
         [Range(0.5f, 3f)]
         public float boosterWidth = 1f;
@@ -272,7 +272,7 @@ namespace CastleDestroyers.Core
         public int maxTileUploadsPerFrame = 4;
         [Range(0.2f, 4f)]
         [Tooltip("Радиус кратера в земле, метры.")]
-        public float craterRadiusGround = 1.2f;
+        public float craterRadiusGround = 0.6f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина каймы кратера, метры.")]
         public float rimWidth = 0.3f;
@@ -496,7 +496,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Подъём точки фокуса над центром замка, метры (видно небо над ним).")]
         public float castleFocusLiftY = 0.5f;
         [Tooltip("Точка фокуса в центре уровня, метры.")]
-        public Vector2 centerFocus = new Vector2(0f, 9f);
+        public Vector2 centerFocus = new Vector2(0f, 11f);
         [Range(0f, 1f)]
         [Tooltip("Насколько центральный кадр смещается к голове потока, доля расстояния.")]
         public float cameraHeadFollow = 0.25f;
@@ -530,9 +530,9 @@ namespace CastleDestroyers.Core
         [Tooltip("Сценарии кнопок SHOT: угол и сила выстрела игрока (навес x20, тоннель x10, низ x50).")]
         public TurnHint[] debugBoosterShots =
         {
-            new TurnHint("shot x20", 20, false, 32f, 0.6f),
-            new TurnHint("shot x10", 10, false, 12f, 0.9f),
-            new TurnHint("shot x50", 50, false, 6f, 0.45f)
+            new TurnHint("shot x20", 20, false, 42f, 0.65f),
+            new TurnHint("shot x10", 10, false, 26f, 0.65f),
+            new TurnHint("shot x50", 50, false, 8f, 0.8f)
         };
 
         /// <summary>Подсказка для хода игрока (индекс с нуля); за пределами массива — последняя.</summary>

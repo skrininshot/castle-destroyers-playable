@@ -125,7 +125,7 @@ namespace CastleDestroyers.Tests
             SpawnIntoX20();
             Run(0.12f);
             Assert.AreEqual(0, rig.Rockets.Count(Side.Enemy));
-            Run(0.5f);
+            Run(0.3f);
             Assert.AreEqual(20, rig.Boosters.SpawnedTotal);
             Assert.AreEqual(20, rig.Rockets.ActiveCount);
             Assert.AreEqual(0, rig.Boosters.PendingCopies);
@@ -170,21 +170,6 @@ namespace CastleDestroyers.Tests
             rig.Rockets.Tick(0.001f);
             Assert.Greater(rig.Boosters.SpawnedTotal, 0);
             Assert.AreEqual(x20Y, rig.RocketCenter(0).y, 0.1f);
-        }
-
-        [Test]
-        public void FixedExitReplacesDirectionAndKeepsSpeed()
-        {
-            rig.Config.boosters[X20].fixedExit = true;
-            rig.Config.boosters[X20].exitAngleDeg = 0f;
-            rig.Rockets.Spawn(-1.5f, x20Y, 20f, -15f, Side.Player, 0f);
-            rig.Rockets.Tick(0.05f);
-            rig.Boosters.Tick(0f);
-            rig.Rockets.Tick(0.1f);
-            Vector3 center = rig.RocketCenter(0);
-            float speed = Mathf.Sqrt(20f * 20f + 15.7f * 15.7f);
-            Assert.AreEqual(rig.Config.boosterWidth * 0.5f + speed * 0.1f, center.x, 0.15f);
-            Assert.AreEqual(x20Y - 0.5f * rig.Config.gravity * 0.01f, center.y, 0.15f);
         }
 
         [Test]
@@ -388,13 +373,19 @@ namespace CastleDestroyers.Tests
         {
             rig.Cannons.SetAim(Side.Enemy, rig.Config.stubAiAngleDeg, rig.Config.stubAiPower);
             rig.Cannons.BeginSalvo(Side.Enemy);
+            float nearestX = float.PositiveInfinity;
             for (int i = 0; i < MaxSteps && (rig.Cannons.IsFiring || rig.Rockets.ActiveCount > 0); i++)
             {
                 rig.Cannons.Tick(Step);
                 rig.Boosters.Tick(Step);
                 rig.Rockets.Tick(Step);
+                if (rig.Rockets.Count(Side.Enemy) > 0)
+                {
+                    nearestX = Mathf.Min(nearestX, rig.Rockets.HeadX(Side.Enemy));
+                }
             }
             Assert.AreEqual(0f, rig.Boosters.HonestTotal);
+            Assert.Less(nearestX, rig.Config.playerCastleX + 4f);
         }
 
         [Test]

@@ -41,7 +41,7 @@ RIM_DRIP_MAX_LENGTH = 0.55
 RIM_DRIP_MIN_WIDTH = 0.2
 RIM_DRIP_MAX_WIDTH = 0.34
 # Ниже этой линии (единицы SVG) кромка не видна: там вода и дно.
-RIM_LOWEST_Y = 208.0
+RIM_LOWEST_Y = 335.0
 
 
 def flatten_path(data):

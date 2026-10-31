@@ -42,11 +42,6 @@ namespace CastleDestroyers.Core
         public int multiplier = 10;
         [Tooltip("Центр бустера в мировых координатах, метры.")]
         public Vector2 position;
-        [Tooltip("Копии выходят под углом exitAngleDeg, а не по направлению вошедшей ракеты (D-041).")]
-        public bool fixedExit;
-        [Range(-45f, 45f)]
-        [Tooltip("Угол выхода копий над горизонтом при включённом fixedExit, градусы. 0 — горизонтально.")]
-        public float exitAngleDeg;
 
         public BoosterSpec()
         {
@@ -56,13 +51,6 @@ namespace CastleDestroyers.Core
         {
             this.multiplier = multiplier;
             position = new Vector2(x, y);
-        }
-
-        public BoosterSpec(int multiplier, float x, float y, float exitAngleDeg)
-            : this(multiplier, x, y)
-        {
-            fixedExit = true;
-            this.exitAngleDeg = exitAngleDeg;
         }
     }
 }

@@ -188,14 +188,6 @@ namespace CastleDestroyers.Combat
             {
                 return;
             }
-            BoosterSpec spec = config.boosters[booster];
-            if (spec.fixedExit)
-            {
-                float radians = spec.exitAngleDeg * Mathf.Deg2Rad;
-                float speed = Mathf.Sqrt(speedX * speedX + speedY * speedY);
-                speedX = (speedX >= 0f ? speed : -speed) * Mathf.Cos(radians);
-                speedY = speed * Mathf.Sin(radians);
-            }
             float exit = ExitDistance(x, y, speedX, speedY, minX[booster], minY[booster], maxX[booster], maxY[booster]);
             float exitX = x + speedX * exit;
             float exitY = y + speedY * exit;
