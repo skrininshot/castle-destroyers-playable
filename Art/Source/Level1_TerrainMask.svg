@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Level 1, TZ 3.8. Scale: 16 units = 1 m, one unit = one mask texel.
+     X = (x_m + 51.59375) * 16 + 0.5; Y = (36.1875 - y_m) * 16 + 0.5; water line is y = 579.5.
+     #ground: soil mass, its top contour gives the level shape and the coloured rim.
+     #buried: shapes buried in the soil, one tone darker. #bones: bones and bottles, second tone.
+     After editing run: python Tools/rasterize_svg.py -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1652 636" width="1652" height="636">
+  <path id="ground" fill="#1F6E4C" d="M 74.48 627.42 C 86.85 614.8 99.23 602.11 111.6 589.56 C 122.27 572.67 132.93 552.79 143.6 538.6 C 153.2 527.47 162.8 517.27 172.4 509.47 C 180.93 506.58 189.47 503.36 198 502.7 C 256.67 502.7 315.33 502.7 374 502.7 C 383.06 505.38 392.13 518.1 401.2 523.73 C 408.13 533.76 415.06 544.37 422 552.3 C 442.43 554.28 463.12 550.08 484.15 544.54 C 500.13 542.11 516.32 527.48 532.73 513.1 C 548.27 496.61 564.02 472.24 580.04 444.23 C 592.82 422.23 605.4 391.91 617.72 361.53 C 629.1 333.88 640.69 300.27 652.46 269.62 C 663.26 242.04 674.29 211.98 685.56 186.9 C 697.11 161.83 708.98 137.22 721.26 117.96 C 731.12 103.01 741.38 86.86 752.06 78.9 C 759.25 73.81 766.77 67.43 774.7 67.43 C 779.29 67.43 784.08 73.46 789.23 85.8 C 791.59 91.18 794.12 114.87 796.79 159.34 C 798.53 186.02 800.45 302.48 802.8 416.67 C 803.65 492.8 803.87 627.5 804.08 627.5 C 810.69 627.5 841.31 627.5 847.92 627.5 C 848.13 627.5 848.35 492.8 849.2 416.67 C 851.55 302.48 853.47 186.02 855.21 159.34 C 857.88 114.87 860.41 91.18 862.77 85.8 C 867.92 73.46 872.71 67.43 877.3 67.43 C 885.23 67.43 892.75 73.81 899.94 78.9 C 910.62 86.86 920.88 103.01 930.74 117.96 C 943.02 137.22 954.89 161.83 966.44 186.9 C 977.71 211.98 988.74 242.04 999.54 269.62 C 1011.31 300.27 1022.9 333.88 1034.28 361.53 C 1046.6 391.91 1059.18 422.23 1071.96 444.23 C 1087.98 472.24 1103.73 496.61 1119.27 513.1 C 1135.68 527.48 1151.87 542.11 1167.85 544.54 C 1188.88 550.08 1209.57 554.28 1230 552.3 C 1236.93 544.38 1243.87 533.76 1250.8 523.73 C 1259.87 518.1 1268.93 505.39 1278 502.7 C 1336.67 502.7 1395.33 502.7 1454 502.7 C 1462.53 503.36 1471.07 506.58 1479.6 509.47 C 1489.2 517.27 1498.8 527.47 1508.4 538.6 C 1519.07 552.79 1529.73 572.67 1540.4 589.56 C 1552.77 602.11 1565.15 614.8 1577.52 627.42 L 1578 627.5 L 1578 636 L 74 636 L 74 627.5 Z"/>
+  <g id="buried" fill="#1A5E41">
+    <ellipse cx="1385.76" cy="574.09" rx="3.71" ry="2.22"/>
+    <ellipse cx="648.45" cy="390.85" rx="7.92" ry="4.75"/>
+    <ellipse cx="823.69" cy="492.17" rx="7.92" ry="4.75"/>
+    <ellipse cx="502.14" cy="320.23" rx="7.92" ry="4.75"/>
+    <ellipse cx="494.44" cy="506.64" rx="7.92" ry="4.75"/>
+    <ellipse cx="691.08" cy="544.59" rx="7.78" ry="4.67"/>
+    <ellipse cx="629.49" cy="508.38" rx="7.78" ry="4.67"/>
+    <ellipse cx="529.67" cy="786.28" rx="7.78" ry="4.67"/>
+    <ellipse cx="740.47" cy="742.25" rx="7.78" ry="4.67"/>
+    <ellipse cx="860.78" cy="244.02" rx="3.55" ry="2.13"/>
+    <ellipse cx="869.47" cy="229.27" rx="3.55" ry="2.13"/>
+    <ellipse cx="946.35" cy="307.76" rx="3.55" ry="2.13"/>
+    <ellipse cx="714.14" cy="141.93" rx="3.55" ry="2.13"/>
+    <ellipse cx="314.27" cy="569.94" rx="4.17" ry="2.5"/>
+    <ellipse cx="773.92" cy="570.37" rx="6.71" ry="4.03"/>
+    <ellipse cx="748.53" cy="526.88" rx="6.71" ry="4.03"/>
+    <ellipse cx="909.03" cy="574.23" rx="6.71" ry="4.03"/>
+    <ellipse cx="806.71" cy="733.73" rx="6.71" ry="4.03"/>
+    <ellipse cx="1117.68" cy="572.59" rx="6.11" ry="3.67"/>
+    <ellipse cx="1031.47" cy="693.37" rx="6.11" ry="3.67"/>
+    <ellipse cx="1212.21" cy="828.61" rx="6.11" ry="3.67"/>
+    <ellipse cx="1278.55" cy="797.43" rx="6.11" ry="3.67"/>
+    <ellipse cx="703.75" cy="451.06" rx="4.79" ry="2.87"/>
+    <ellipse cx="515.48" cy="416.70" rx="4.79" ry="2.87"/>
+    <ellipse cx="606.85" cy="555.51" rx="4.79" ry="2.87"/>
+    <ellipse cx="829.95" cy="650.64" rx="4.79" ry="2.87"/>
+    <ellipse cx="1311.09" cy="572.31" rx="7.75" ry="4.65"/>
+    <ellipse cx="649.45" cy="489.20" rx="5.72" ry="3.43"/>
+    <ellipse cx="556.84" cy="418.38" rx="5.72" ry="3.43"/>
+    <ellipse cx="823.81" cy="430.88" rx="5.72" ry="3.43"/>
+    <ellipse cx="797.67" cy="530.44" rx="5.72" ry="3.43"/>
+    <ellipse cx="940.39" cy="383.30" rx="7.3" ry="4.38"/>
+    <ellipse cx="1068.78" cy="373.90" rx="7.3" ry="4.38"/>
+    <ellipse cx="800.83" cy="636.98" rx="7.3" ry="4.38"/>
+    <ellipse cx="935.38" cy="218.64" rx="7.3" ry="4.38"/>
+    <ellipse cx="707.36" cy="276.61" rx="6.22" ry="3.73"/>
+    <ellipse cx="603.42" cy="394.69" rx="6.22" ry="3.73"/>
+    <ellipse cx="636.51" cy="266.32" rx="6.22" ry="3.73"/>
+    <ellipse cx="614.12" cy="87.59" rx="6.22" ry="3.73"/>
+    <ellipse cx="649.04" cy="513.00" rx="3.2" ry="1.92"/>
+    <ellipse cx="463.68" cy="544.16" rx="3.2" ry="1.92"/>
+    <ellipse cx="677.52" cy="672.52" rx="3.2" ry="1.92"/>
+    <ellipse cx="705.95" cy="691.34" rx="3.2" ry="1.92"/>
+    <ellipse cx="730.92" cy="334.93" rx="4.33" ry="2.6"/>
+    <ellipse cx="557.31" cy="451.36" rx="4.33" ry="2.6"/>
+    <ellipse cx="541.53" cy="204.85" rx="4.33" ry="2.6"/>
+    <ellipse cx="695.37" cy="356.87" rx="4.33" ry="2.6"/>
+    <ellipse cx="1011.46" cy="432.14" rx="3.26" ry="1.96"/>
+    <ellipse cx="1186.08" cy="579.67" rx="3.26" ry="1.96"/>
+    <ellipse cx="837.27" cy="286.42" rx="3.26" ry="1.96"/>
+    <ellipse cx="1079.98" cy="522.36" rx="3.26" ry="1.96"/>
+    <ellipse cx="978.04" cy="430.11" rx="5.21" ry="3.12"/>
+    <ellipse cx="925.26" cy="577.35" rx="5.21" ry="3.12"/>
+    <ellipse cx="841.99" cy="667.82" rx="5.21" ry="3.12"/>
+    <ellipse cx="937.82" cy="645.52" rx="5.21" ry="3.12"/>
+    <ellipse cx="669.61" cy="332.82" rx="3.81" ry="2.29"/>
+    <ellipse cx="764.47" cy="460.74" rx="3.81" ry="2.29"/>
+    <ellipse cx="694.73" cy="150.97" rx="3.81" ry="2.29"/>
+    <ellipse cx="660.24" cy="566.12" rx="3.81" ry="2.29"/>
+    <ellipse cx="1031.36" cy="558.42" rx="7.44" ry="4.47"/>
+    <ellipse cx="1037.41" cy="530.51" rx="7.44" ry="4.47"/>
+    <ellipse cx="1145.82" cy="418.63" rx="7.44" ry="4.47"/>
+    <ellipse cx="912.95" cy="391.50" rx="7.44" ry="4.47"/>
+    <ellipse cx="910.08" cy="272.85" rx="4.26" ry="2.55"/>
+    <ellipse cx="897.47" cy="180.18" rx="4.26" ry="2.55"/>
+    <ellipse cx="814.07" cy="446.39" rx="4.26" ry="2.55"/>
+    <ellipse cx="768.25" cy="60.61" rx="4.26" ry="2.55"/>
+    <ellipse cx="937.67" cy="555.41" rx="3.49" ry="2.09"/>
+    <ellipse cx="940.37" cy="706.99" rx="3.49" ry="2.09"/>
+    <ellipse cx="781.57" cy="747.69" rx="3.49" ry="2.09"/>
+    <ellipse cx="738.09" cy="733.70" rx="3.49" ry="2.09"/>
+    <ellipse cx="946.97" cy="432.05" rx="7.52" ry="4.51"/>
+    <ellipse cx="781.03" cy="253.62" rx="7.52" ry="4.51"/>
+    <ellipse cx="893.96" cy="363.64" rx="7.52" ry="4.51"/>
+    <ellipse cx="765.21" cy="689.26" rx="7.52" ry="4.51"/>
+    <ellipse cx="663.28" cy="487.50" rx="5.66" ry="3.4"/>
+    <ellipse cx="858.08" cy="453.26" rx="5.66" ry="3.4"/>
+    <ellipse cx="807.37" cy="502.54" rx="5.66" ry="3.4"/>
+    <ellipse cx="774.21" cy="384.85" rx="5.66" ry="3.4"/>
+    <ellipse cx="740.45" cy="345.26" rx="4.02" ry="2.41"/>
+    <ellipse cx="917.43" cy="333.01" rx="4.02" ry="2.41"/>
+    <ellipse cx="745.19" cy="337.08" rx="4.02" ry="2.41"/>
+    <ellipse cx="591.63" cy="197.96" rx="4.02" ry="2.41"/>
+    <ellipse cx="743.17" cy="374.52" rx="5.63" ry="3.38"/>
+    <ellipse cx="918.87" cy="506.62" rx="5.63" ry="3.38"/>
+    <ellipse cx="589.20" cy="593.30" rx="5.63" ry="3.38"/>
+    <ellipse cx="665.79" cy="205.71" rx="5.63" ry="3.38"/>
+    <ellipse cx="1015.32" cy="477.88" rx="4.32" ry="2.59"/>
+    <ellipse cx="823.62" cy="534.99" rx="4.32" ry="2.59"/>
+    <ellipse cx="839.36" cy="449.36" rx="4.32" ry="2.59"/>
+    <ellipse cx="975.64" cy="382.65" rx="4.32" ry="2.59"/>
+    <ellipse cx="606.50" cy="466.41" rx="4.04" ry="2.42"/>
+    <ellipse cx="415.69" cy="501.17" rx="4.04" ry="2.42"/>
+    <ellipse cx="792.86" cy="267.55" rx="4.04" ry="2.42"/>
+    <ellipse cx="507.27" cy="623.58" rx="4.04" ry="2.42"/>
+    <ellipse cx="1005.90" cy="556.58" rx="6.58" ry="3.95"/>
+    <ellipse cx="1173.58" cy="335.91" rx="6.58" ry="3.95"/>
+    <ellipse cx="929.44" cy="662.14" rx="6.58" ry="3.95"/>
+    <ellipse cx="967.71" cy="513.19" rx="6.58" ry="3.95"/>
+    <ellipse cx="902.43" cy="495.32" rx="6.52" ry="3.91"/>
+    <ellipse cx="1038.20" cy="602.73" rx="6.52" ry="3.91"/>
+    <ellipse cx="1091.63" cy="442.58" rx="6.52" ry="3.91"/>
+    <ellipse cx="989.89" cy="546.01" rx="6.52" ry="3.91"/>
+    <ellipse cx="933.64" cy="235.88" rx="4.04" ry="2.42"/>
+    <ellipse cx="893.95" cy="346.22" rx="4.04" ry="2.42"/>
+    <ellipse cx="876.94" cy="401.60" rx="4.04" ry="2.42"/>
+    <ellipse cx="960.15" cy="177.72" rx="4.04" ry="2.42"/>
+    <ellipse cx="621.75" cy="557.35" rx="6.47" ry="3.88"/>
+    <ellipse cx="699.37" cy="442.41" rx="6.47" ry="3.88"/>
+    <ellipse cx="524.58" cy="347.76" rx="6.47" ry="3.88"/>
+    <ellipse cx="533.08" cy="741.48" rx="6.47" ry="3.88"/>
+    <ellipse cx="935.96" cy="414.78" rx="3.83" ry="2.3"/>
+    <ellipse cx="863.29" cy="236.12" rx="3.83" ry="2.3"/>
+    <ellipse cx="891.89" cy="385.64" rx="3.83" ry="2.3"/>
+    <ellipse cx="972.86" cy="570.39" rx="3.83" ry="2.3"/>
+    <ellipse cx="723.24" cy="450.75" rx="6.46" ry="3.88"/>
+    <ellipse cx="534.34" cy="216.85" rx="6.46" ry="3.88"/>
+    <ellipse cx="878.43" cy="600.99" rx="6.46" ry="3.88"/>
+    <ellipse cx="660.06" cy="467.61" rx="6.46" ry="3.88"/>
+    <ellipse cx="596.58" cy="521.71" rx="7.44" ry="4.46"/>
+    <ellipse cx="664.27" cy="744.55" rx="7.44" ry="4.46"/>
+    <ellipse cx="784.59" cy="472.19" rx="7.44" ry="4.46"/>
+    <ellipse cx="504.72" cy="479.17" rx="7.44" ry="4.46"/>
+    <ellipse cx="908.37" cy="328.24" rx="5.14" ry="3.09"/>
+    <ellipse cx="848.69" cy="101.51" rx="5.14" ry="3.09"/>
+    <ellipse cx="741.46" cy="507.30" rx="5.14" ry="3.09"/>
+    <ellipse cx="736.35" cy="499.50" rx="5.14" ry="3.09"/>
+    <ellipse cx="749.33" cy="235.12" rx="3.54" ry="2.12"/>
+    <ellipse cx="656.38" cy="30.26" rx="3.54" ry="2.12"/>
+    <ellipse cx="798.37" cy="0.02" rx="3.54" ry="2.12"/>
+    <ellipse cx="854.16" cy="51.12" rx="3.54" ry="2.12"/>
+    <ellipse cx="1105.99" cy="569.04" rx="5.17" ry="3.1"/>
+    <ellipse cx="926.19" cy="325.85" rx="5.17" ry="3.1"/>
+    <ellipse cx="1124.16" cy="787.41" rx="5.17" ry="3.1"/>
+    <ellipse cx="1061.21" cy="349.22" rx="5.17" ry="3.1"/>
+    <ellipse cx="1056.94" cy="541.05" rx="7.63" ry="4.58"/>
+    <ellipse cx="1062.65" cy="717.34" rx="7.63" ry="4.58"/>
+    <ellipse cx="1070.26" cy="607.44" rx="7.63" ry="4.58"/>
+    <ellipse cx="1247.51" cy="671.61" rx="7.63" ry="4.58"/>
+    <ellipse cx="1075.83" cy="523.39" rx="5.97" ry="3.58"/>
+    <ellipse cx="944.74" cy="666.70" rx="5.97" ry="3.58"/>
+    <ellipse cx="981.15" cy="436.44" rx="5.97" ry="3.58"/>
+    <ellipse cx="1177.19" cy="689.41" rx="5.97" ry="3.58"/>
+    <ellipse cx="909.53" cy="419.31" rx="5.65" ry="3.39"/>
+    <ellipse cx="745.33" cy="594.23" rx="5.65" ry="3.39"/>
+    <ellipse cx="1037.28" cy="593.82" rx="5.65" ry="3.39"/>
+    <ellipse cx="887.02" cy="447.80" rx="5.65" ry="3.39"/>
+    <ellipse cx="298.87" cy="568.61" rx="6.92" ry="4.15"/>
+  </g>
+  <g id="bones">
+    <g transform="translate(670.6 564.0) rotate(-28.1)"><rect x="-12.59" y="-2.20" width="25.18" height="4.41" rx="1.57" fill="#FFFFFF"/><circle cx="-12.59" cy="-3.30" r="3.62" fill="#FFFFFF"/><circle cx="-12.59" cy="3.30" r="3.62" fill="#FFFFFF"/><circle cx="12.59" cy="-3.30" r="3.62" fill="#FFFFFF"/><circle cx="12.59" cy="3.30" r="3.62" fill="#FFFFFF"/></g>
+    <g transform="translate(759.0 401.1) rotate(-1.6)"><rect x="-3.68" y="-11.04" width="7.36" height="8.10" rx="1.47" fill="#FFFFFF"/><rect x="-8.83" y="-4.42" width="17.66" height="13.98" rx="3.68" fill="#FFFFFF"/></g>
+    <g transform="translate(999.5 526.8) rotate(-34.6)"><rect x="-14.48" y="-2.53" width="28.97" height="5.07" rx="1.81" fill="#FFFFFF"/><circle cx="-14.48" cy="-3.80" r="4.16" fill="#FFFFFF"/><circle cx="-14.48" cy="3.80" r="4.16" fill="#FFFFFF"/><circle cx="14.48" cy="-3.80" r="4.16" fill="#FFFFFF"/><circle cx="14.48" cy="3.80" r="4.16" fill="#FFFFFF"/></g>
+    <g transform="translate(699.1 262.8) rotate(-14.6)"><rect x="-12.94" y="-2.26" width="25.87" height="4.53" rx="1.62" fill="#FFFFFF"/><circle cx="-12.94" cy="-3.40" r="3.72" fill="#FFFFFF"/><circle cx="-12.94" cy="3.40" r="3.72" fill="#FFFFFF"/><circle cx="12.94" cy="-3.40" r="3.72" fill="#FFFFFF"/><circle cx="12.94" cy="3.40" r="3.72" fill="#FFFFFF"/></g>
+    <g transform="translate(632.3 436.9) rotate(-16.3)"><rect x="-4.05" y="-12.15" width="8.10" height="8.91" rx="1.62" fill="#FFFFFF"/><rect x="-9.72" y="-4.86" width="19.44" height="15.39" rx="4.05" fill="#FFFFFF"/></g>
+    <g transform="translate(952.0 264.7) rotate(9.1)"><rect x="-14.48" y="-2.53" width="28.95" height="5.07" rx="1.81" fill="#FFFFFF"/><circle cx="-14.48" cy="-3.80" r="4.16" fill="#FFFFFF"/><circle cx="-14.48" cy="3.80" r="4.16" fill="#FFFFFF"/><circle cx="14.48" cy="-3.80" r="4.16" fill="#FFFFFF"/><circle cx="14.48" cy="3.80" r="4.16" fill="#FFFFFF"/></g>
+    <g transform="translate(954.8 389.9) rotate(-4.0)"><rect x="-11.55" y="-2.02" width="23.09" height="4.04" rx="1.44" fill="#FFFFFF"/><circle cx="-11.55" cy="-3.03" r="3.32" fill="#FFFFFF"/><circle cx="-11.55" cy="3.03" r="3.32" fill="#FFFFFF"/><circle cx="11.55" cy="-3.03" r="3.32" fill="#FFFFFF"/><circle cx="11.55" cy="3.03" r="3.32" fill="#FFFFFF"/></g>
+    <g transform="translate(1452.8 560.8) rotate(-25.6)"><rect x="-3.87" y="-11.62" width="7.75" height="8.52" rx="1.55" fill="#FFFFFF"/><rect x="-9.30" y="-4.65" width="18.59" height="14.72" rx="3.87" fill="#FFFFFF"/></g>
+    <g transform="translate(315.3 554.4) rotate(-11.0)"><rect x="-11.47" y="-2.01" width="22.93" height="4.01" rx="1.43" fill="#FFFFFF"/><circle cx="-11.47" cy="-3.01" r="3.30" fill="#FFFFFF"/><circle cx="-11.47" cy="3.01" r="3.30" fill="#FFFFFF"/><circle cx="11.47" cy="-3.01" r="3.30" fill="#FFFFFF"/><circle cx="11.47" cy="3.01" r="3.30" fill="#FFFFFF"/></g>
+    <g transform="translate(1332.9 550.8) rotate(-28.1)"><rect x="-15.67" y="-2.74" width="31.34" height="5.48" rx="1.96" fill="#FFFFFF"/><circle cx="-15.67" cy="-4.11" r="4.51" fill="#FFFFFF"/><circle cx="-15.67" cy="4.11" r="4.51" fill="#FFFFFF"/><circle cx="15.67" cy="-4.11" r="4.51" fill="#FFFFFF"/><circle cx="15.67" cy="4.11" r="4.51" fill="#FFFFFF"/></g>
+    <g transform="translate(550.1 564.2) rotate(25.9)"><rect x="-3.75" y="-11.25" width="7.50" height="8.25" rx="1.50" fill="#FFFFFF"/><rect x="-9.00" y="-4.50" width="18.00" height="14.25" rx="3.75" fill="#FFFFFF"/></g>
+    <g transform="translate(194.9 549.6) rotate(29.4)"><rect x="-12.06" y="-2.11" width="24.12" height="4.22" rx="1.51" fill="#FFFFFF"/><circle cx="-12.06" cy="-3.17" r="3.47" fill="#FFFFFF"/><circle cx="-12.06" cy="3.17" r="3.47" fill="#FFFFFF"/><circle cx="12.06" cy="-3.17" r="3.47" fill="#FFFFFF"/><circle cx="12.06" cy="3.17" r="3.47" fill="#FFFFFF"/></g>
+    <g transform="translate(878.1 522.8) rotate(-16.8)"><rect x="-12.02" y="-2.10" width="24.04" height="4.21" rx="1.50" fill="#FFFFFF"/><circle cx="-12.02" cy="-3.16" r="3.46" fill="#FFFFFF"/><circle cx="-12.02" cy="3.16" r="3.46" fill="#FFFFFF"/><circle cx="12.02" cy="-3.16" r="3.46" fill="#FFFFFF"/><circle cx="12.02" cy="3.16" r="3.46" fill="#FFFFFF"/></g>
+  </g>
+</svg>

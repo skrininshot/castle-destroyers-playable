@@ -1,0 +1,345 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83b16eb0bbf25ce40b10e74277f22329, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: 
+  theme: {fileID: 11400000, guid: e6f6bb77344a6794e8d147ff38cd6ecd, type: 2}
+  rngSeed: 12345
+  maxPlayerTurns: 3
+  maxSessionSeconds: 75
+  maxDeltaTime: 0.05
+  directorEnabled: 1
+  directorMaxLossPerAiTurn: 1
+  directorEnemyKeepCannons: 2
+  directorFinisherWeight: 4
+  bonusPickEnabled: 0
+  turnHints:
+  - label: x20 lob
+    highlightBoosterMultiplier: 20
+    showHand: 1
+    handAngleDeg: 50
+    handPower01: 0.68
+    panToBooster: 0
+  - label: x20 steep lob
+    highlightBoosterMultiplier: 20
+    showHand: 1
+    handAngleDeg: 54
+    handPower01: 0.6
+    panToBooster: 0
+  - label: free shot
+    highlightBoosterMultiplier: 0
+    showHand: 0
+    handAngleDeg: 50
+    handPower01: 0.68
+    panToBooster: 0
+  bootDuration: 0.2
+  introDuration: 1.5
+  playerAimDuration: 10
+  aiAimDuration: 1.5
+  fireDuration: 0.6
+  flightDuration: 1
+  flightMaxDuration: 12
+  resolveDuration: 0.7
+  victoryDuration: 2.5
+  victoryLoserHold: 1
+  defeatDuration: 2
+  victoryFlightCap: 0.8
+  aiPresets:
+  - label: over x20
+    angleDeg: 62
+    power01: 0.7
+  - label: via x20
+    angleDeg: 52
+    power01: 0.6
+  - label: tunnel
+    angleDeg: 18
+    power01: 0.7
+  aiPresetOrder: 000000000100000002000000
+  aiAngleNoiseDeg: 1.5
+  aiPowerNoise: 0.02
+  aiDecoyDeg: 18
+  aiDecoyShare: 0.55
+  aiTurnSpeed: 45
+  handStartDelay: 0.5
+  handDemoDuration: 1.5
+  handDemoRepeats: 2
+  handRepeatDelay: 3
+  hintPanDuration: 1.6
+  handStartViewport: {x: 0.7, y: 0.55}
+  boosterHighlightPulse: 0.16
+  boosterHighlightSpeed: 9
+  hudFlashTime: 0.3
+  hudShakeAmplitude: 9
+  hudShakeTime: 0.3
+  hudShakeFrequency: 50
+  bannerDuration: 1
+  uiPopTime: 0.25
+  endCardFadeTime: 0.4
+  endCardDimAlpha: 0.94
+  hudLandscapeScale: 0.66
+  endCardTapDelay: 0.5
+  ctaPulse: 0.07
+  ctaPulseSpeed: 5
+  victoryJumpHeight: 0.55
+  victoryJumpSpeed: 9
+  victoryJumpPhase: 0.8
+  fireworkBursts: 4
+  fireworkInterval: 0.32
+  fireworkSparks: 18
+  fireworkSpeed: 7
+  fireworkSparkSize: 0.6
+  fireworkLife: 0.9
+  fireworkGravity: 5
+  fireworkLift: 1
+  fireworkSpread: 4.5
+  aimMinDeg: 5
+  aimMaxDeg: 85
+  aimMaxDragScreenFraction: 0.35
+  aimDeadZone: 0.03
+  aimTurnSpeed: 240
+  aimPreviewFraction: 0.3
+  aimDotCount: 12
+  aimDotSizeStart: 0.36
+  aimDotSizeEnd: 0.14
+  aimDotAlphaEnd: 90
+  aimPanelOffset: {x: 5, y: 6.5}
+  aimPointAtFinger: 0
+  aimPointPower: 0.6
+  launchSpeedMin: 14
+  launchSpeedMax: 42
+  gravity: 14
+  playerCannons: 3
+  enemyCannons: 12
+  rocketsPerCannon: 10
+  rocketInterval: 0.06
+  cannonHitRadius: 0.45
+  cannonSupportRadius: 0.4
+  cannonSupportShare: 0.5
+  cannonDropSpeed: 6
+  maxActiveRockets: 600
+  stressRocketCount: 1000
+  rocketLength: 1.45
+  rocketWidth: 0.45
+  rocketCollisionStep: 0.25
+  rocketSplashWidth: 0.8
+  recoilDistance: 0.3
+  cannonFireSquash: 0.14
+  cannonDetachSquash: 0.35
+  cannonDetachSquashTime: 0.3
+  cannonJumpSquash: -0.18
+  cannonSquashLengthShare: 0.6
+  recoilReturnSpeed: 3
+  muzzleFlashSize: 0.8
+  muzzleFlashLife: 0.1
+  stressRocketAngleDeg: 20
+  stressRocketSpeed: 36
+  stressSpawnPerFrame: 40
+  boosters:
+  - multiplier: 20
+    position: {x: 0, y: 33.6}
+  - multiplier: 10
+    position: {x: 0, y: 19}
+  - multiplier: 50
+    position: {x: 0, y: 13}
+  boosterWidth: 1.875
+  boosterHeight: 3.75
+  boosterNudgeReach: 2.5
+  boosterNudgeInset: 0.6
+  boosterNudgeScreenMargin: 1
+  boosterSpreadDeg: 18
+  boosterSpawnStagger: 0.04
+  boosterStreams: 5
+  boosterExitFocus: 1
+  boosterMaxCraterScale: 2
+  boosterPulse: 0.03
+  boosterPulseSpeed: 3
+  boosterSquash: 0.14
+  boosterSquashDecay: 8
+  boosterPuffCount: 12
+  boosterPuffInterval: 0.12
+  boosterPuffSize: 1.05
+  boosterPuffSpeed: 5
+  boosterPuffLife: 0.4
+  boosterPopupHeight: 1.2
+  boosterPopupOffsetY: 0.4
+  boosterPopupHold: 0.7
+  boosterPopupFade: 0.25
+  boosterPopupRise: 1.2
+  terrainMask: {fileID: 11400000, guid: f07d6423099f0bf4f97e65071c67d9ae, type: 2}
+  terrainMaskOrigin: {x: -51.59375, y: -3.5}
+  maskTexelsPerMeter: 16
+  maskTileSize: 128
+  maxTileUploadsPerFrame: 4
+  craterRadiusGround: 1
+  rimWidth: 0.18
+  rimScallop: 0
+  rimScallopTeeth: 14
+  rimScallopDepth: 0.12
+  maskEdgeSoftness: 0.15
+  connectivityInterval: 0.1
+  connectivityCellTexels: 4
+  minChunkCells: 6
+  maxIslandsPerSolve: 16
+  chunkSlots: 6
+  chunkTextureSize: 256
+  chunkGravity: 14
+  chunkMaxDrift: 1.2
+  chunkMaxSpinDeg: 35
+  decorMaxSpinDeg: 220
+  decorAnchorDepth: 0.15
+  waterWaveAmplitude: 0.09
+  waterWaveFrequency: 0.9
+  waterWaveSpeed: 1.6
+  waterWaveStep: 0.5
+  waterRimThickness: 0.22
+  fxParticleCapacity: 512
+  craterDustPuffs: 6
+  dustMaxPuffs: 16
+  dustSize: 0.6
+  dustSpeed: 2.2
+  dustLife: 0.6
+  dustGravity: 12
+  splashDrops: 8
+  splashDropsPerMeter: 3
+  splashDropSize: 0.34
+  splashSpeed: 7
+  splashSpread: 1.6
+  splashLife: 0.8
+  splashGravity: 18
+  explosionPoolSize: 128
+  explosionMergeRadius: 0.5
+  explosionMergeGrowth: 0.12
+  explosionMaxStrength: 1.6
+  explosionRadius: 2.6
+  explosionLife: 0.32
+  explosionShards: 4
+  explosionShardSpeed: 8
+  explosionShardSize: 0.5
+  explosionShardLife: 0.5
+  shakeMax: 0.6
+  shakeDecay: 4
+  shakePerExplosion: 0.08
+  shakeFrequency: 45
+  smokeCapacity: 2000
+  smokeLodRocketThreshold: 200
+  smokeLodGrowth: 0.15
+  smokeInterval: 0.05
+  smokeLife: 0.5
+  smokeSizeStart: 0.24
+  smokeSizeEnd: 0.6
+  smokeFlameFraction: 0.25
+  smokeAlpha: 230
+  castleConnectivityCellTexels: 2
+  castleLoadTexels: 3
+  castleMinChunkCells: 24
+  craterRadiusCastle: 0.288
+  castleRimWidth: 0.13
+  castleRimDarken: 0.88
+  castleCraterTeethMin: 8
+  castleCraterTeethMax: 12
+  castleCraterNoise: 0.3
+  castleCrackChance: 0.3
+  castleCrackCount: 2
+  castleCrackLength: 1.3
+  castleCrackWidth: 0.12
+  castleCrackSegments: 4
+  castleCrackBendDeg: 32
+  castleDustPuffs: 4
+  castleChunkSlots: 4
+  castleChunkTextureSize: 128
+  castleUploadInterval: 0.05
+  platformHitsPerCrack: 10
+  castleMaxTiltDeg: 16
+  trackMaxTiltDeg: 30
+  trackTiltSpeed: 40
+  castleSettleSpeed: 4
+  swayMaxDeg: 3
+  swayFrequency: 7
+  swayDamping: 0.2
+  swayImpulseDeg: 7
+  swayMaxSpeedDeg: 30
+  swayBlastReach: 3
+  cannonDetachSpeed: 6
+  cannonDetachLift: 6
+  cannonDetachSpinDeg: 420
+  cannonSplashWidth: 1.4
+  levelWidth: 80
+  waterLevel: 0
+  levelBottom: -40
+  playerCastleX: -33.75
+  enemyCastleX: 33.75
+  trackHeight: 1.2
+  platformHeight: 0.8
+  parallaxFactors:
+  - 0
+  - 0.05
+  - 0.15
+  - 0.3
+  - 0.5
+  backBandBase:
+  - 6
+  - 4
+  - 2
+  moonPosition: {x: 7, y: 31}
+  cloudStep: 23
+  soundVolume: 0.8
+  soundCooldown: 0.07
+  cameraSmoothTime: 0.45
+  castleFrameWidth: 16.8
+  centerFrameWidth: 22
+  centerFrameMinHeight: 40
+  centerFrameMaxHeight: 66
+  cameraFlightTopMargin: 8
+  cameraCenterHold: 0.5
+  targetFrameWidth: 19.2
+  minFrameHeight: 26.4
+  castleLeadX: 2
+  castleFocusLiftY: 0.5
+  centerFocus: {x: 0, y: 17}
+  cameraHeadFollow: 0.25
+  rainEnabled: 0
+  rainPerSecond: 90
+  rainSpeed: 30
+  rainDropSize: 0.13
+  lightBeamEnabled: 0
+  showPersistentCta: 0
+  debugSlowScale: 0.25
+  debugHudRefresh: 0.25
+  debugBlastRadii:
+  - 1.2
+  - 2.4
+  - 4
+  - 0.6
+  debugBlastHoldInterval: 0.08
+  debugBlastUiBand: 0.26
+  debugToggleBand: 0.07
+  debugOverviewWidth: 106
+  debugBoosterShots:
+  - label: shot x20
+    highlightBoosterMultiplier: 20
+    showHand: 0
+    handAngleDeg: 50
+    handPower01: 0.68
+    panToBooster: 0
+  - label: shot x10
+    highlightBoosterMultiplier: 20
+    showHand: 0
+    handAngleDeg: 32
+    handPower01: 0.55
+    panToBooster: 0
+  - label: shot x50
+    highlightBoosterMultiplier: 50
+    showHand: 0
+    handAngleDeg: 18
+    handPower01: 0.7
+    panToBooster: 0
+  debugBoosterShotSalvos: 010000000100000001000000

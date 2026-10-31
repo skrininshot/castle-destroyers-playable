@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<g transform="translate(64.0 64.0) rotate(45)">
+<rect x="-40.32" y="-5.04" width="72.80" height="10.08" rx="5.04" fill="var(--hudGold)" opacity="1"/>
+<path d="M28.0 -10.6 Q48.2 -7.8 56.0 0 Q48.2 7.8 28.0 10.6 Z" fill="var(--hudGold)"/>
+<polygon points="-38.08,-5.04 -54.88,-15.68 -28.00,-5.04" fill="var(--hudGoldShade)" opacity="1"/>
+<polygon points="-38.08,5.04 -54.88,15.68 -28.00,5.04" fill="var(--hudGoldShade)" opacity="1"/>
+</g>
+<g transform="translate(64.0 64.0) rotate(135)">
+<rect x="-40.32" y="-5.04" width="72.80" height="10.08" rx="5.04" fill="var(--hudGold)" opacity="1"/>
+<path d="M28.0 -10.6 Q48.2 -7.8 56.0 0 Q48.2 7.8 28.0 10.6 Z" fill="var(--hudGold)"/>
+<polygon points="-38.08,-5.04 -54.88,-15.68 -28.00,-5.04" fill="var(--hudGoldShade)" opacity="1"/>
+<polygon points="-38.08,5.04 -54.88,15.68 -28.00,5.04" fill="var(--hudGoldShade)" opacity="1"/>
+</g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<rect x="36.28" y="66.08" width="55.44" height="47.52" rx="3.96" fill="#FFFFFF" opacity="1"/>
+<rect x="35.62" y="52.88" width="14.52" height="19.80" rx="2.64" fill="#FFFFFF" opacity="1"/>
+<rect x="56.74" y="52.88" width="14.52" height="19.80" rx="2.64" fill="#FFFFFF" opacity="1"/>
+<rect x="77.86" y="52.88" width="14.52" height="19.80" rx="2.64" fill="#FFFFFF" opacity="1"/>
+<rect x="62.02" y="25.16" width="3.96" height="30.36" rx="0.00" fill="#FFFFFF" opacity="1"/>
+<polygon points="65.98,25.16 91.72,34.40 65.98,44.96" fill="#FFFFFF" opacity="1"/>
+<path d="M53.4 113.6 L53.4 89.8 Q64.0 76.6 74.6 89.8 L74.6 113.6 Z" fill="var(--hudPanel)"/>
+<path d="M53 113 L53 89 Q64 76 75 89 L75 113 Z" fill="#5A5A70"/>
+</svg>

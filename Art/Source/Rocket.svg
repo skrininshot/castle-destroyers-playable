@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Rocket, nose points right. Flat, no outlines (TZ 3.4).
+     #body: full silhouette. #accent: nose and fins in the side colour. #shade: one shadow stripe.
+     After editing run: python Tools/rasterize_svg.py -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 40" width="128" height="40">
+  <path id="body" fill="#F2F0F8" d="M 4 3 L 22 3 L 34 12 L 92 12 C 108 12 118 15 126 20 C 118 25 108 28 92 28 L 34 28 L 22 37 L 4 37 L 14 26 L 14 14 Z"/>
+  <path id="accent" fill="#2F8CF0" d="M 4 3 L 22 3 L 34 12 L 14 14 Z M 4 37 L 22 37 L 34 28 L 14 26 Z M 90 12 C 108 12 118 15 126 20 C 118 25 108 28 90 28 Z M 62 12 L 70 12 L 70 28 L 62 28 Z"/>
+  <path id="shade" fill="#B9B6D2" d="M 14 22 L 90 22 L 90 28 L 34 28 L 14 26 Z"/>
+</svg>

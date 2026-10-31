@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="167" viewBox="0 0 96 167">
+<g transform="scale(64.0)">
+<g transform="translate(0.75 2.5) scale(1 1)">
+<rect x="-0.08" y="-0.48" width="0.17" height="0.48" rx="2.00" fill="var(--platformShade)" opacity="1"/>
+<path d="M-0.7 -0.3 Q-0.7 -0.3 -0.6 -0.3 L0.0 -0.3 L0.0 -1.5 Z" fill="var(--treeLight)"/>
+<path d="M0.7 -0.3 Q0.7 -0.3 0.6 -0.3 L0.0 -0.3 L0.0 -1.5 Z" fill="var(--treeShade)"/>
+<path d="M-0.6 -1.0 Q-0.6 -0.9 -0.5 -0.9 L0.0 -0.9 L0.0 -2.0 Z" fill="var(--treeLight)"/>
+<path d="M0.6 -1.0 Q0.6 -0.9 0.5 -0.9 L0.0 -0.9 L0.0 -2.0 Z" fill="var(--treeShade)"/>
+<path d="M-0.4 -1.5 Q-0.4 -1.5 -0.3 -1.5 L0.0 -1.5 L0.0 -2.5 Z" fill="var(--treeLight)"/>
+<path d="M0.4 -1.5 Q0.4 -1.5 0.3 -1.5 L0.0 -1.5 L0.0 -2.5 Z" fill="var(--treeShade)"/>
+</g>
+</g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="84" height="103" viewBox="0 0 84 103">
+<g transform="scale(64.0)">
+<rect x="0.48" y="0.08" width="0.34" height="1.42" rx="0.17" fill="var(--treeLight)" opacity="1"/>
+<rect x="0.66" y="0.08" width="0.16" height="1.42" rx="0.08" fill="var(--treeShade)" opacity="1"/>
+<rect x="0.08" y="0.44" width="0.24" height="0.50" rx="0.12" fill="var(--treeLight)" opacity="1"/>
+<rect x="0.08" y="0.76" width="0.50" height="0.18" rx="0.09" fill="var(--treeLight)" opacity="1"/>
+<rect x="0.98" y="0.30" width="0.22" height="0.46" rx="0.11" fill="var(--treeShade)" opacity="1"/>
+<rect x="0.72" y="0.60" width="0.48" height="0.16" rx="0.08" fill="var(--treeShade)" opacity="1"/>
+</g>
+</svg>

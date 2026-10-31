@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<circle cx="128.00" cy="128.00" r="124.00" fill="var(--moon)" opacity="1"/>
+<circle cx="84.60" cy="103.20" r="32.24" fill="var(--moonShade)" opacity="1"/>
+<circle cx="91.05" cy="109.00" r="23.86" fill="var(--moon)" opacity="1"/>
+<circle cx="170.16" cy="160.24" r="24.80" fill="var(--moonShade)" opacity="1"/>
+<circle cx="175.12" cy="164.70" r="18.35" fill="var(--moon)" opacity="1"/>
+<circle cx="142.88" cy="66.00" r="16.12" fill="var(--moonShade)" opacity="1"/>
+<circle cx="146.10" cy="68.90" r="11.93" fill="var(--moon)" opacity="1"/>
+</svg>
