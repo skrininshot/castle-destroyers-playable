@@ -931,6 +931,105 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(craters, rig.Castles.Body(Side.Enemy).Mask.SolidCount);
         }
 
+        /// <summary>Ставит прицел так, что ближайшая дуга проходит над x20 с промахом 0.5–2 м.</summary>
+        private float AimAboveX20()
+        {
+            AdvanceTo(SessionState.Aim, Side.Player);
+            for (float power = 0.5f; power < 1f; power += 0.002f)
+            {
+                rig.Cannons.SetAim(Side.Player, 50f, power);
+                float miss = rig.Cannons.SalvoMissY(Side.Player, 0f, rig.Boosters.HomeMinY(0), rig.Boosters.HomeMaxY(0));
+                if (miss > 0.5f && miss < 2f)
+                {
+                    return miss;
+                }
+            }
+            Assert.Fail("no near miss above x20");
+            return 0f;
+        }
+
+        [Test]
+        public void NearMissNudgesBoosterAndRocketsTouchIt()
+        {
+            float miss = AimAboveX20();
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.AreEqual(miss + rig.Config.boosterNudgeInset, rig.Boosters.ShiftY(0), 1e-3f);
+            Assert.AreEqual(0f, rig.Boosters.ShiftY(1));
+            Assert.AreEqual(0f, rig.Boosters.ShiftY(2));
+
+            for (int i = 0; i < 300 && rig.Boosters.HonestTotal == 0f; i++)
+            {
+                rig.Boosters.Tick(0.02f);
+                rig.Cannons.Tick(0.02f);
+                rig.Rockets.Tick(0.02f);
+            }
+            Assert.Greater(rig.Boosters.HonestTotal, 0f);
+        }
+
+        [Test]
+        public void FarArcLeavesBoosterHome()
+        {
+            AdvanceTo(SessionState.Aim, Side.Player);
+            rig.Cannons.SetAim(Side.Player, 80f, 1f);
+            AdvanceTo(SessionState.Fire, Side.Player);
+            for (int k = 0; k < rig.Boosters.Count; k++)
+            {
+                Assert.AreEqual(0f, rig.Boosters.ShiftY(k));
+            }
+        }
+
+        [Test]
+        public void EnemyTurnSendsBoosterHome()
+        {
+            AimAboveX20();
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.Greater(rig.Boosters.ShiftY(0), 0f);
+            AdvanceTo(SessionState.Fire, Side.Enemy);
+            Assert.AreEqual(0f, rig.Boosters.ShiftY(0));
+        }
+
+        [Test]
+        public void VisibleBoosterStaysInPlace()
+        {
+            float miss = AimAboveX20();
+            rig.Config.castleFrameWidth = 200f;
+            director.Snap();
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.Greater(miss, 0f);
+            Assert.AreEqual(0f, rig.Boosters.ShiftY(0));
+        }
+
+        [Test]
+        public void NudgeNeverOverlapsNeighbourBooster()
+        {
+            AdvanceTo(SessionState.Aim, Side.Player);
+            for (float power = 0.3f; power < 1f; power += 0.01f)
+            {
+                rig.Cannons.SetAim(Side.Player, 20f, power);
+                rig.Boosters.Clear();
+                int nearest = -1;
+                float best = float.PositiveInfinity;
+                for (int k = 0; k < rig.Boosters.Count; k++)
+                {
+                    float miss = rig.Cannons.SalvoMissY(Side.Player, 0f, rig.Boosters.HomeMinY(k), rig.Boosters.HomeMaxY(k));
+                    if (Mathf.Abs(miss) < Mathf.Abs(best))
+                    {
+                        nearest = k;
+                        best = miss;
+                    }
+                }
+                float shift = BoosterSystem.NudgeShift(best, rig.Config.boosterNudgeReach, rig.Config.boosterNudgeInset);
+                for (int k = 0; k < rig.Boosters.Count; k++)
+                {
+                    if (k != nearest)
+                    {
+                        bool apart = rig.Boosters.HomeMaxY(nearest) + shift < rig.Boosters.HomeMinY(k) || rig.Boosters.HomeMinY(nearest) + shift > rig.Boosters.HomeMaxY(k);
+                        Assert.IsTrue(apart, "power " + power);
+                    }
+                }
+            }
+        }
+
         private float HeaviestRocket()
         {
             float heaviest = 0f;

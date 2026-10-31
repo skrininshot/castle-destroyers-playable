@@ -80,6 +80,14 @@ namespace CastleDestroyers.CameraRig
             Apply();
         }
 
+        /// <summary>Попадает ли прямоугольник мира в текущий кадр, расширенный на margin метров.</summary>
+        public bool IsOnScreen(float minX, float minY, float maxX, float maxY, float margin)
+        {
+            float halfHeight = currentSize + margin;
+            float halfWidth = currentSize * cam.aspect + margin;
+            return maxX > currentX - halfWidth && minX < currentX + halfWidth && maxY > currentY - halfHeight && minY < currentY + halfHeight;
+        }
+
         /// <summary>Кадр для текущего состояния сессии: на своём замке, в центре уровня или на замке-цели.</summary>
         public void SelectFrame(CameraFrame frame)
         {

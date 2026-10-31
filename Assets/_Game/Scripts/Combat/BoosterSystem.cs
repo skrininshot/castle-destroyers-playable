@@ -32,6 +32,7 @@ namespace CastleDestroyers.Combat
         private float[] minY;
         private float[] maxX;
         private float[] maxY;
+        private float[] shiftY;
         private float[] squash;
         private float[] puffCooldown;
         private float[] popupValue;
@@ -76,6 +77,7 @@ namespace CastleDestroyers.Combat
             minY = new float[count];
             maxX = new float[count];
             maxY = new float[count];
+            shiftY = new float[count];
             squash = new float[count];
             puffCooldown = new float[count];
             popupValue = new float[count];
@@ -133,6 +135,43 @@ namespace CastleDestroyers.Combat
         public float Squash(int booster)
         {
             return squash[booster];
+        }
+
+        public float CenterX(int booster)
+        {
+            return (minX[booster] + maxX[booster]) * 0.5f;
+        }
+
+        public float CenterY(int booster)
+        {
+            return (minY[booster] + maxY[booster]) * 0.5f;
+        }
+
+        /// <summary>Низ бустера на штатном месте, без подтяжки.</summary>
+        public float HomeMinY(int booster)
+        {
+            return minY[booster] - shiftY[booster];
+        }
+
+        /// <summary>Верх бустера на штатном месте, без подтяжки.</summary>
+        public float HomeMaxY(int booster)
+        {
+            return maxY[booster] - shiftY[booster];
+        }
+
+        /// <summary>Текущая подтяжка бустера от штатного места, метры.</summary>
+        public float ShiftY(int booster)
+        {
+            return shiftY[booster];
+        }
+
+        /// <summary>Ставит бустер на shift метров от штатного места. Только пока он за кадром (D-069).</summary>
+        public void SetShiftY(int booster, float shift)
+        {
+            float delta = shift - shiftY[booster];
+            minY[booster] += delta;
+            maxY[booster] += delta;
+            shiftY[booster] = shift;
         }
 
         /// <summary>Число на поп-апе «+N»; 0 — поп-апа нет.</summary>
@@ -258,7 +297,19 @@ namespace CastleDestroyers.Combat
                 puffCooldown[k] = 0f;
                 popupValue[k] = 0f;
                 popupAge[k] = 0f;
+                SetShiftY(k, 0f);
             }
+        }
+
+        /// <summary>Подтяжка бустера под промах дуги: дуга входит в корпус на inset. 0, если дуга уже внутри или дальше reach.</summary>
+        public static float NudgeShift(float miss, float reach, float inset)
+        {
+            float distance = Mathf.Abs(miss);
+            if (distance < Epsilon || distance > reach)
+            {
+                return 0f;
+            }
+            return miss > 0f ? miss + inset : miss - inset;
         }
 
         /// <summary>Сколько копий выпустить: не меньше одной, ракета заменяет сама себя.</summary>

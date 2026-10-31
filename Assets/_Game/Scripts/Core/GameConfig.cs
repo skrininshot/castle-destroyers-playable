@@ -351,9 +351,18 @@ namespace CastleDestroyers.Core
             new BoosterSpec(50, 0f, 13f)
         };
         [Range(0.5f, 3f)]
-        public float boosterWidth = 1.5f;
+        public float boosterWidth = 1.875f;
         [Range(1f, 4f)]
-        public float boosterHeight = 3f;
+        public float boosterHeight = 3.75f;
+        [Range(0f, 6f)]
+        [Tooltip("Подтяжка: на сколько метров дуга залпа игрока может пройти мимо бустера, чтобы он подъехал под неё. 0 — выключено.")]
+        public float boosterNudgeReach = 2.5f;
+        [Range(0f, 2f)]
+        [Tooltip("Подтяжка: на сколько метров дуга заходит в корпус после сдвига.")]
+        public float boosterNudgeInset = 0.6f;
+        [Range(0f, 5f)]
+        [Tooltip("Подтяжка: запас от края кадра, метры. Бустер двигается, только если он дальше этого запаса за экраном.")]
+        public float boosterNudgeScreenMargin = 1f;
         [Range(0f, 45f)]
         [Tooltip("Разброс угла копий ракет после бустера, градусы.")]
         public float boosterSpreadDeg = 18f;

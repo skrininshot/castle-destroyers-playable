@@ -150,8 +150,11 @@ MonoBehaviour:
     position: {x: 0, y: 19}
   - multiplier: 50
     position: {x: 0, y: 13}
-  boosterWidth: 1.5
-  boosterHeight: 3
+  boosterWidth: 1.875
+  boosterHeight: 3.75
+  boosterNudgeReach: 2.5
+  boosterNudgeInset: 0.6
+  boosterNudgeScreenMargin: 1
   boosterSpreadDeg: 18
   boosterSpawnStagger: 0.04
   boosterStreams: 5

@@ -17,6 +17,13 @@ namespace CastleDestroyers.Combat
             return speedY > 0f ? speedY * speedY / (2f * gravity) : 0f;
         }
 
+        /// <summary>Высота дуги через deltaX метров по горизонтали. Знак deltaX совпадает со знаком speedX, speedX не ноль.</summary>
+        public static float HeightAtDistance(float startY, float speedX, float speedY, float gravity, float deltaX)
+        {
+            float time = deltaX / speedX;
+            return startY + speedY * time - 0.5f * gravity * time * time;
+        }
+
         /// <summary>Когда ракета опустится до высоты targetY, секунды. Если высота недостижима — 0.</summary>
         public static float TimeToHeight(float startY, float speedY, float gravity, float targetY)
         {

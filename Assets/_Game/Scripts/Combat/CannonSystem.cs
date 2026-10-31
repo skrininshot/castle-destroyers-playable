@@ -441,6 +441,41 @@ namespace CastleDestroyers.Combat
             return Mean(worldY, side) + Mathf.Sin(targetDeg[(int)side] * Mathf.Deg2Rad) * BarrelLength;
         }
 
+        /// <summary>
+        /// Промах залпа по полосе minY..maxY на вертикали x: разница высот до ближайшей дуги живых пушек при текущем прицеле.
+        /// Больше 0 — дуга выше полосы, 0 — проходит через полосу, бесконечность — ни одна дуга не идёт к x.
+        /// </summary>
+        public float SalvoMissY(Side side, float x, float minY, float maxY)
+        {
+            int s = (int)side;
+            float radians = targetDeg[s] * Mathf.Deg2Rad;
+            float dirX = Facing(side) * Mathf.Cos(radians);
+            float dirY = Mathf.Sin(radians);
+            float speed = Ballistics.Speed(power[s], config.launchSpeedMin, config.launchSpeedMax);
+            float nearest = float.PositiveInfinity;
+            int first = FirstCannon(side);
+            int end = first + CountOf(side);
+            for (int c = first; c < end; c++)
+            {
+                if (state[c] != Alive)
+                {
+                    continue;
+                }
+                float deltaX = x - (worldX[c] + dirX * BarrelLength);
+                if (deltaX * dirX <= 0f)
+                {
+                    continue;
+                }
+                float y = Ballistics.HeightAtDistance(worldY[c] + dirY * BarrelLength, dirX * speed, dirY * speed, config.gravity, deltaX);
+                float miss = y > maxY ? y - maxY : (y < minY ? y - minY : 0f);
+                if (Mathf.Abs(miss) < Mathf.Abs(nearest))
+                {
+                    nearest = miss;
+                }
+            }
+            return nearest;
+        }
+
         public void Tick(float dt)
         {
             Moved = false;

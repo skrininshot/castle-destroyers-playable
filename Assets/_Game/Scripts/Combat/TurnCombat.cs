@@ -1,6 +1,7 @@
 using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
+using UnityEngine;
 
 namespace CastleDestroyers.Combat
 {
@@ -82,7 +83,48 @@ namespace CastleDestroyers.Combat
                 cannons.SetSalvoWeight(side, flow.IsFinisherTurn ? config.directorFinisherWeight : 1f);
                 bool spare = config.directorEnabled && !flow.IsFinisherTurn;
                 cannons.SparedEnemyCannons = spare ? config.directorEnemyKeepCannons : 0;
+                NudgeBoosters(side);
                 cannons.BeginSalvo(side);
+            }
+        }
+
+        /// <summary>
+        /// Подтяжка (D-069): если дуга залпа игрока едва проходит мимо бустера, он сдвигается под неё. Двигается ближайший
+        /// к дуге бустер, иначе соседние съехались бы друг к другу. Остальные и все бустеры на ходу врага идут на своё место,
+        /// под которое настроен ИИ. Что видно в кадре, не двигается.
+        /// </summary>
+        private void NudgeBoosters(Side side)
+        {
+            int nearest = -1;
+            float nearestMiss = float.PositiveInfinity;
+            if (side == Side.Player)
+            {
+                for (int k = 0; k < boosters.Count; k++)
+                {
+                    float miss = cannons.SalvoMissY(side, boosters.CenterX(k), boosters.HomeMinY(k), boosters.HomeMaxY(k));
+                    if (Mathf.Abs(miss) < Mathf.Abs(nearestMiss))
+                    {
+                        nearest = k;
+                        nearestMiss = miss;
+                    }
+                }
+            }
+            float halfWidth = config.boosterWidth * 0.5f;
+            for (int k = 0; k < boosters.Count; k++)
+            {
+                float shift = k == nearest ? BoosterSystem.NudgeShift(nearestMiss, config.boosterNudgeReach, config.boosterNudgeInset) : 0f;
+                float current = boosters.ShiftY(k);
+                if (shift == current)
+                {
+                    continue;
+                }
+                float centerX = boosters.CenterX(k);
+                float low = boosters.HomeMinY(k) + Mathf.Min(shift, current);
+                float high = boosters.HomeMaxY(k) + Mathf.Max(shift, current);
+                if (!cameraDirector.IsOnScreen(centerX - halfWidth, low, centerX + halfWidth, high, config.boosterNudgeScreenMargin))
+                {
+                    boosters.SetShiftY(k, shift);
+                }
             }
         }
     }

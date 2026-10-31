@@ -71,6 +71,26 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
+        public void NudgeShiftMovesOnlyOnNearMiss()
+        {
+            Assert.AreEqual(0f, BoosterSystem.NudgeShift(0f, 2.5f, 0.6f));
+            Assert.AreEqual(0f, BoosterSystem.NudgeShift(3f, 2.5f, 0.6f));
+            Assert.AreEqual(0f, BoosterSystem.NudgeShift(float.PositiveInfinity, 2.5f, 0.6f));
+            Assert.AreEqual(1.6f, BoosterSystem.NudgeShift(1f, 2.5f, 0.6f), 1e-5f);
+            Assert.AreEqual(-1.6f, BoosterSystem.NudgeShift(-1f, 2.5f, 0.6f), 1e-5f);
+            Assert.AreEqual(0f, BoosterSystem.NudgeShift(1f, 0f, 0.6f));
+        }
+
+        [Test]
+        public void HeightAtDistanceMatchesFlightFormula()
+        {
+            float time = 1.5f;
+            float expected = 2f + 20f * time - 0.5f * 9f * time * time;
+            Assert.AreEqual(expected, Ballistics.HeightAtDistance(2f, 10f, 20f, 9f, 15f), 1e-4f);
+            Assert.AreEqual(expected, Ballistics.HeightAtDistance(2f, -10f, 20f, 9f, -15f), 1e-4f);
+        }
+
+        [Test]
         public void StreamsAreSymmetricAndCentreComesFirst()
         {
             Assert.AreEqual(0f, BoosterSystem.StreamAngleDeg(0, 5, 12f));
@@ -213,6 +233,22 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(0f, rig.Boosters.HonestTotal);
             Assert.AreEqual(1, rig.Rockets.ActiveCount);
             Assert.AreEqual(solid, rig.Mask.SolidCount);
+        }
+
+        [Test]
+        public void ShiftMovesHitBoxAndClearReturnsHome()
+        {
+            float homeTop = rig.Boosters.HomeMaxY(X20);
+            rig.Boosters.SetShiftY(X20, 2f);
+            Assert.AreEqual(x20Y + 2f, rig.Boosters.CenterY(X20), 1e-4f);
+            Assert.AreEqual(homeTop, rig.Boosters.HomeMaxY(X20), 1e-4f);
+            rig.Rockets.Spawn(-2f, x20Y + rig.Config.boosterHeight * 0.5f + 1f, 30f, rig.Config.gravity * 0.1f, Side.Player, 0f);
+            Run(0.2f);
+            Assert.Greater(rig.Boosters.HonestTotal, 0f);
+
+            rig.Boosters.Clear();
+            Assert.AreEqual(0f, rig.Boosters.ShiftY(X20));
+            Assert.AreEqual(x20Y, rig.Boosters.CenterY(X20), 1e-4f);
         }
 
         [Test]
@@ -447,6 +483,16 @@ namespace CastleDestroyers.Tests
                 float center = rig.Config.boosters[0].position.y;
                 Assert.LessOrEqual(top - center, height * 0.5f * (1f + rig.Config.boosterPulse) + 1e-3f);
             }
+        }
+
+        [Test]
+        public void ShiftedBoosterIsDrawnAtNewPlace()
+        {
+            view.Tick(0.016f);
+            float before = view.Mesh.vertices[0].y;
+            rig.Boosters.SetShiftY(0, 2f);
+            view.Tick(0f);
+            Assert.AreEqual(before + 2f, view.Mesh.vertices[0].y, 0.1f);
         }
 
         [Test]

@@ -155,14 +155,15 @@ namespace CastleDestroyers.Level
             float scaleX = 1f + breath + squash;
             float scaleY = 1f + breath - squash;
             float centerX = spec.position.x;
-            float centerY = spec.position.y;
+            float homeY = spec.position.y;
+            float centerY = homeY + boosters.ShiftY(k);
             Vector3[] source = baseVertices;
             Vector3[] target = vertices;
             int end = bodyEnd[k];
             for (int v = bodyStart[k]; v < end; v++)
             {
                 target[v].x = centerX + (source[v].x - centerX) * scaleX;
-                target[v].y = centerY + (source[v].y - centerY) * scaleY;
+                target[v].y = centerY + (source[v].y - homeY) * scaleY;
             }
         }
 
@@ -190,7 +191,7 @@ namespace CastleDestroyers.Level
             float scale = age <= hold ? 1f : Mathf.Clamp01(1f - (age - hold) / config.boosterPopupFade);
             float height = config.boosterPopupHeight * scale;
             BoosterSpec spec = config.boosters[k];
-            float y = spec.position.y + config.boosterHeight * 0.5f + config.boosterPopupOffsetY + config.boosterPopupRise * age;
+            float y = boosters.CenterY(k) + config.boosterHeight * 0.5f + config.boosterPopupOffsetY + config.boosterPopupRise * age;
 
             int digitCount = SplitDigits(value);
             float width = TextWidth(digitCount) * height;
