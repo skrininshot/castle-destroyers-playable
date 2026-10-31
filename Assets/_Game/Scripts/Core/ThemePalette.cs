@@ -16,8 +16,10 @@ namespace CastleDestroyers.Core
         [Header("Фон: ступени светлоты, дальше = светлее (небо Night тёмное, D-023)")]
         public Color32 sky;
         public Color32 backgroundFar;
+        public Color32 backgroundFarShade;
         public Color32 backgroundMid;
         public Color32 backgroundNear;
+        public Color32 backgroundNearLight;
         public Color32 skyStar;
         public Color32 moon;
         public Color32 moonShade;
@@ -25,8 +27,12 @@ namespace CastleDestroyers.Core
         [Header("Ландшафт")]
         public Color32 ground;
         public Color32 groundShade;
+        public Color32 groundBuried;
         public Color32 groundRim;
+        public Color32 groundRimLight;
         public Color32 groundCrater;
+        public Color32 bush;
+        public Color32 bushLight;
         public Color32 treeLight;
         public Color32 treeShade;
         public Color32 water;
@@ -36,6 +42,7 @@ namespace CastleDestroyers.Core
         [Header("Замки и пушки")]
         public Color32 castleStone;
         public Color32 castleStoneShade;
+        public Color32 castleBrick;
         public Color32 castleCrack;
         public Color32 castleWindow;
         public Color32 castleWindowLit;
@@ -73,8 +80,11 @@ namespace CastleDestroyers.Core
 
         [Header("HUD (общий для тем)")]
         public Color32 hudPanel;
+        public Color32 hudTrack;
         public Color32 hudHealth;
+        public Color32 hudHealthShade;
         public Color32 hudGold;
+        public Color32 hudGoldShade;
         public Color32 hudText;
     }
 
@@ -120,22 +130,28 @@ namespace CastleDestroyers.Core
         public static PaletteSet CreateNight()
         {
             PaletteSet set = new PaletteSet();
-            set.sky = Hex(0x23246E);
-            set.backgroundFar = Hex(0x5C6FC2);
-            set.backgroundMid = Hex(0x373A8A);
-            set.backgroundNear = Hex(0x1E1F5C);
+            set.sky = Hex(0x192DA0);
+            set.backgroundFar = Hex(0x5974C3);
+            set.backgroundFarShade = Hex(0x404AA1);
+            set.backgroundMid = Hex(0x043987);
+            set.backgroundNear = Hex(0x513D77);
+            set.backgroundNearLight = Hex(0x795586);
             set.skyStar = Hex(0xDCE3FF);
-            set.moon = Hex(0xF2EFD2);
-            set.moonShade = Hex(0xD6D2B0);
-            set.ground = Hex(0x1F6E4C);
-            set.groundShade = Hex(0x1A5E41);
-            set.groundRim = Hex(0x3FE07A);
-            set.groundCrater = Hex(0x144A36);
-            set.treeLight = Hex(0x2C9C6B);
-            set.treeShade = Hex(0x1F7A55);
-            set.water = Hex(0x2AA7A8);
-            set.waterHighlight = Hex(0x45BFBD);
-            set.waterRim = Hex(0x8CEDE4);
+            set.moon = Hex(0xF5EBD2);
+            set.moonShade = Hex(0xDCCFB4);
+            set.ground = Hex(0x00A988);
+            set.groundShade = Hex(0x00997C);
+            set.groundBuried = Hex(0x008F75);
+            set.groundRim = Hex(0x31E18C);
+            set.groundRimLight = Hex(0x77E9A6);
+            set.groundCrater = Hex(0x007F6C);
+            set.bush = Hex(0x52E48F);
+            set.bushLight = Hex(0x77E9A6);
+            set.treeLight = Hex(0x14B98C);
+            set.treeShade = Hex(0x069B80);
+            set.water = Hex(0x1FB6E8);
+            set.waterHighlight = Hex(0x4CCDF0);
+            set.waterRim = Hex(0xB5F1FA);
             FillShared(set);
             set.roofPlayer = Hex(0x3CC7E0);
             set.roofPlayerShade = Hex(0x2AA0BC);
@@ -150,22 +166,28 @@ namespace CastleDestroyers.Core
         public static PaletteSet CreateSunset()
         {
             PaletteSet set = new PaletteSet();
-            set.sky = Hex(0xFFC4A8);
-            set.backgroundFar = Hex(0xFFA597);
-            set.backgroundMid = Hex(0xE8727F);
-            set.backgroundNear = Hex(0xA33A5E);
+            set.sky = Hex(0xFDB649);
+            set.backgroundFar = Hex(0xFC9076);
+            set.backgroundFarShade = Hex(0xFF7C80);
+            set.backgroundMid = Hex(0xF17A58);
+            set.backgroundNear = Hex(0xE96344);
+            set.backgroundNearLight = Hex(0xEA483B);
             set.skyStar = Hex(0xFFE3D3);
-            set.moon = Hex(0xFFF1C9);
-            set.moonShade = Hex(0xFFD79A);
-            set.ground = Hex(0xB8303A);
-            set.groundShade = Hex(0xA32832);
-            set.groundRim = Hex(0xFF6B57);
-            set.groundCrater = Hex(0x7E1D27);
+            set.moon = Hex(0xFFE36E);
+            set.moonShade = Hex(0xFECC13);
+            set.ground = Hex(0xF65157);
+            set.groundShade = Hex(0xF14448);
+            set.groundBuried = Hex(0xFF656B);
+            set.groundRim = Hex(0xC81A1D);
+            set.groundRimLight = Hex(0xDE2E2C);
+            set.groundCrater = Hex(0xC92F3A);
+            set.bush = Hex(0x8FB04E);
+            set.bushLight = Hex(0xDBE0AF);
             set.treeLight = Hex(0x8FB04E);
             set.treeShade = Hex(0x6C8C3A);
-            set.water = Hex(0x2E70D8);
-            set.waterHighlight = Hex(0x4B8BE6);
-            set.waterRim = Hex(0x93C4FF);
+            set.water = Hex(0x3A86E8);
+            set.waterHighlight = Hex(0x69C1E8);
+            set.waterRim = Hex(0xC4E6FF);
             FillShared(set);
             set.roofPlayer = Hex(0x3CA8E8);
             set.roofPlayerShade = Hex(0x2A86C2);
@@ -180,9 +202,10 @@ namespace CastleDestroyers.Core
         /// <summary>Цвета, одинаковые в обеих темах: камень, пушки, бустеры, ракеты, HUD.</summary>
         private static void FillShared(PaletteSet set)
         {
-            set.castleStone = Hex(0xD7D3E6);
-            set.castleStoneShade = Hex(0xA9A4C4);
-            set.castleCrack = Hex(0x56507A);
+            set.castleStone = Hex(0xEDE6D6);
+            set.castleStoneShade = Hex(0xCFC6BE);
+            set.castleBrick = Hex(0xDCD3C5);
+            set.castleCrack = Hex(0x6B5F78);
             set.castleWindow = Hex(0x3A3358);
             set.castleWindowLit = Hex(0xFFD27A);
             set.cannonPlayer = Hex(0x2E7BEA);
@@ -205,9 +228,12 @@ namespace CastleDestroyers.Core
             set.blastCore = Hex(0xFFFFFF);
             set.blastMid = Hex(0xFFD84A);
             set.blastEdge = Hex(0xFF8A2B);
-            set.hudPanel = Hex(0x4B2463);
-            set.hudHealth = Hex(0xF0335A);
-            set.hudGold = Hex(0xF5C443);
+            set.hudPanel = Hex(0x813A86);
+            set.hudTrack = Hex(0x540D59);
+            set.hudHealth = Hex(0xFC2E5C);
+            set.hudHealthShade = Hex(0xCE214C);
+            set.hudGold = Hex(0xFDDA4E);
+            set.hudGoldShade = Hex(0xE8A92C);
             set.hudText = Hex(0xFFFFFF);
         }
     }

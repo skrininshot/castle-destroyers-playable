@@ -261,12 +261,12 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void NightLayersGetLighterWithDistanceOverDarkSky()
+        public void NightFarLayerIsLightestOverDarkSky()
         {
             PaletteSet night = ThemePalette.CreateNight();
             Assert.Greater(Brightness(night.backgroundFar), Brightness(night.backgroundMid));
-            Assert.Greater(Brightness(night.backgroundMid), Brightness(night.backgroundNear));
-            Assert.Less(Brightness(night.sky), Brightness(night.backgroundMid), "D-023: night sky is dark");
+            Assert.Greater(Brightness(night.backgroundFar), Brightness(night.backgroundNear), "D-054: near layer is muted purple");
+            Assert.Less(Brightness(night.sky), Brightness(night.backgroundFar), "D-023: night sky is dark");
         }
 
         [Test]
