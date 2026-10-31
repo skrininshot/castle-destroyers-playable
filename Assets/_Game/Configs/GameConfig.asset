@@ -176,7 +176,7 @@ MonoBehaviour:
   maskTexelsPerMeter: 16
   maskTileSize: 128
   maxTileUploadsPerFrame: 4
-  craterRadiusGround: 1.5
+  craterRadiusGround: 1
   rimWidth: 0.18
   rimScallop: 0
   rimScallopTeeth: 14
