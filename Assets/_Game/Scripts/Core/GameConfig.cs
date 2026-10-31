@@ -245,6 +245,9 @@ namespace CastleDestroyers.Core
         public int aimDotAlphaEnd = 90;
         [Tooltip("Плашка POWER / ANGLE: смещение от центра замка игрока, метры.")]
         public Vector2 aimPanelOffset = new Vector2(5f, 6.5f);
+        [Range(0f, 60f)]
+        [Tooltip("Плашка POWER / ANGLE: наименьший зазор до полос здоровья, единицы канваса.")]
+        public float aimPanelHudGap = 12f;
         [Tooltip("Режим «направление на палец» вместо «оттянуть»: сила постоянная (D-017).")]
         public bool aimPointAtFinger;
         [Range(0f, 1f)]

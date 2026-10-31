@@ -51,16 +51,9 @@ namespace CastleDestroyers.Core
         public Text aimAngleText;
         public Text[] aimCaptions;
         public Image aimDegree;
-        [Tooltip("HUD: корень, полосы сторон, сегменты, панели, рамки, иконки замков, скрещённые ракеты.")]
-        public RectTransform hudRoot;
-        public RectTransform[] hudBars;
-        public Image[] hudPlayerSegments;
-        public Image[] hudEnemySegments;
-        public Image[] hudPanels;
-        public Image[] hudFrames;
-        public Image[] hudFrameInners;
-        public Image[] hudCastleIcons;
-        public Image hudCrossedRockets;
+        [Tooltip("Меш HUD: полосы здоровья, рамки, иконки. Единицы — как у канваса игры.")]
+        public MeshFilter hudFilter;
+        public RectTransform gameCanvas;
         [Tooltip("Плашка хода.")]
         public RectTransform bannerRoot;
         public Image bannerBackground;
@@ -272,7 +265,8 @@ namespace CastleDestroyers.Core
             Guide.Init(config, Flow, Aim, Cannons, CameraDirector);
             boosterView.Guide = Guide;
             hudView = new HudView();
-            hudView.Init(config, Match, hudRoot, hudBars, hudPlayerSegments, hudEnemySegments, hudPanels, hudFrames, hudFrameInners, hudCastleIcons, hudCrossedRockets);
+            hudView.Init(config, Match, mainCamera, shake, gameCanvas, hudFilter.transform);
+            hudFilter.sharedMesh = hudView.Mesh;
             bannerView = new TurnBannerView();
             bannerView.Init(config, Flow, bannerRoot, bannerBackground, bannerText);
             handView = new HandView();

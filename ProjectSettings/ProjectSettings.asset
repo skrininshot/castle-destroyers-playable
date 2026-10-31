@@ -709,7 +709,6 @@ PlayerSettings:
   webWasm2023: 0
   scriptingDefineSymbols:
     Standalone: GAME_DEBUG
-    WebGL: GAME_DEBUG
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

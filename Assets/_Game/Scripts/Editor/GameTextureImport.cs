@@ -8,11 +8,8 @@ namespace CastleDestroyers.EditorTools
         public const string RocketPath = "Assets/_Game/Art/Level/Rocket.png";
         public const string UiFolder = "Assets/_Game/Art/Ui/";
         public const string PillPath = UiFolder + "UiPill.png";
-        public const string SegmentPath = UiFolder + "UiSegment.png";
         public const string CirclePath = UiFolder + "UiCircle.png";
-        public const string TowerPath = UiFolder + "UiTower.png";
         public const string DegreePath = UiFolder + "UiDegree.png";
-        public const string RocketsPath = UiFolder + "UiRockets.png";
         public const string HandPath = UiFolder + "UiHand.png";
         public const string LogoPath = UiFolder + "UiLogo.png";
         public const string EndBluePath = UiFolder + "UiEndBlue.png";
@@ -22,7 +19,6 @@ namespace CastleDestroyers.EditorTools
         public const string AudioFolder = "Assets/_Game/Audio/";
 
         private const float PillBorder = 31f;
-        private const float SegmentBorder = 10f;
         private const string BackPrefix = "/Back";
         private const int SoundSampleRate = 22050;
 
@@ -54,10 +50,6 @@ namespace CastleDestroyers.EditorTools
                 if (assetPath == PillPath)
                 {
                     importer.spriteBorder = new UnityEngine.Vector4(PillBorder, PillBorder, PillBorder, PillBorder);
-                }
-                else if (assetPath == SegmentPath)
-                {
-                    importer.spriteBorder = new UnityEngine.Vector4(SegmentBorder, 0f, SegmentBorder, 0f);
                 }
                 return;
             }

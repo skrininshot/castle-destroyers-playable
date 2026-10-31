@@ -174,32 +174,32 @@ namespace CastleDestroyers.Tests
 
     public sealed class HudViewTests
     {
-        private const int Segments = 14;
+        private const int PlayerCannons = 3;
+        private const int EnemyCannons = 12;
 
         private GameConfig config;
         private MatchState match;
         private HudView hud;
-        private GameObject root;
-        private Image[] player;
-        private Image[] enemy;
-        private RectTransform[] bars;
+        private GameObject canvasObject;
+        private GameObject meshObject;
+        private GameObject cameraObject;
+        private Camera camera;
+        private ScreenShake shake;
         private PaletteSet palette;
 
-        private Image Make(Transform parent, string objectName)
+        private Color32 Segment(Side side, int index)
         {
-            GameObject item = new GameObject(objectName, typeof(RectTransform), typeof(Image));
-            item.transform.SetParent(parent, false);
-            return item.GetComponent<Image>();
+            return hud.SegmentColor(side, index);
         }
 
-        private Image[] MakeRow(Transform parent, string prefix)
+        private static void AssertColor(Color32 expected, Color32 actual)
         {
-            Image[] row = new Image[Segments];
-            for (int i = 0; i < Segments; i++)
-            {
-                row[i] = Make(parent, prefix + i);
-            }
-            return row;
+            Assert.AreEqual((Color)expected, (Color)actual);
+        }
+
+        private static void AssertNotColor(Color32 expected, Color32 actual)
+        {
+            Assert.AreNotEqual((Color)expected, (Color)actual);
         }
 
         [SetUp]
@@ -207,15 +207,18 @@ namespace CastleDestroyers.Tests
         {
             config = ScriptableObject.CreateInstance<GameConfig>();
             match = new MatchState();
-            match.Init(3, 12);
-            root = new GameObject("Canvas", typeof(RectTransform));
-            RectTransform hudRoot = Make(root.transform, "Hud").rectTransform;
-            bars = new[] { Make(hudRoot, "BarL").rectTransform, Make(hudRoot, "BarR").rectTransform };
-            player = MakeRow(bars[0], "p");
-            enemy = MakeRow(bars[1], "e");
+            match.Init(PlayerCannons, EnemyCannons);
+            canvasObject = new GameObject("Canvas", typeof(RectTransform));
+            canvasObject.GetComponent<RectTransform>().sizeDelta = new Vector2(720f, 1280f);
+            meshObject = new GameObject("Hud");
+            cameraObject = new GameObject("Camera");
+            camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.orthographicSize = 10f;
+            shake = new ScreenShake();
+            shake.Init(config);
             hud = new HudView();
-            hud.Init(config, match, hudRoot, bars, player, enemy, new[] { Make(hudRoot, "Panel") }, new[] { Make(hudRoot, "Frame") },
-                new[] { Make(hudRoot, "Inner") }, new[] { Make(hudRoot, "IconL"), Make(hudRoot, "IconR") }, Make(hudRoot, "Crossed"));
+            hud.Init(config, match, camera, shake, canvasObject.GetComponent<RectTransform>(), meshObject.transform);
             palette = ThemePalette.CreateNight();
             hud.ApplyPalette(palette);
         }
@@ -223,17 +226,70 @@ namespace CastleDestroyers.Tests
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(hud.Mesh);
+            Object.DestroyImmediate(canvasObject);
+            Object.DestroyImmediate(meshObject);
+            Object.DestroyImmediate(cameraObject);
             Object.DestroyImmediate(config);
         }
 
         [Test]
-        public void SegmentPerCannonAndExtrasAreHidden()
+        public void SegmentPerCannon()
         {
-            Assert.IsTrue(player[2].gameObject.activeSelf);
-            Assert.IsFalse(player[3].gameObject.activeSelf);
-            Assert.IsTrue(enemy[11].gameObject.activeSelf);
-            Assert.IsFalse(enemy[12].gameObject.activeSelf);
+            Assert.AreEqual(PlayerCannons, hud.SegmentCount(Side.Player));
+            Assert.AreEqual(EnemyCannons, hud.SegmentCount(Side.Enemy));
+        }
+
+        [Test]
+        public void SegmentsFillTheBarWithoutOverlap()
+        {
+            float previousMax = float.MinValue;
+            for (int i = 0; i < EnemyCannons; i++)
+            {
+                float minX;
+                float maxX;
+                HudView.SegmentBounds(Side.Enemy, i, EnemyCannons, out minX, out maxX);
+                Assert.Less(minX, maxX);
+                Assert.Greater(minX, previousMax);
+                previousMax = maxX;
+            }
+        }
+
+        [Test]
+        public void AimPanelStaysBelowHudInBothOrientations()
+        {
+            const float PanelHeight = 110f;
+            const float Gap = 12f;
+            float[] widths = { 720f, 1280f };
+            float[] heights = { 1280f, 720f };
+            for (int i = 0; i < widths.Length; i++)
+            {
+                float panelTop = AimPanelView.TopAnchor(widths[i], heights[i], PanelHeight, config.hudLandscapeScale, Gap) + PanelHeight / heights[i];
+                Assert.Less(panelTop, HudView.BottomViewport(widths[i], heights[i], config.hudLandscapeScale));
+                Assert.Greater(panelTop, 0.4f);
+            }
+        }
+
+        [Test]
+        public void EverythingIsOneMeshAboveTheSafeTopBand()
+        {
+            hud.Tick(0f);
+            Assert.AreEqual(1, hud.Mesh.subMeshCount);
+            Assert.Greater(hud.Mesh.vertexCount, 0);
+            Assert.AreEqual(camera.orthographicSize * 0.8f, meshObject.transform.position.y, 0.001f);
+        }
+
+        [Test]
+        public void HudDoesNotFollowCameraShake()
+        {
+            hud.Tick(0f);
+            float restY = meshObject.transform.position.y;
+            shake.Add(1f);
+            shake.Tick(0.05f);
+            cameraObject.transform.position += new Vector3(shake.OffsetX, shake.OffsetY, 0f);
+            hud.Tick(0f);
+            Assert.AreEqual(restY, meshObject.transform.position.y, 0.001f);
+            Assert.AreEqual(0f, meshObject.transform.position.x, 0.001f);
         }
 
         [Test]
@@ -241,12 +297,12 @@ namespace CastleDestroyers.Tests
         {
             match.Destroy(Side.Enemy, 2, 0);
             hud.Tick(0.01f);
-            Assert.AreEqual((Color)palette.hudText, enemy[0].color);
-            Assert.AreEqual((Color)palette.hudText, enemy[1].color);
-            Assert.AreEqual((Color)palette.hudHealth, enemy[2].color);
+            AssertColor(palette.hudText, Segment(Side.Enemy, 0));
+            AssertColor(palette.hudText, Segment(Side.Enemy, 1));
+            AssertColor(palette.hudHealth, Segment(Side.Enemy, 2));
             hud.Tick(config.hudFlashTime + 0.01f);
-            Assert.AreNotEqual((Color)palette.hudText, enemy[0].color);
-            Assert.AreNotEqual((Color)palette.hudHealth, enemy[0].color);
+            AssertNotColor(palette.hudText, Segment(Side.Enemy, 0));
+            AssertNotColor(palette.hudHealth, Segment(Side.Enemy, 0));
         }
 
         [Test]
@@ -255,9 +311,9 @@ namespace CastleDestroyers.Tests
             match.Destroy(Side.Player, 1, 0);
             hud.Tick(config.hudFlashTime + 0.01f);
             hud.Tick(0.01f);
-            Assert.AreEqual((Color)palette.hudHealth, player[0].color);
-            Assert.AreEqual((Color)palette.hudHealth, player[1].color);
-            Assert.AreNotEqual((Color)palette.hudHealth, player[2].color);
+            AssertColor(palette.hudHealth, Segment(Side.Player, 0));
+            AssertColor(palette.hudHealth, Segment(Side.Player, 1));
+            AssertNotColor(palette.hudHealth, Segment(Side.Player, 2));
         }
 
         [Test]
@@ -266,10 +322,10 @@ namespace CastleDestroyers.Tests
             match.Destroy(Side.Enemy, 1, 0);
             hud.Tick(0.01f);
             hud.Tick(0.01f);
-            Assert.AreNotEqual(0f, bars[1].localPosition.x);
-            Assert.AreEqual(0f, bars[0].localPosition.x);
+            Assert.AreNotEqual(0f, hud.BarShift(Side.Enemy));
+            Assert.AreEqual(0f, hud.BarShift(Side.Player));
             hud.Tick(config.hudShakeTime + 0.01f);
-            Assert.AreEqual(0f, bars[1].localPosition.x);
+            Assert.AreEqual(0f, hud.BarShift(Side.Enemy));
         }
 
         [Test]
@@ -279,7 +335,7 @@ namespace CastleDestroyers.Tests
             hud.Tick(config.hudFlashTime + 0.01f);
             match.Reset();
             hud.Tick(0.01f);
-            Assert.AreEqual((Color)palette.hudHealth, enemy[0].color);
+            AssertColor(palette.hudHealth, Segment(Side.Enemy, 0));
         }
     }
 

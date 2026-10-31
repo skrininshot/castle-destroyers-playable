@@ -48,6 +48,7 @@ namespace CastleDestroyers.EditorTools
         private const int OrderBoosters = OrderDecor + 12;
         private const int OrderExplosions = OrderDecor + 13;
         private const int OrderAimDots = OrderDecor + 14;
+        private const int OrderHud = OrderDecor + 15;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
@@ -69,21 +70,6 @@ namespace CastleDestroyers.EditorTools
         private const float AimDegreeSize = 15f;
         private const int AimCaptionFontSize = 18;
         private const float ScaleMatchBalanced = 0.5f;
-
-        // HUD: координаты внутри корня, от левого верхнего угла. Корень висит под верхними 10% экрана (ТЗ §2.2).
-        private const float SafeTopAnchor = 0.9f;
-        private const float HudWidth = 640f;
-        private const float HudHeight = 76f;
-        private const float HudPanelHeight = 56f;
-        private const float HudPanelInset = 30f;
-        private const float HudFrameSize = 76f;
-        private const float HudFrameInnerSize = 62f;
-        private const float HudIconSize = 54f;
-        private const float HudBarHeight = 26f;
-        private const float HudBarWidth = 214f;
-        private const float HudBarX = 192f;
-        private const float HudCrossedIconSize = 58f;
-        private const int MaxCannonSegments = 14;
         private const float BannerWidth = 330f;
         private const float BannerHeight = 76f;
         private const float BannerAnchorY = 0.8f;
@@ -167,6 +153,7 @@ namespace CastleDestroyers.EditorTools
             MeshFilter boosters = CreateBatch("Boosters", material, OrderBoosters);
             MeshFilter explosions = CreateBatch("Explosions", material, OrderExplosions);
             MeshFilter aimDots = CreateBatch("AimDots", particleMaterial, OrderAimDots);
+            MeshFilter hud = CreateBatch("Hud", material, OrderHud);
 
             GameBootstrap bootstrap = new GameObject("GameBootstrap").AddComponent<GameBootstrap>();
             bootstrap.config = config;
@@ -186,6 +173,7 @@ namespace CastleDestroyers.EditorTools
             bootstrap.boostersFilter = boosters;
             bootstrap.explosionsFilter = explosions;
             bootstrap.aimDotsFilter = aimDots;
+            bootstrap.hudFilter = hud;
             bootstrap.rocketMaterial = rocketMaterial;
             bootstrap.flatMaterial = material;
             CreateSounds(bootstrap);
@@ -332,7 +320,7 @@ namespace CastleDestroyers.EditorTools
             };
 
             Transform canvas = canvasObject.transform;
-            CreateHud(bootstrap, canvas, pill, LoadSprite(GameTextureImport.SegmentPath), LoadSprite(GameTextureImport.CirclePath));
+            bootstrap.gameCanvas = canvasObject.GetComponent<RectTransform>();
             CreateBanner(bootstrap, canvas, pill, font);
             CreateHand(bootstrap, canvas);
             CreateEndCard(bootstrap, canvas, pill, LoadSprite(GameTextureImport.CirclePath), font);
@@ -379,63 +367,6 @@ namespace CastleDestroyers.EditorTools
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-        }
-
-        /// <summary>Полосы здоровья: синяя слева, красная справа, между ними скрещённые ракеты (ТЗ §3.12). Сегменты раскладывает HudView.</summary>
-        private static void CreateHud(GameBootstrap bootstrap, Transform canvas, Sprite pill, Sprite segment, Sprite circle)
-        {
-            RectTransform root = CreateRect(canvas, "Hud", 0.5f, SafeTopAnchor, HudWidth, HudHeight);
-            root.pivot = new Vector2(0.5f, 1f);
-
-            Image[] panels = { CreatePill(root, "Panel", 0.5f, 0.5f, HudWidth - HudPanelInset, HudPanelHeight, pill) };
-            Sprite castle = LoadSprite(GameTextureImport.TowerPath);
-            float frameX = HudFrameSize * 0.5f / HudWidth;
-            Image[] frames =
-            {
-                CreateImage(root, "FrameBlue", frameX, 0.5f, HudFrameSize, HudFrameSize, circle),
-                CreateImage(root, "FrameRed", 1f - frameX, 0.5f, HudFrameSize, HudFrameSize, circle)
-            };
-            Image[] inners =
-            {
-                CreateImage(frames[0].transform, "InnerBlue", 0.5f, 0.5f, HudFrameInnerSize, HudFrameInnerSize, circle),
-                CreateImage(frames[1].transform, "InnerRed", 0.5f, 0.5f, HudFrameInnerSize, HudFrameInnerSize, circle)
-            };
-            bootstrap.hudCastleIcons = new[]
-            {
-                CreateImage(frames[0].transform, "IconBlue", 0.5f, 0.5f, HudIconSize, HudIconSize, castle),
-                CreateImage(frames[1].transform, "IconRed", 0.5f, 0.5f, HudIconSize, HudIconSize, castle)
-            };
-            bootstrap.hudCrossedRockets = CreateImage(root, "CrossedRockets", 0.5f, 0.5f, HudCrossedIconSize, HudCrossedIconSize, LoadSprite(GameTextureImport.RocketsPath));
-
-            RectTransform playerSlot = CreateRect(root, "BarSlotBlue", HudBarX / HudWidth, 0.5f, HudBarWidth, HudBarHeight);
-            RectTransform enemySlot = CreateRect(root, "BarSlotRed", 1f - HudBarX / HudWidth, 0.5f, HudBarWidth, HudBarHeight);
-            RectTransform playerBar = CreateBar(playerSlot, "BarBlue");
-            RectTransform enemyBar = CreateBar(enemySlot, "BarRed");
-
-            bootstrap.hudRoot = root;
-            bootstrap.hudBars = new[] { playerBar, enemyBar };
-            bootstrap.hudPanels = panels;
-            bootstrap.hudFrames = frames;
-            bootstrap.hudFrameInners = inners;
-            bootstrap.hudPlayerSegments = CreateSegments(playerBar, segment);
-            bootstrap.hudEnemySegments = CreateSegments(enemyBar, segment);
-        }
-
-        private static RectTransform CreateBar(RectTransform slot, string objectName)
-        {
-            RectTransform bar = CreateRect(slot, objectName, 0.5f, 0.5f, 0f, 0f);
-            Stretch(bar);
-            return bar;
-        }
-
-        private static Image[] CreateSegments(RectTransform bar, Sprite pill)
-        {
-            Image[] segments = new Image[MaxCannonSegments];
-            for (int i = 0; i < MaxCannonSegments; i++)
-            {
-                segments[i] = CreatePill(bar, "Segment" + i, 0.5f, 0.5f, 0f, 0f, pill);
-            }
-            return segments;
         }
 
         private static void CreateBanner(GameBootstrap bootstrap, Transform canvas, Sprite pill, Font font)

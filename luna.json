@@ -79,7 +79,7 @@
             "msbuildWin64": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe",
             "externalSources": [],
             "externalJSLibraries": [],
-            "scriptingDefines": ["GAME_DEBUG"],
+            "scriptingDefines": [],
             "msbuildVersion": "17.14",
             "monoVersion": "9.0.22",
             "dotnetVersion": ""

@@ -1,5 +1,7 @@
+using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
+using CastleDestroyers.Level;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,7 +23,8 @@ namespace CastleDestroyers.UI
 
     /// <summary>
     /// Полосы здоровья сторон (ТЗ §3.12): сегмент = пушка. Потерянный сегмент мигает белым и трясёт полосу.
-    /// Цвета пишутся только при смене состояния сегмента.
+    /// Весь HUD — один меш на атласе: Luna не склеивает элементы uGUI, и 23 Image давали 23 draw call (D-071).
+    /// Меш висит под верхними 10% кадра в единицах канваса. Вершины и цвета заливаются только при изменении.
     /// </summary>
     public sealed class HudView : ITickable
     {
@@ -29,54 +32,154 @@ namespace CastleDestroyers.UI
         private const byte SegmentOff = 0;
         private const byte SegmentOn = 1;
         private const byte SegmentFlash = 2;
-        private const float DesignWidth = 640f;
-        private const float SegmentGap = 4f;
         private const byte PanelAlpha = 240;
+        private const int VerticesPerQuad = 4;
+        private const int IndicesPerQuad = 6;
+        private const int PillQuads = 9;
+        private const int SegmentQuads = 3;
+        private const int IconQuads = 7;
+        private const float BoundsSize = 4000f;
+
+        // Раскладка в единицах канваса 720×1280, начало в центре верхнего края HUD, Y вниз отрицательный.
+        private const float SafeTopAnchor = 0.9f;
+        private const float DesignWidth = 640f;
+        private const float DesignHeight = 76f;
+        private const float PanelWidth = 610f;
+        private const float PanelHeight = 56f;
+        private const float FrameSize = 76f;
+        private const float FrameInnerSize = 62f;
+        private const float IconSize = 54f;
+        private const float CrossedSize = 58f;
+        private const float BarWidth = 214f;
+        private const float BarHeight = 26f;
+        private const float BarCenterX = 128f;
+        private const float SegmentGap = 4f;
+        private const float PillBorder = 31f;
+        private const float PillTexels = 64f;
+        private const float SegmentBorder = 10f;
+        private const float SegmentTexels = 32f;
 
         private GameConfig config;
         private MatchState match;
-        private RectTransform root;
-        private RectTransform[] bars;
-        private Image[][] segments;
+        private Camera cam;
+        private ScreenShake cameraShake;
+        private RectTransform canvas;
+        private Transform meshTransform;
         private byte[][] shown;
         private float[][] flash;
+        private Color32[][] painted;
         private int[] seenAlive;
         private float[] shake;
-        private Image[] panels;
-        private Image[] frames;
-        private Image[] frameInners;
-        private Image[] icons;
-        private Image crossedRockets;
+        private float[] barShift;
+        private int[] firstSegmentQuad;
+        private Vector3[] baseVertices;
+        private Vector3[] vertices;
+        private Color32[] colors;
+        private Vector2[] uvs;
+        private int quadCursor;
+        private bool verticesDirty;
+        private bool colorsDirty;
         private Color32 onColor;
         private Color32 offColor;
         private Color32 flashColor;
         private float time;
 
-        public void Init(GameConfig gameConfig, MatchState matchState, RectTransform hudRoot, RectTransform[] sideBars, Image[] playerSegments, Image[] enemySegments,
-            Image[] hudPanels, Image[] hudFrames, Image[] hudFrameInners, Image[] castleIcons, Image crossed)
+        public Mesh Mesh { get; private set; }
+
+        public void Init(GameConfig gameConfig, MatchState matchState, Camera camera, ScreenShake screenShake, RectTransform gameCanvas, Transform hudTransform)
         {
             config = gameConfig;
             match = matchState;
-            root = hudRoot;
-            bars = sideBars;
-            panels = hudPanels;
-            frames = hudFrames;
-            frameInners = hudFrameInners;
-            icons = castleIcons;
-            crossedRockets = crossed;
-            segments = new[] { playerSegments, enemySegments };
+            cam = camera;
+            cameraShake = screenShake;
+            canvas = gameCanvas;
+            meshTransform = hudTransform;
             shown = new byte[SideCount][];
             flash = new float[SideCount][];
+            painted = new Color32[SideCount][];
             seenAlive = new int[SideCount];
             shake = new float[SideCount];
+            barShift = new float[SideCount];
+            firstSegmentQuad = new int[SideCount];
+
+            int segmentQuads = 0;
             for (int s = 0; s < SideCount; s++)
             {
                 int count = match.Start((Side)s);
-                shown[s] = new byte[segments[s].Length];
-                flash[s] = new float[segments[s].Length];
+                shown[s] = new byte[count];
+                flash[s] = new float[count];
+                painted[s] = new Color32[count];
                 seenAlive[s] = count;
-                LayOut(segments[s], count);
+                segmentQuads += count * SegmentQuads;
             }
+            int quads = PillQuads + IconQuads + segmentQuads;
+            int vertexCount = quads * VerticesPerQuad;
+            baseVertices = new Vector3[vertexCount];
+            vertices = new Vector3[vertexCount];
+            colors = new Color32[vertexCount];
+            uvs = new Vector2[vertexCount];
+            BuildLayout();
+
+            int[] triangles = new int[quads * IndicesPerQuad];
+            for (int q = 0; q < quads; q++)
+            {
+                int v = q * VerticesPerQuad;
+                int t = q * IndicesPerQuad;
+                triangles[t] = v;
+                triangles[t + 1] = v + 2;
+                triangles[t + 2] = v + 1;
+                triangles[t + 3] = v + 2;
+                triangles[t + 4] = v + 3;
+                triangles[t + 5] = v + 1;
+            }
+            Mesh = new Mesh();
+            Mesh.name = "Hud";
+            Mesh.MarkDynamic();
+            Mesh.vertices = vertices;
+            Mesh.uv = uvs;
+            Mesh.colors32 = colors;
+            Mesh.triangles = triangles;
+            Mesh.bounds = new Bounds(Vector3.zero, new Vector3(BoundsSize, BoundsSize, 1f));
+        }
+
+        /// <summary>Сколько сегментов у стороны: по одному на пушку.</summary>
+        public int SegmentCount(Side side)
+        {
+            return shown[(int)side].Length;
+        }
+
+        /// <summary>Текущий цвет сегмента.</summary>
+        public Color32 SegmentColor(Side side, int index)
+        {
+            return painted[(int)side][index];
+        }
+
+        /// <summary>Смещение полосы от тряски, единицы канваса.</summary>
+        public float BarShift(Side side)
+        {
+            return barShift[(int)side];
+        }
+
+        /// <summary>Масштаб HUD: на очень узком экране он ужимается, а не обрезается, в ландшафте меньше, чтобы не закрывать x20.</summary>
+        public static float Scale(float canvasWidth, float canvasHeight, float landscapeScale)
+        {
+            float fit = canvasWidth / DesignWidth;
+            float scale = fit < 1f ? fit : 1f;
+            return canvasWidth > canvasHeight ? scale * landscapeScale : scale;
+        }
+
+        /// <summary>Нижний край HUD в долях высоты экрана.</summary>
+        public static float BottomViewport(float canvasWidth, float canvasHeight, float landscapeScale)
+        {
+            return SafeTopAnchor - DesignHeight * Scale(canvasWidth, canvasHeight, landscapeScale) / canvasHeight;
+        }
+
+        /// <summary>Границы сегмента по X внутри HUD.</summary>
+        public static void SegmentBounds(Side side, int index, int count, out float minX, out float maxX)
+        {
+            float left = (side == Side.Player ? -BarCenterX : BarCenterX) - BarWidth * 0.5f;
+            minX = left + BarWidth * index / count + SegmentGap * 0.5f;
+            maxX = left + BarWidth * (index + 1) / count - SegmentGap * 0.5f;
         }
 
         public void ApplyPalette(PaletteSet palette)
@@ -86,69 +189,153 @@ namespace CastleDestroyers.UI
             flashColor = palette.hudText;
             Color32 panel = palette.hudPanel;
             panel.a = PanelAlpha;
-            for (int i = 0; i < panels.Length; i++)
-            {
-                panels[i].color = panel;
-            }
-            for (int i = 0; i < frames.Length; i++)
-            {
-                frames[i].color = palette.hudPanel;
-            }
-            for (int i = 0; i < frameInners.Length; i++)
-            {
-                frameInners[i].color = palette.hudTrack;
-            }
-            icons[(int)Side.Player].color = palette.roofPlayer;
-            icons[(int)Side.Enemy].color = palette.rocketEnemy;
-            crossedRockets.color = Color.white;
+            FillColor(0, PillQuads, panel);
+            FillColor(PillQuads, 2, palette.hudPanel);
+            FillColor(PillQuads + 2, 2, palette.hudTrack);
+            FillColor(PillQuads + 4, 1, palette.roofPlayer);
+            FillColor(PillQuads + 5, 1, palette.rocketEnemy);
+            FillColor(PillQuads + 6, 1, Color.white);
             for (int s = 0; s < SideCount; s++)
             {
                 Paint(s, true);
             }
+            Flush();
         }
 
         public void Tick(float dt)
         {
             time += dt;
-            FitWidth();
+            PlaceOnScreen();
             for (int s = 0; s < SideCount; s++)
             {
                 TickSide(s, dt);
             }
+            Flush();
         }
 
-        /// <summary>Сегменты равной ширины на всю полосу; лишние выключены.</summary>
-        private static void LayOut(Image[] bar, int count)
+        private void BuildLayout()
         {
-            for (int i = 0; i < bar.Length; i++)
+            float centerY = -DesignHeight * 0.5f;
+            float frameX = DesignWidth * 0.5f - FrameSize * 0.5f;
+            AddPill(0f, centerY);
+            AddIcon(ArtSprites.Circle, -frameX, centerY, FrameSize);
+            AddIcon(ArtSprites.Circle, frameX, centerY, FrameSize);
+            AddIcon(ArtSprites.Circle, -frameX, centerY, FrameInnerSize);
+            AddIcon(ArtSprites.Circle, frameX, centerY, FrameInnerSize);
+            AddIcon(ArtSprites.HudTower, -frameX, centerY, IconSize);
+            AddIcon(ArtSprites.HudTower, frameX, centerY, IconSize);
+            AddIcon(ArtSprites.HudRockets, 0f, centerY, CrossedSize);
+            for (int s = 0; s < SideCount; s++)
             {
-                bool used = i < count;
-                bar[i].gameObject.SetActive(used);
-                if (used)
+                Side side = (Side)s;
+                int count = shown[s].Length;
+                firstSegmentQuad[s] = quadCursor;
+                for (int i = 0; i < count; i++)
                 {
-                    RectTransform rect = bar[i].rectTransform;
-                    rect.anchorMin = new Vector2((float)i / count, 0f);
-                    rect.anchorMax = new Vector2((float)(i + 1) / count, 1f);
-                    rect.offsetMin = new Vector2(SegmentGap * 0.5f, 0f);
-                    rect.offsetMax = new Vector2(-SegmentGap * 0.5f, 0f);
+                    float minX;
+                    float maxX;
+                    SegmentBounds(side, i, count, out minX, out maxX);
+                    AddSegment(minX, maxX, centerY - BarHeight * 0.5f, centerY + BarHeight * 0.5f);
+                }
+            }
+            for (int v = 0; v < vertices.Length; v++)
+            {
+                vertices[v].x = baseVertices[v].x;
+                vertices[v].y = baseVertices[v].y;
+            }
+        }
+
+        private void AddPill(float centerX, float centerY)
+        {
+            float halfWidth = PanelWidth * 0.5f;
+            float halfHeight = PanelHeight * 0.5f;
+            float borderX = Mathf.Min(PillBorder, halfWidth);
+            float borderY = Mathf.Min(PillBorder, halfHeight);
+            float[] xs = { centerX - halfWidth, centerX - halfWidth + borderX, centerX + halfWidth - borderX, centerX + halfWidth };
+            float[] ys = { centerY - halfHeight, centerY - halfHeight + borderY, centerY + halfHeight - borderY, centerY + halfHeight };
+            float uvBorder = PillBorder / PillTexels;
+            for (int row = 0; row < 3; row++)
+            {
+                for (int column = 0; column < 3; column++)
+                {
+                    AddSlice(ArtSprites.HudPill, xs[column], ys[row], xs[column + 1], ys[row + 1], column, row, uvBorder, uvBorder);
                 }
             }
         }
 
-        /// <summary>На очень узком экране HUD ужимается, а не обрезается.</summary>
-        private void FitWidth()
+        private void AddSegment(float minX, float maxX, float minY, float maxY)
         {
-            RectTransform parent = root.parent as RectTransform;
-            float fit = parent.rect.width / DesignWidth;
-            float scale = fit < 1f ? fit : 1f;
-            if (parent.rect.width > parent.rect.height)
+            float border = Mathf.Min(SegmentBorder, (maxX - minX) * 0.5f);
+            float uvBorder = SegmentBorder / SegmentTexels;
+            AddSlice(ArtSprites.HudSegment, minX, minY, minX + border, maxY, 0, 1, uvBorder, 0f);
+            AddSlice(ArtSprites.HudSegment, minX + border, minY, maxX - border, maxY, 1, 1, uvBorder, 0f);
+            AddSlice(ArtSprites.HudSegment, maxX - border, minY, maxX, maxY, 2, 1, uvBorder, 0f);
+        }
+
+        private void AddIcon(int sprite, float centerX, float centerY, float size)
+        {
+            float half = size * 0.5f;
+            int v = quadCursor * VerticesPerQuad;
+            WriteQuad(v, centerX - half, centerY - half, centerX + half, centerY + half);
+            AtlasUv.SetStrip(uvs, v, sprite);
+            quadCursor++;
+        }
+
+        /// <summary>Клетка сетки 3×3 спрайта: середина растягивается, края берут поля uvBorderX и uvBorderY. Строка 1 без полей по Y — весь спрайт.</summary>
+        private void AddSlice(int sprite, float minX, float minY, float maxX, float maxY, int column, int row, float uvBorderX, float uvBorderY)
+        {
+            int r = sprite * 4;
+            float[] source = ArtSprites.Uv;
+            float spanU = source[r + 2] - source[r];
+            float spanV = source[r + 3] - source[r + 1];
+            float left = source[r] + (column == 0 ? 0f : (column == 1 ? uvBorderX : 1f - uvBorderX)) * spanU;
+            float right = source[r] + (column == 0 ? uvBorderX : (column == 1 ? 1f - uvBorderX : 1f)) * spanU;
+            float bottom = source[r + 1] + (row == 0 ? 0f : (row == 1 ? uvBorderY : 1f - uvBorderY)) * spanV;
+            float top = source[r + 1] + (row == 0 ? uvBorderY : (row == 1 ? 1f - uvBorderY : 1f)) * spanV;
+            int v = quadCursor * VerticesPerQuad;
+            WriteQuad(v, minX, minY, maxX, maxY);
+            uvs[v].x = left;
+            uvs[v].y = bottom;
+            uvs[v + 1].x = right;
+            uvs[v + 1].y = bottom;
+            uvs[v + 2].x = left;
+            uvs[v + 2].y = top;
+            uvs[v + 3].x = right;
+            uvs[v + 3].y = top;
+            quadCursor++;
+        }
+
+        private void WriteQuad(int v, float minX, float minY, float maxX, float maxY)
+        {
+            baseVertices[v].x = minX;
+            baseVertices[v].y = minY;
+            baseVertices[v + 1].x = maxX;
+            baseVertices[v + 1].y = minY;
+            baseVertices[v + 2].x = minX;
+            baseVertices[v + 2].y = maxY;
+            baseVertices[v + 3].x = maxX;
+            baseVertices[v + 3].y = maxY;
+        }
+
+        private void FillColor(int firstQuad, int quads, Color32 color)
+        {
+            int last = (firstQuad + quads) * VerticesPerQuad;
+            for (int v = firstQuad * VerticesPerQuad; v < last; v++)
             {
-                scale *= config.hudLandscapeScale;
+                colors[v] = color;
             }
-            if (root.localScale.x != scale)
-            {
-                root.localScale = new Vector3(scale, scale, 1f);
-            }
+            colorsDirty = true;
+        }
+
+        /// <summary>Ставит HUD на кадр камеры без её тряски.</summary>
+        private void PlaceOnScreen()
+        {
+            float height = canvas.rect.height;
+            float halfHeight = cam.orthographicSize;
+            float size = Scale(canvas.rect.width, height, config.hudLandscapeScale) * halfHeight * 2f / height;
+            Vector3 center = cam.transform.position;
+            meshTransform.position = new Vector3(center.x - cameraShake.OffsetX, center.y - cameraShake.OffsetY + halfHeight * (SafeTopAnchor * 2f - 1f), 0f);
+            meshTransform.localScale = new Vector3(size, size, 1f);
         }
 
         private void TickSide(int s, float dt)
@@ -176,12 +363,25 @@ namespace CastleDestroyers.UI
             }
             Paint(s, false);
 
-            if (shake[s] > 0f || bars[s].localPosition.x != 0f)
+            if (shake[s] > 0f || barShift[s] != 0f)
             {
                 shake[s] -= dt;
                 float strength = shake[s] > 0f ? shake[s] / config.hudShakeTime : 0f;
-                bars[s].localPosition = new Vector3(Mathf.Sin(time * config.hudShakeFrequency) * config.hudShakeAmplitude * strength, 0f, 0f);
+                barShift[s] = Mathf.Sin(time * config.hudShakeFrequency) * config.hudShakeAmplitude * strength;
+                ShiftBar(s);
             }
+        }
+
+        private void ShiftBar(int s)
+        {
+            int first = firstSegmentQuad[s] * VerticesPerQuad;
+            int last = first + shown[s].Length * SegmentQuads * VerticesPerQuad;
+            float shift = barShift[s];
+            for (int v = first; v < last; v++)
+            {
+                vertices[v].x = baseVertices[v].x + shift;
+            }
+            verticesDirty = true;
         }
 
         /// <summary>Индекс сегмента k-й по счёту пушки: синяя полоса гаснет к центру, красная — зеркально.</summary>
@@ -202,8 +402,24 @@ namespace CastleDestroyers.UI
                 if (force || shown[s][index] != state)
                 {
                     shown[s][index] = state;
-                    segments[s][index].color = state == SegmentFlash ? flashColor : (state == SegmentOn ? onColor : offColor);
+                    Color32 color = state == SegmentFlash ? flashColor : (state == SegmentOn ? onColor : offColor);
+                    painted[s][index] = color;
+                    FillColor(firstSegmentQuad[s] + index * SegmentQuads, SegmentQuads, color);
                 }
+            }
+        }
+
+        private void Flush()
+        {
+            if (verticesDirty)
+            {
+                Mesh.vertices = vertices;
+                verticesDirty = false;
+            }
+            if (colorsDirty)
+            {
+                Mesh.colors32 = colors;
+                colorsDirty = false;
             }
         }
     }

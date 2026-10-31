@@ -63,6 +63,12 @@ namespace CastleDestroyers.UI
             root.SetActive(false);
         }
 
+        /// <summary>Самый высокий якорь низа плашки в долях экрана: в ландшафте кадр низкий, а плашка не должна заходить на HUD.</summary>
+        public static float TopAnchor(float canvasWidth, float canvasHeight, float panelHeight, float landscapeScale, float gap)
+        {
+            return HudView.BottomViewport(canvasWidth, canvasHeight, landscapeScale) - (panelHeight + gap) / canvasHeight;
+        }
+
         public void ApplyPalette(PaletteSet palette)
         {
             background.color = palette.hudText;
@@ -105,7 +111,9 @@ namespace CastleDestroyers.UI
             float worldX = level.PlayerFocusX + config.aimPanelOffset.x;
             float worldY = level.PlayerFocusY + config.aimPanelOffset.y;
             Vector3 viewport = cam.WorldToViewportPoint(new Vector3(worldX, worldY, 0f));
-            Vector2 anchor = new Vector2(Mathf.Clamp01(viewport.x), Mathf.Clamp01(viewport.y));
+            RectTransform canvas = rect.parent as RectTransform;
+            float top = TopAnchor(canvas.rect.width, canvas.rect.height, rect.rect.height, config.hudLandscapeScale, config.aimPanelHudGap);
+            Vector2 anchor = new Vector2(Mathf.Clamp01(viewport.x), Mathf.Min(Mathf.Clamp01(viewport.y), top));
             rect.anchorMin = anchor;
             rect.anchorMax = anchor;
         }

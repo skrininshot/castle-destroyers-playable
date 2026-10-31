@@ -222,8 +222,27 @@ def atlas_sprites(theme):
         Sprite("Booster10", 110, 196, (-0.859, -1.531, 0.859, 1.531), draw_booster("x10", "booster10")),
         Sprite("Booster20", 110, 196, (-0.859, -1.531, 0.859, 1.531), draw_booster("x20", "booster20")),
         Sprite("Booster50", 110, 196, (-0.859, -1.531, 0.859, 1.531), draw_booster("x50", "booster50")),
+        Sprite("HudPill", 64, 64, (0.0, 0.0, 1.0, 1.0), draw_hud_pill),
+        Sprite("HudSegment", 32, 32, (0.0, 0.0, 1.0, 1.0), draw_hud_segment),
+        Sprite("HudTower", 128, 128, (0.0, 0.0, 1.0, 1.0), draw_hud_tower),
+        Sprite("HudRockets", 128, 128, (0.0, 0.0, 1.0, 1.0), lambda svg: ss.crossed_rockets(svg, 64, 64, 56)),
     ]
     return sprites + glyph_sprites()
+
+
+def draw_hud_pill(svg):
+    svg.rect(0, 0, 64, 64, "#FFFFFF", 30)
+
+
+def draw_hud_segment(svg):
+    svg.rect(0, 0, 32, 32, "#FFFFFF", 9)
+    svg.rect(0, 18, 32, 14, "#D2D2D2", 8)
+    svg.rect(0, 18, 32, 8, "#D2D2D2")
+
+
+def draw_hud_tower(svg):
+    ss.tower_icon(svg, 64, 74, 66, "#FFFFFF")
+    svg.path("M53 113 L53 89 Q64 76 75 89 L75 113 Z", "#5A5A70")
 
 
 def scaled_y_down(svg, draw):
@@ -502,14 +521,8 @@ def ui_documents():
     docs = {}
 
     svg = Svg()
-    svg.rect(0, 0, 64, 64, "#FFFFFF", 30)
+    draw_hud_pill(svg)
     docs["UiPill"] = svg.document(64, 64)
-
-    svg = Svg()
-    svg.rect(0, 0, 32, 32, "#FFFFFF", 9)
-    svg.rect(0, 18, 32, 14, "#D2D2D2", 8)
-    svg.rect(0, 18, 32, 8, "#D2D2D2")
-    docs["UiSegment"] = svg.document(32, 32)
 
     svg = Svg()
     svg.circle(256, 256, 254, "#FFFFFF")
@@ -518,15 +531,6 @@ def ui_documents():
     svg = Svg()
     svg.parts.append('<circle cx="16" cy="16" r="10" fill="none" stroke="#FFFFFF" stroke-width="7"/>')
     docs["UiDegree"] = svg.document(32, 32)
-
-    svg = Svg()
-    ss.tower_icon(svg, 64, 74, 66, "#FFFFFF")
-    svg.path("M53 113 L53 89 Q64 76 75 89 L75 113 Z", "#5A5A70")
-    docs["UiTower"] = svg.document(128, 128)
-
-    svg = Svg()
-    ss.crossed_rockets(svg, 64, 64, 56)
-    docs["UiRockets"] = svg.document(128, 128)
 
     svg = Svg()
     svg.open("translate(112 160) rotate(-18) scale(1.45)")
