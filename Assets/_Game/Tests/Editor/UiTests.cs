@@ -118,6 +118,7 @@ namespace CastleDestroyers.Tests
         [Test]
         public void GestureRemovesHandAndMountainPreview()
         {
+            rig.Config.turnHints[1].panToBooster = true;
             ToAim(2);
             Assert.IsTrue(director.ShowMountain);
             aim.Feed(true, 100f, 500f, ScreenHeight);
@@ -127,8 +128,9 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void SecondTurnPansToMountainAndHighlightsX50()
+        public void HintWithPanShowsMountainThenReturns()
         {
+            rig.Config.turnHints[1].panToBooster = true;
             ToAim(2);
             Assert.IsTrue(director.ShowMountain);
             Assert.AreEqual(50, guide.HighlightMultiplier);
@@ -136,6 +138,15 @@ namespace CastleDestroyers.Tests
             Run(rig.Config.hintPanDuration + Step * 2f);
             Assert.IsFalse(director.ShowMountain);
             Assert.AreEqual(50, guide.HighlightMultiplier);
+        }
+
+        [Test]
+        public void ReturningTurnGoesStraightToOwnCastle()
+        {
+            ToAim(2);
+            Assert.IsFalse(director.ShowMountain);
+            ToAim(3);
+            Assert.IsFalse(director.ShowMountain);
         }
 
         [Test]

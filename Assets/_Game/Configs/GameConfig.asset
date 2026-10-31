@@ -31,7 +31,7 @@ MonoBehaviour:
     showHand: 1
     handAngleDeg: 16
     handPower01: 0.8
-    panToBooster: 1
+    panToBooster: 0
   - label: free shot
     highlightBoosterMultiplier: 0
     showHand: 0
@@ -134,10 +134,10 @@ MonoBehaviour:
   trackHeight: 1.2
   platformHeight: 0.8
   cameraSmoothTime: 0.45
-  castleFrameWidth: 14
+  castleFrameWidth: 16.8
   centerFrameWidth: 22
-  targetFrameWidth: 16
-  minFrameHeight: 22
+  targetFrameWidth: 19.2
+  minFrameHeight: 26.4
   castleLeadX: 2
   castleFocusLiftY: 0.5
   centerFocus: {x: 0, y: 17}

@@ -38,7 +38,7 @@ namespace CastleDestroyers.Core
         public TurnHint[] turnHints =
         {
             new TurnHint("x20 lob", 20, true, 50f, 0.68f),
-            new TurnHint("x50 straight shot", 50, true, 16f, 0.8f, true),
+            new TurnHint("x50 straight shot", 50, true, 16f, 0.8f),
             new TurnHint("free shot", 0, false, 50f, 0.68f)
         };
 
@@ -703,7 +703,7 @@ namespace CastleDestroyers.Core
         public float cameraSmoothTime = 0.45f;
         [Range(8f, 40f)]
         [Tooltip("Ширина кадра на своём замке, метры.")]
-        public float castleFrameWidth = 14f;
+        public float castleFrameWidth = 16.8f;
         [Range(10f, 60f)]
         [Tooltip("Ширина кадра в центре уровня (гора и бустеры), метры. Самый широкий кадр.")]
         public float centerFrameWidth = 22f;
@@ -721,10 +721,10 @@ namespace CastleDestroyers.Core
         public float cameraCenterHold = 0.5f;
         [Range(8f, 50f)]
         [Tooltip("Ширина кадра на замке-цели, метры. Чуть уже центрального.")]
-        public float targetFrameWidth = 16f;
+        public float targetFrameWidth = 19.2f;
         [Range(6f, 40f)]
         [Tooltip("Минимальная высота кадра, метры. Нужна в ландшафтной ориентации.")]
-        public float minFrameHeight = 22f;
+        public float minFrameHeight = 26.4f;
         [Range(0f, 8f)]
         [Tooltip("Сдвиг камеры к противнику, чтобы свой замок стоял чуть левее центра, метры.")]
         public float castleLeadX = 2f;
