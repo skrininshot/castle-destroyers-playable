@@ -1,8 +1,8 @@
+using CastleDestroyers.CastleRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
 using CastleDestroyers.Fx;
-using CastleDestroyers.Level;
 using UnityEngine;
 
 namespace CastleDestroyers.Combat
@@ -23,7 +23,7 @@ namespace CastleDestroyers.Combat
 
         private GameConfig config;
         private DestructibleMask mask;
-        private GreyboxLevel level;
+        private CastleSystem castles;
         private ExplosionSystem explosions;
         private SmokeTrails smoke;
         private LevelFx fx;
@@ -57,11 +57,11 @@ namespace CastleDestroyers.Combat
         /// <summary>Лимит одновременно летящих ракет. Стресс-режим поднимает его до размера буфера.</summary>
         public int Budget { get; set; }
 
-        public void Init(GameConfig gameConfig, DestructibleMask terrainMask, GreyboxLevel greyboxLevel, ExplosionSystem explosionSystem, SmokeTrails smokeTrails, LevelFx levelFx, BoosterSystem boosterSystem)
+        public void Init(GameConfig gameConfig, DestructibleMask terrainMask, CastleSystem castleSystem, ExplosionSystem explosionSystem, SmokeTrails smokeTrails, LevelFx levelFx, BoosterSystem boosterSystem)
         {
             config = gameConfig;
             mask = terrainMask;
-            level = greyboxLevel;
+            castles = castleSystem;
             explosions = explosionSystem;
             smoke = smokeTrails;
             fx = levelFx;
@@ -311,22 +311,38 @@ namespace CastleDestroyers.Combat
         /// <summary>Ближайшее препятствие на отрезке носа: земля, вода или чужой замок. True, если ракета закончила полёт.</summary>
         private bool ResolveHit(int i, float fromX, float fromY, float toX, float toY, float step, float waterLevel)
         {
+            Side target = side[i] == (byte)Side.Player ? Side.Enemy : Side.Player;
             float solid = mask.FirstSolid(fromX, fromY, toX, toY, step);
             float water = toY < waterLevel ? (fromY - waterLevel) / (fromY - toY) : -1f;
+            float castle = castles.FirstHit(target, fromX, fromY, toX, toY, step);
+            if (castle >= 0f && (solid < 0f || castle <= solid) && (water < 0f || castle <= water))
+            {
+                float x = fromX + (toX - fromX) * castle;
+                float y = fromY + (toY - fromY) * castle;
+                if (castles.LastHitPlatform)
+                {
+                    // Платформа не вырезается, зато удар по ней и гусеницам рвёт землю под замком (кадр 7).
+                    explosions.Explode(x, y, true, weight[i]);
+                    castles.HitPlatform(target, x, y, weight[i]);
+                }
+                else
+                {
+                    explosions.Explode(x, y, false, weight[i]);
+                    castles.HitWall(target, x, y, weight[i]);
+                }
+                return true;
+            }
             if (solid >= 0f && (water < 0f || solid <= water))
             {
-                explosions.Explode(fromX + (toX - fromX) * solid, fromY + (toY - fromY) * solid, true, weight[i]);
+                float x = fromX + (toX - fromX) * solid;
+                float y = fromY + (toY - fromY) * solid;
+                explosions.Explode(x, y, true, weight[i]);
+                castles.GroundBlast(target, x, y, weight[i]);
                 return true;
             }
             if (water >= 0f)
             {
                 fx.Splash(fromX + (toX - fromX) * water, waterLevel, config.rocketSplashWidth);
-                return true;
-            }
-            Side target = side[i] == (byte)Side.Player ? Side.Enemy : Side.Player;
-            if (level.CastleContains(target, toX, toY))
-            {
-                explosions.Explode(toX, toY, false, weight[i]);
                 return true;
             }
             return false;

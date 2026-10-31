@@ -31,8 +31,8 @@ namespace CastleDestroyers.Core
         [Tooltip("Подсказки к ходам игрока по порядку. Если ходов больше, чем подсказок, используется последняя.")]
         public TurnHint[] turnHints =
         {
-            new TurnHint("x20 lob", 20, true, 56f, 0.65f),
-            new TurnHint("x50 straight shot", 50, true, 20f, 0.8f),
+            new TurnHint("x20 lob", 20, true, 50f, 0.68f),
+            new TurnHint("x50 straight shot", 50, true, 18f, 0.7f),
             new TurnHint("free shot", 0, false, 40f, 0.85f)
         };
 
@@ -71,13 +71,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Defeat: от поражения до EndCard, секунды.")]
         public float defeatDuration = 2f;
 
-        [Header("Заглушки боя (потери до этапа 5, выстрел ИИ до этапа 6)")]
-        [Range(0, 14)]
-        [Tooltip("Сколько пушек ИИ теряет за залп игрока.")]
-        public int stubEnemyLossPerPlayerTurn = 3;
-        [Range(0, 14)]
-        [Tooltip("Сколько пушек игрок теряет за залп ИИ.")]
-        public int stubPlayerLossPerAiTurn = 1;
+        [Header("Заглушка боя (выстрел ИИ до этапа 6)")]
         [Range(0f, 90f)]
         [Tooltip("Угол выстрела ИИ, градусы.")]
         public float stubAiAngleDeg = 62f;
@@ -146,7 +140,7 @@ namespace CastleDestroyers.Core
         public float rocketInterval = 0.06f;
         [Range(0.1f, 2f)]
         [Tooltip("Хит-круг пушки, метры.")]
-        public float cannonHitRadius = 0.5f;
+        public float cannonHitRadius = 0.3f;
         [Range(100, 1000)]
         [Tooltip("Жёсткий бюджет одновременно летящих ракет.")]
         public int maxActiveRockets = 600;
@@ -196,9 +190,9 @@ namespace CastleDestroyers.Core
             new BoosterSpec(50, 0f, 13f)
         };
         [Range(0.5f, 3f)]
-        public float boosterWidth = 1f;
+        public float boosterWidth = 1.5f;
         [Range(1f, 4f)]
-        public float boosterHeight = 2f;
+        public float boosterHeight = 3f;
         [Range(0f, 45f)]
         [Tooltip("Разброс угла копий ракет после бустера, градусы.")]
         public float boosterSpreadDeg = 18f;
@@ -234,7 +228,7 @@ namespace CastleDestroyers.Core
         public float boosterPuffInterval = 0.12f;
         [Range(0.1f, 2f)]
         [Tooltip("Размер пуфа, метры.")]
-        public float boosterPuffSize = 0.7f;
+        public float boosterPuffSize = 1.05f;
         [Range(0f, 12f)]
         [Tooltip("Скорость разлёта пуфов, м/с.")]
         public float boosterPuffSpeed = 5f;
@@ -243,7 +237,7 @@ namespace CastleDestroyers.Core
         public float boosterPuffLife = 0.4f;
         [Range(0.2f, 2f)]
         [Tooltip("Высота цифр поп-апа «+N», метры.")]
-        public float boosterPopupHeight = 0.8f;
+        public float boosterPopupHeight = 1.2f;
         [Range(0f, 3f)]
         [Tooltip("Отступ поп-апа от верха бустера, метры.")]
         public float boosterPopupOffsetY = 0.4f;
@@ -447,9 +441,104 @@ namespace CastleDestroyers.Core
         [Range(0, 255)]
         [Tooltip("Начальная непрозрачность пуфа, 0..255.")]
         public int smokeAlpha = 230;
+
+        [Header("Замки: разрушение (ТЗ §3.6)")]
+        [Range(0.1f, 2f)]
+        [Tooltip("Радиус кратера в замке, метры.")]
+        public float craterRadiusCastle = 0.36f;
+        [Range(0.02f, 0.5f)]
+        [Tooltip("Ширина каймы кратера в замке, метры.")]
+        public float castleRimWidth = 0.13f;
+        [Range(0f, 1f)]
+        [Tooltip("Кайма кратера: во сколько раз темнее исходного цвета.")]
+        public float castleRimDarken = 0.72f;
+        [Range(4, 16)]
+        [Tooltip("Минимум зубцов «погрызанного» кратера.")]
+        public int castleCraterTeethMin = 8;
+        [Range(4, 16)]
+        [Tooltip("Максимум зубцов «погрызанного» кратера.")]
+        public int castleCraterTeethMax = 12;
+        [Range(0f, 0.6f)]
+        [Tooltip("Разброс радиуса по зубцам, доля радиуса.")]
+        public float castleCraterNoise = 0.3f;
+        [Range(0f, 1f)]
+        [Tooltip("Вероятность, что кратер пустит трещины. Под потоком ракет трещин не должно быть слишком много.")]
+        public float castleCrackChance = 0.6f;
+        [Range(1, 6)]
+        [Tooltip("Трещин от одного кратера.")]
+        public int castleCrackCount = 3;
+        [Range(0.2f, 4f)]
+        [Tooltip("Длина трещины, метры.")]
+        public float castleCrackLength = 1.3f;
+        [Range(0.05f, 0.6f)]
+        [Tooltip("Ширина клина трещины у кратера, метры.")]
+        public float castleCrackWidth = 0.2f;
+        [Range(1, 8)]
+        [Tooltip("Звеньев в ломаной трещины.")]
+        public int castleCrackSegments = 4;
+        [Range(0f, 80f)]
+        [Tooltip("Излом трещины: отклонение звена от направления, градусы.")]
+        public float castleCrackBendDeg = 32f;
+        [Range(0, 32)]
+        [Tooltip("Частиц каменной пыли на кратер в замке.")]
+        public int castleDustPuffs = 4;
+        [Range(1, 8)]
+        [Tooltip("Обломков замков одновременно. Сверх лимита кусок исчезает с пылью.")]
+        public int castleChunkSlots = 4;
+        [Tooltip("Размер текстуры обломка замка, степень двойки. Большой кусок снимается с пониженным разрешением.")]
+        public int castleChunkTextureSize = 128;
+        [Range(0.016f, 0.3f)]
+        [Tooltip("Минимальный интервал заливки текстуры замка, секунды.")]
+        public float castleUploadInterval = 0.05f;
+        [Range(1, 200)]
+        [Tooltip("Сколько ударов по платформе открывает следующую трещину-декаль.")]
+        public int platformHitsPerCrack = 10;
+
+        [Header("Замки: посадка, наклон, покачивание (ТЗ §3.7)")]
+        [Range(0f, 40f)]
+        [Tooltip("Предел наклона платформы, градусы.")]
+        public float castleMaxTiltDeg = 16f;
+        [Range(0f, 60f)]
+        [Tooltip("Предел наклона гусеницы, градусы.")]
+        public float trackMaxTiltDeg = 30f;
+        [Range(5f, 180f)]
+        [Tooltip("Скорость поворота гусеницы по склону, градусов в секунду.")]
+        public float trackTiltSpeed = 40f;
+        [Range(0.5f, 20f)]
+        [Tooltip("Скорость оседания гусеницы, м/с.")]
+        public float castleSettleSpeed = 4f;
         [Range(0f, 6f)]
-        [Tooltip("Максимальный наклон от урона, градусы.")]
+        [Tooltip("Максимальное покачивание от урона, градусы.")]
         public float swayMaxDeg = 3f;
+        [Range(1f, 30f)]
+        [Tooltip("Жёсткость пружины покачивания: собственная частота, рад/с.")]
+        public float swayFrequency = 7f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Затухание покачивания, доля от критического.")]
+        public float swayDamping = 0.2f;
+        [Range(0f, 60f)]
+        [Tooltip("Угловой импульс от одного взрыва, градусов в секунду.")]
+        public float swayImpulseDeg = 7f;
+        [Range(5f, 120f)]
+        [Tooltip("Насыщение импульсов залпа, градусов в секунду.")]
+        public float swayMaxSpeedDeg = 30f;
+        [Range(0f, 12f)]
+        [Tooltip("На каком расстоянии от края замка взрыв в земле ещё качает его, метры.")]
+        public float swayBlastReach = 3f;
+
+        [Header("Отрыв пушек (ТЗ §3.3)")]
+        [Range(0f, 20f)]
+        [Tooltip("Скорость отлёта пушки от взрыва, м/с.")]
+        public float cannonDetachSpeed = 6f;
+        [Range(0f, 20f)]
+        [Tooltip("Подброс пушки вверх при отрыве, м/с.")]
+        public float cannonDetachLift = 6f;
+        [Range(0f, 900f)]
+        [Tooltip("Максимальная скорость вращения падающей пушки, градусов в секунду.")]
+        public float cannonDetachSpinDeg = 420f;
+        [Range(0.2f, 4f)]
+        [Tooltip("Ширина всплеска от пушки, метры.")]
+        public float cannonSplashWidth = 1.4f;
 
         [Header("Уровень (ТЗ §3.8): greybox")]
         [Tooltip("Ширина уровня, метры.")]
@@ -533,12 +622,12 @@ namespace CastleDestroyers.Core
         [Tooltip("Сценарии кнопок SHOT: угол и сила выстрела игрока (навес x20, тоннель x10, низ x50).")]
         public TurnHint[] debugBoosterShots =
         {
-            new TurnHint("shot x20", 20, false, 56f, 0.65f),
-            new TurnHint("shot x10", 10, false, 36f, 0.55f),
-            new TurnHint("shot x50", 50, false, 20f, 0.8f)
+            new TurnHint("shot x20", 20, false, 50f, 0.68f),
+            new TurnHint("shot x10", 10, false, 32f, 0.55f),
+            new TurnHint("shot x50", 50, false, 18f, 0.7f)
         };
-        [Tooltip("Залпов подряд у кнопок SHOT: до x10 и x50 поток добирается только вторым залпом.")]
-        public int[] debugBoosterShotSalvos = { 1, 2, 2 };
+        [Tooltip("Залпов подряд у кнопок SHOT.")]
+        public int[] debugBoosterShotSalvos = { 1, 1, 1 };
 
         /// <summary>Подсказка для хода игрока (индекс с нуля); за пределами массива — последняя.</summary>
         public TurnHint GetHint(int turnIndex)

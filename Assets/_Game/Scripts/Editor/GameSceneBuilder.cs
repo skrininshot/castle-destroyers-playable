@@ -27,20 +27,26 @@ namespace CastleDestroyers.EditorTools
 
         private const string RocketMaterialPath = "Assets/_Game/Art/Mat_Rocket.mat";
         private const string RocketShaderName = "Game/Rocket";
+        private const string CastleMaterialPath = "Assets/_Game/Art/Mat_Castle.mat";
+        private const string CastleShaderName = "Game/Castle";
 
-        // Порядок отрисовки: слои фона, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, дым, ракеты, бустеры, взрывы, пунктир.
+        // Порядок отрисовки: слои фона, деревья, земля, шасси, замки, их куски, обломки, вода, кромка воды, пушки, частицы, дым, ракеты, бустеры, взрывы, пунктир.
+        // Замки и куски идут до воды: они в неё падают.
         private const int OrderDecor = GreyboxLevel.BackLayerCount;
         private const int OrderTerrain = OrderDecor + 1;
-        private const int OrderChunks = OrderDecor + 2;
-        private const int OrderFront = OrderDecor + 3;
-        private const int OrderWave = OrderDecor + 4;
-        private const int OrderCannons = OrderDecor + 5;
-        private const int OrderParticles = OrderDecor + 6;
-        private const int OrderSmoke = OrderDecor + 7;
-        private const int OrderRockets = OrderDecor + 8;
-        private const int OrderBoosters = OrderDecor + 9;
-        private const int OrderExplosions = OrderDecor + 10;
-        private const int OrderAimDots = OrderDecor + 11;
+        private const int OrderUndercarriage = OrderDecor + 2;
+        private const int OrderCastles = OrderDecor + 3;
+        private const int OrderCastleChunks = OrderDecor + 4;
+        private const int OrderChunks = OrderDecor + 5;
+        private const int OrderFront = OrderDecor + 6;
+        private const int OrderWave = OrderDecor + 7;
+        private const int OrderCannons = OrderDecor + 8;
+        private const int OrderParticles = OrderDecor + 9;
+        private const int OrderSmoke = OrderDecor + 10;
+        private const int OrderRockets = OrderDecor + 11;
+        private const int OrderBoosters = OrderDecor + 12;
+        private const int OrderExplosions = OrderDecor + 13;
+        private const int OrderAimDots = OrderDecor + 14;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
@@ -83,6 +89,7 @@ namespace CastleDestroyers.EditorTools
             Material material = LoadOrCreateMaterial(MaterialPath, ShaderName);
             Material terrainMaterial = LoadOrCreateMaterial(TerrainMaterialPath, TerrainShaderName);
             Material particleMaterial = LoadOrCreateMaterial(ParticleMaterialPath, ParticleShaderName);
+            Material castleMaterial = LoadOrCreateMaterial(CastleMaterialPath, CastleShaderName);
             Material rocketMaterial = LoadOrCreateMaterial(RocketMaterialPath, RocketShaderName);
             rocketMaterial.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(GameTextureImport.RocketPath));
             EditorUtility.SetDirty(rocketMaterial);
@@ -95,6 +102,9 @@ namespace CastleDestroyers.EditorTools
                 back[i] = CreateBatch("LevelBack" + i, material, i);
             }
             MeshFilter decor = CreateBatch("SurfaceDecor", material, OrderDecor);
+            MeshFilter undercarriage = CreateBatch("Undercarriage", material, OrderUndercarriage);
+            MeshFilter blueCastle = CreateBatch("CastleBlue", castleMaterial, OrderCastles);
+            MeshFilter redCastle = CreateBatch("CastleRed", castleMaterial, OrderCastles);
             MeshFilter front = CreateBatch("LevelFront", material, OrderFront);
             MeshFilter wave = CreateBatch("WaterStrip", material, OrderWave);
             MeshFilter cannons = CreateBatch("Cannons", material, OrderCannons);
@@ -113,6 +123,10 @@ namespace CastleDestroyers.EditorTools
             bootstrap.frontFilter = front;
             bootstrap.waveFilter = wave;
             bootstrap.cannonsFilter = cannons;
+            bootstrap.castleFilters = new[] { blueCastle, redCastle };
+            bootstrap.undercarriageFilter = undercarriage;
+            bootstrap.castleMaterial = castleMaterial;
+            bootstrap.castleChunkSortingOrder = OrderCastleChunks;
             bootstrap.particlesFilter = particles;
             bootstrap.smokeFilter = smoke;
             bootstrap.rocketsFilter = rockets;

@@ -109,7 +109,7 @@ namespace CastleDestroyers.Combat
             shardAccent = palette.groundCrater;
         }
 
-        /// <summary>Взрыв в точке мира. crater = false — без кратера: попадание в замок до масок этапа 5.</summary>
+        /// <summary>Взрыв в точке мира. crater = false — без кратера в земле: попадание в камень замка.</summary>
         public void Explode(float x, float y, bool crater)
         {
             Explode(x, y, crater, 1f);

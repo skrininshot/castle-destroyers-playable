@@ -6,8 +6,8 @@ using UnityEngine;
 namespace CastleDestroyers.Level
 {
     /// <summary>
-    /// Greybox-вид пушек: трёхствольный блок на каждое крепление, один динамический меш. Поворот и отдачу берёт из CannonSystem.
-    /// Погибшая пушка схлопывается в точку. Настоящие трёхстволки и отрыв появятся на этапе 5.
+    /// Greybox-вид пушек: трёхствольный блок на каждое крепление, один динамический меш. Положение, поворот и отдачу
+    /// берёт из CannonSystem. Падающая пушка кувыркается, ушедшая в воду схлопывается в точку.
     /// </summary>
     public sealed class CannonMarkers : ITickable
     {
@@ -19,7 +19,6 @@ namespace CastleDestroyers.Level
         private const float BarrelThickness = 0.16f;
         private const float BoundsPadding = 4f;
 
-        private GreyboxLevel level;
         private MatchState match;
         private CannonSystem cannons;
         private int playerCount;
@@ -30,13 +29,12 @@ namespace CastleDestroyers.Level
 
         public Mesh Mesh { get; private set; }
 
-        public void Init(GreyboxLevel greyboxLevel, MatchState matchState, CannonSystem cannonSystem, GameConfig config)
+        public void Init(MatchState matchState, CannonSystem cannonSystem, GameConfig config)
         {
-            level = greyboxLevel;
             match = matchState;
             cannons = cannonSystem;
-            playerCount = level.PlayerMountX.Length;
-            enemyCount = level.EnemyMountX.Length;
+            playerCount = cannons.CountOf(Side.Player);
+            enemyCount = cannons.CountOf(Side.Enemy);
 
             int total = (playerCount + enemyCount) * QuadsPerCannon;
             vertices = new Vector3[total * VerticesPerQuad];
@@ -83,8 +81,8 @@ namespace CastleDestroyers.Level
                 return;
             }
             dirty = false;
-            WriteSide(Side.Player, 0, playerCount, level.PlayerMountX, level.PlayerMountY, match.PlayerAlive, 1f);
-            WriteSide(Side.Enemy, playerCount, enemyCount, level.EnemyMountX, level.EnemyMountY, match.EnemyAlive, -1f);
+            WriteSide(Side.Player, 0, playerCount, 1f);
+            WriteSide(Side.Enemy, playerCount, enemyCount, -1f);
             Mesh.vertices = vertices;
         }
 
@@ -106,24 +104,25 @@ namespace CastleDestroyers.Level
             }
         }
 
-        /// <summary>Первые alive креплений рисуются пушкой, остальные схлопываются.</summary>
-        private void WriteSide(Side side, int firstCannon, int count, float[] mountX, float[] mountY, int alive, float facing)
+        /// <summary>Живые и падающие пушки рисуются, ушедшие в воду схлопываются.</summary>
+        private void WriteSide(Side side, int firstCannon, int count, float facing)
         {
             float radians = cannons.AngleDeg(side) * Mathf.Deg2Rad;
-            float cos = Mathf.Cos(radians);
-            float sin = Mathf.Sin(radians);
-            float alongX = facing * cos;
-            float alongY = sin;
-            float acrossX = -facing * sin;
-            float acrossY = cos;
-
             for (int i = 0; i < count; i++)
             {
                 int cannon = firstCannon + i;
                 int quad = cannon * QuadsPerCannon;
-                float x = mountX[i];
-                float y = mountY[i];
-                if (i >= alive)
+                float x = cannons.WorldX(cannon);
+                float y = cannons.WorldY(cannon);
+                bool falling = cannons.IsFalling(cannon);
+                float angle = falling ? radians + cannons.FallAngle(cannon) : radians;
+                float cos = Mathf.Cos(angle);
+                float sin = Mathf.Sin(angle);
+                float alongX = facing * cos;
+                float alongY = sin;
+                float acrossX = -facing * sin;
+                float acrossY = cos;
+                if (!falling && !cannons.IsAlive(cannon))
                 {
                     for (int q = 0; q < QuadsPerCannon; q++)
                     {

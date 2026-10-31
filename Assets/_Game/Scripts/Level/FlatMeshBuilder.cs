@@ -24,6 +24,10 @@ namespace CastleDestroyers.Level
         private int triangleIndexCount;
 
         public int VertexCount { get { return vertexCount; } }
+        public int TriangleIndexCount { get { return triangleIndexCount; } }
+        /// <summary>Накопленные вершины и индексы: буферы больше своего содержимого, границы дают счётчики.</summary>
+        public Vector3[] Vertices { get { return vertices; } }
+        public int[] Triangles { get { return triangles; } }
 
         public void Clear()
         {

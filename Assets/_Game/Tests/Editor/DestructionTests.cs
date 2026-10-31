@@ -680,20 +680,22 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void CrevasseGoesBelowWaterAndIsAboutOneAndAHalfMetersWide()
+        public void CrevasseGoesBelowWaterAndIsWiderThanBooster()
         {
             Assert.Less(mask.SurfaceHeight(0f), config.waterLevel);
-            Assert.Greater(mask.SurfaceHeight(-0.75f), 5f);
-            Assert.Greater(mask.SurfaceHeight(0.75f), 5f);
-            Assert.Less(mask.SurfaceHeight(-0.55f), config.waterLevel);
-            Assert.Less(mask.SurfaceHeight(0.55f), config.waterLevel);
+            Assert.Greater(mask.SurfaceHeight(-1.6f), 5f);
+            Assert.Greater(mask.SurfaceHeight(1.6f), 5f);
+            Assert.Less(mask.SurfaceHeight(-1.2f), config.waterLevel);
+            Assert.Less(mask.SurfaceHeight(1.2f), config.waterLevel);
+            Assert.Less(config.boosterWidth * 0.5f, 1.2f);
         }
 
         [Test]
-        public void CastleHillsAreLowAndFlat()
+        public void CastleHillsAreRaisedAndFlat()
         {
-            Assert.AreEqual(1.8f, mask.SurfaceHeight(config.playerCastleX), 0.1f);
-            Assert.AreEqual(1.8f, mask.SurfaceHeight(config.enemyCastleX), 0.1f);
+            Assert.AreEqual(4.8f, mask.SurfaceHeight(config.playerCastleX), 0.1f);
+            Assert.AreEqual(4.8f, mask.SurfaceHeight(config.enemyCastleX), 0.1f);
+            Assert.AreEqual(mask.SurfaceHeight(config.playerCastleX - 4.3f), mask.SurfaceHeight(config.playerCastleX + 4.3f), 0.1f);
         }
 
         [Test]

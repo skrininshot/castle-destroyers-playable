@@ -1,4 +1,5 @@
 using CastleDestroyers.CameraRig;
+using CastleDestroyers.CastleRig;
 using CastleDestroyers.Combat;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.Flow;
@@ -32,6 +33,9 @@ namespace CastleDestroyers.Core
         public MeshFilter frontFilter;
         public MeshFilter waveFilter;
         public MeshFilter cannonsFilter;
+        [Tooltip("Каменные части замков: синий, красный.")]
+        public MeshFilter[] castleFilters;
+        public MeshFilter undercarriageFilter;
         public MeshFilter particlesFilter;
         public MeshFilter smokeFilter;
         public MeshFilter rocketsFilter;
@@ -48,10 +52,13 @@ namespace CastleDestroyers.Core
         public Transform terrainRoot;
         public Material terrainMaterial;
         public Material rocketMaterial;
+        public Material castleMaterial;
         [Tooltip("Порядок отрисовки тайлов земли.")]
         public int terrainSortingOrder;
         [Tooltip("Порядок отрисовки обломков: поверх земли, но под водой.")]
         public int chunkSortingOrder;
+        [Tooltip("Порядок отрисовки кусков замков: поверх замков, но под водой.")]
+        public int castleChunkSortingOrder;
         [Tooltip("Корень debug-UI. В сборке без GAME_DEBUG удаляется.")]
         public GameObject debugRoot;
 #if GAME_DEBUG
@@ -68,6 +75,7 @@ namespace CastleDestroyers.Core
         public RocketSystem Rockets { get; private set; }
         public BoosterSystem Boosters { get; private set; }
         public CannonSystem Cannons { get; private set; }
+        public CastleSystem Castles { get; private set; }
         public ExplosionSystem Explosions { get; private set; }
         public SmokeTrails Smoke { get; private set; }
         public AimInput Aim { get; private set; }
@@ -86,6 +94,7 @@ namespace CastleDestroyers.Core
         private ChunkSystem chunks;
         private WaterStrip water;
         private CannonMarkers cannonView;
+        private UndercarriageView undercarriageView;
         private BoosterView boosterView;
         private ScreenShake shake;
         private AimPreview aimPreview;
@@ -162,8 +171,9 @@ namespace CastleDestroyers.Core
             Explosions.Init(config, Terrain, Particles, levelFx, shake, Rng);
             explosionsFilter.sharedMesh = Explosions.Mesh;
             Boosters = new BoosterSystem();
+            Castles = new CastleSystem();
             Rockets = new RocketSystem();
-            Rockets.Init(config, terrainMask, Level, Explosions, Smoke, levelFx, Boosters);
+            Rockets.Init(config, terrainMask, Castles, Explosions, Smoke, levelFx, Boosters);
             rocketsFilter.sharedMesh = Rockets.Mesh;
             Boosters.Init(config, Rockets, Particles, Rng);
             boosterView = new BoosterView();
@@ -171,10 +181,15 @@ namespace CastleDestroyers.Core
             boostersFilter.sharedMesh = boosterView.Mesh;
 
             Cannons = new CannonSystem();
-            Cannons.Init(config, Level, Match, Rockets, Particles);
+            Cannons.Init(config, Level, Match, Rockets, Particles, levelFx, Rng);
             cannonView = new CannonMarkers();
-            cannonView.Init(Level, Match, Cannons, config);
+            cannonView.Init(Match, Cannons, config);
             cannonsFilter.sharedMesh = cannonView.Mesh;
+
+            Castles.Init(config, Level, terrainMask, Cannons, levelFx, Rng, castleMaterial, castleFilters, terrainRoot, castleChunkSortingOrder);
+            undercarriageView = new UndercarriageView();
+            undercarriageView.Init(config, Castles);
+            undercarriageFilter.sharedMesh = undercarriageView.Mesh;
 
             CameraDirector = new CameraDirector();
             CameraDirector.Init(mainCamera, config, Level, Flow, shake);
@@ -197,14 +212,14 @@ namespace CastleDestroyers.Core
             Stress = new DebugRocketStress();
             Stress.Init(config, Level, Rockets);
             Blaster = new DebugBlaster();
-            Blaster.Init(config, mainCamera, Terrain);
+            Blaster.Init(config, mainCamera, Terrain, Castles);
             Scenarios = new DebugBoosterScenarios();
             Scenarios.Init(config, Flow, Cannons);
             debugOverlay.Init(this);
             ITickable[] systems =
             {
-                Flow, Aim, Scenarios, combat, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Decor, water,
-                Particles, Smoke, cannonView, boosterView, aimPreview, aimPanelView, debugOverlay
+                Flow, Aim, Scenarios, combat, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Castles, Decor, water,
+                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView, debugOverlay
             };
 #else
             if (debugRoot != null)
@@ -213,8 +228,8 @@ namespace CastleDestroyers.Core
             }
             ITickable[] systems =
             {
-                Flow, Aim, combat, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Decor, water,
-                Particles, Smoke, cannonView, boosterView, aimPreview, aimPanelView
+                Flow, Aim, combat, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Castles, Decor, water,
+                Particles, Smoke, cannonView, undercarriageView, boosterView, aimPreview, aimPanelView
             };
 #endif
             Loop = new GameLoop();
@@ -247,6 +262,7 @@ namespace CastleDestroyers.Core
             Rockets.Clear();
             Boosters.Clear();
             Cannons.Clear();
+            Castles.Reset();
             Explosions.Clear();
             Smoke.Clear();
             shake.Clear();
@@ -270,6 +286,8 @@ namespace CastleDestroyers.Core
             levelFx.ApplyPalette(palette);
             Cannons.ApplyPalette(palette);
             cannonView.ApplyPalette(palette);
+            Castles.ApplyPalette(palette);
+            undercarriageView.ApplyPalette(palette);
             Rockets.ApplyPalette(palette);
             Boosters.ApplyPalette(palette);
             boosterView.ApplyPalette(palette);

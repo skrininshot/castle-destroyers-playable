@@ -68,6 +68,9 @@ MonoBehaviour:
     castleStoneShade:
       serializedVersion: 2
       rgba: 4291077289
+    castleCrack:
+      serializedVersion: 2
+      rgba: 4286206038
     castleWindow:
       serializedVersion: 2
       rgba: 4283970362
@@ -222,6 +225,9 @@ MonoBehaviour:
     castleStoneShade:
       serializedVersion: 2
       rgba: 4291077289
+    castleCrack:
+      serializedVersion: 2
+      rgba: 4286206038
     castleWindow:
       serializedVersion: 2
       rgba: 4283970362

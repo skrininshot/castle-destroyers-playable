@@ -16,6 +16,7 @@ namespace CastleDestroyers.Destruction
 
         public byte[] Solid { get; private set; }
         public byte[] Shade { get; private set; }
+        /// <summary>Канал B: цветная кромка земли, у замка — трещины.</summary>
         public byte[] Grass { get; private set; }
         public byte[] Buried { get; private set; }
         /// <summary>Сколько непустых текселей в каждой ячейке сетки связности.</summary>
@@ -65,7 +66,10 @@ namespace CastleDestroyers.Destruction
             return mask;
         }
 
-        /// <summary>Размеры должны быть кратны шагу тайла плюс 1. Массивы переходят во владение маски.</summary>
+        /// <summary>
+        /// Размеры должны быть кратны шагу тайла плюс 1. Если тайл больше маски, она считается одним тайлом (маска замка).
+        /// Массивы переходят во владение маски.
+        /// </summary>
         public void Init(int width, int height, int tileSize, int cellSize, float texelsPerMeter, float originX, float originY,
             byte[] solid, byte[] grass, byte[] buried)
         {
@@ -73,8 +77,8 @@ namespace CastleDestroyers.Destruction
             Height = height;
             TileSize = tileSize;
             TileStride = tileSize - 1;
-            TilesX = (width - 1) / TileStride;
-            TilesY = (height - 1) / TileStride;
+            TilesX = System.Math.Max(1, (width - 1) / TileStride);
+            TilesY = System.Math.Max(1, (height - 1) / TileStride);
             CellSize = cellSize;
             CellsX = (width + cellSize - 1) / cellSize;
             CellsY = (height + cellSize - 1) / cellSize;

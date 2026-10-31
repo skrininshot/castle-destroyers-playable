@@ -7,8 +7,8 @@ namespace CastleDestroyers.Level
 {
     /// <summary>
     /// Greybox уровня 1 (ТЗ §3.8, §3.10): статичные меши вокруг земли. BackLayers — слои фона для параллакса, рисуются до неё;
-    /// FrontMesh — вода и замки, рисуется после неё и обломков. Порядок внутри меша = порядок добавления.
-    /// Заменяется масками и артом на этапах 5 и 7; геометрия мест (замки, бустеры) остаётся.
+    /// FrontMesh — вода, рисуется после неё, замков и обломков. Порядок внутри меша = порядок добавления.
+    /// Заменяется артом на этапе 7; геометрия мест (замки, бустеры) остаётся. Замками занимается CastleSystem.
     /// </summary>
     public sealed class GreyboxLevel
     {
@@ -109,29 +109,10 @@ namespace CastleDestroyers.Level
             return terrain.SurfaceHeight(x);
         }
 
-        /// <summary>Точка внутри силуэта замка стороны. Заглушка попаданий до масок этапа 5.</summary>
-        public bool CastleContains(Side side, float x, float y)
+        /// <summary>Высота ландшафта под гусеницами замка на старте, метры.</summary>
+        public float CastleGround(Side side)
         {
-            float top;
-            float offset;
-            float groundY;
-            if (side == Side.Player)
-            {
-                offset = x - config.playerCastleX;
-                groundY = playerGroundY;
-                if (Mathf.Abs(offset) > GreyboxCastles.BlueHalfWidth)
-                {
-                    return false;
-                }
-                top = GreyboxCastles.BlueTowerTop;
-            }
-            else
-            {
-                offset = x - config.enemyCastleX;
-                groundY = enemyGroundY;
-                top = GreyboxCastles.RedHitTop(offset);
-            }
-            return top > 0f && y >= groundY && y <= groundY + config.trackHeight + config.platformHeight + top;
+            return side == Side.Player ? playerGroundY : enemyGroundY;
         }
 
         /// <summary>Пересобирает меши в цветах палитры (при старте и смене темы).</summary>
@@ -153,8 +134,6 @@ namespace CastleDestroyers.Level
 
             builder.Clear();
             AddWater(palette, extent);
-            GreyboxCastles.DrawBlue(builder, palette, decorRng, config, config.playerCastleX, playerGroundY);
-            GreyboxCastles.DrawRed(builder, palette, decorRng, config, config.enemyCastleX, enemyGroundY);
             builder.Apply(FrontMesh);
         }
 

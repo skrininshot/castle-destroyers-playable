@@ -18,6 +18,8 @@ namespace CastleDestroyers.Fx
         private Rng rng;
         private Color32 dustColor;
         private Color32 dustAccent;
+        private Color32 stoneColor;
+        private Color32 stoneAccent;
         private Color32 splashColor;
         private Color32 splashAccent;
 
@@ -32,12 +34,25 @@ namespace CastleDestroyers.Fx
         {
             dustColor = palette.groundCrater;
             dustAccent = palette.smoke;
+            stoneColor = palette.castleStone;
+            stoneAccent = palette.castleStoneShade;
             splashColor = palette.waterRim;
             splashAccent = palette.waterHighlight;
         }
 
         /// <summary>Облачко пыли и комьев в круге радиуса spread.</summary>
         public void Dust(float x, float y, float spread, int puffs)
+        {
+            Puffs(x, y, spread, puffs, dustColor, dustAccent);
+        }
+
+        /// <summary>То же в цветах камня: разрушение замка.</summary>
+        public void StoneDust(float x, float y, float spread, int puffs)
+        {
+            Puffs(x, y, spread, puffs, stoneColor, stoneAccent);
+        }
+
+        private void Puffs(float x, float y, float spread, int puffs, Color32 color, Color32 accentColor)
         {
             for (int i = 0; i < puffs; i++)
             {
@@ -49,7 +64,7 @@ namespace CastleDestroyers.Fx
                 float size = config.dustSize * rng.Range(ScatterFloor, 1f);
                 bool accent = rng.Chance(AccentChance);
                 particles.Spawn(x + directionX * reach, y + directionY * reach, directionX * speed, directionY * speed, size,
-                    config.dustLife * rng.Range(DustLifeFloor, 1f), accent ? 0f : config.dustGravity, accent ? dustAccent : dustColor);
+                    config.dustLife * rng.Range(DustLifeFloor, 1f), accent ? 0f : config.dustGravity, accent ? accentColor : color);
             }
         }
 

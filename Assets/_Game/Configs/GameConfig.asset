@@ -23,13 +23,13 @@ MonoBehaviour:
   - label: x20 lob
     highlightBoosterMultiplier: 20
     showHand: 1
-    handAngleDeg: 56
-    handPower01: 0.65
+    handAngleDeg: 50
+    handPower01: 0.68
   - label: x50 straight shot
     highlightBoosterMultiplier: 50
     showHand: 1
-    handAngleDeg: 20
-    handPower01: 0.8
+    handAngleDeg: 18
+    handPower01: 0.7
   - label: free shot
     highlightBoosterMultiplier: 0
     showHand: 0
@@ -45,8 +45,6 @@ MonoBehaviour:
   victoryDuration: 2.5
   victoryLoserHold: 1
   defeatDuration: 2
-  stubEnemyLossPerPlayerTurn: 3
-  stubPlayerLossPerAiTurn: 1
   aimMinDeg: 5
   aimMaxDeg: 85
   aimMaxDragScreenFraction: 0.35
@@ -60,7 +58,7 @@ MonoBehaviour:
   enemyCannons: 12
   rocketsPerCannon: 10
   rocketInterval: 0.06
-  cannonHitRadius: 0.5
+  cannonHitRadius: 0.3
   maxActiveRockets: 600
   stressRocketCount: 1000
   rocketLength: 1.1
@@ -72,8 +70,8 @@ MonoBehaviour:
     position: {x: 0, y: 19}
   - multiplier: 50
     position: {x: 0, y: 13}
-  boosterWidth: 1
-  boosterHeight: 2
+  boosterWidth: 1.5
+  boosterHeight: 3
   boosterSpreadDeg: 18
   boosterSpawnStagger: 0.04
   boosterPulse: 0.03

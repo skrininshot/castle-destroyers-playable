@@ -332,11 +332,7 @@ namespace CastleDestroyers.Tests
                     salvosLeft--;
                     rig.Cannons.BeginSalvo(side);
                 }
-                rig.Cannons.Tick(Step);
-                rig.Boosters.Tick(Step);
-                rig.Rockets.Tick(Step);
-                rig.Explosions.Tick(Step);
-                rig.Terrain.Tick(Step);
+                rig.Step(Step);
                 peakRockets = Mathf.Max(peakRockets, rig.Rockets.ActiveCount);
                 if (rig.Rockets.Count(side) > 0)
                 {

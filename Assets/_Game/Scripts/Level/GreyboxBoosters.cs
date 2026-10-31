@@ -13,6 +13,8 @@ namespace CastleDestroyers.Level
         private const int MultiplierHigh = 50;
         private const byte GlassAlpha = 232;
         private const byte HighlightAlpha = 110;
+        // Размеры ниже заданы для бустера шириной 1 м и растут вместе с ним.
+        private const float ReferenceHalfWidth = 0.5f;
         private const float CapHeight = 0.17f;
         private const float CapOverhang = 0.05f;
         private const float CapRadius = 0.06f;
@@ -59,18 +61,23 @@ namespace CastleDestroyers.Level
             float right = x + halfWidth;
             float bottom = y - halfHeight;
             float top = y + halfHeight;
+            float scale = halfWidth / ReferenceHalfWidth;
             builder.AddRect(left, bottom, right, top, glass);
 
-            float wideLeft = left + HighlightInset;
-            float thinLeft = wideLeft + HighlightWideWidth + HighlightGap;
-            builder.AddRect(wideLeft, bottom, wideLeft + HighlightWideWidth, top, highlight);
-            builder.AddRect(thinLeft, bottom, thinLeft + HighlightThinWidth, top, highlight);
+            float wideLeft = left + HighlightInset * scale;
+            float wideRight = wideLeft + HighlightWideWidth * scale;
+            float thinLeft = wideRight + HighlightGap * scale;
+            builder.AddRect(wideLeft, bottom, wideRight, top, highlight);
+            builder.AddRect(thinLeft, bottom, thinLeft + HighlightThinWidth * scale, top, highlight);
 
-            builder.AddRoundedRect(left - CapOverhang, top - CapHeight, right + CapOverhang, top + CapHeight * 0.5f, CapRadius, cap);
-            builder.AddRoundedRect(left - CapOverhang, bottom - CapHeight * 0.5f, right + CapOverhang, bottom + CapHeight, CapRadius, cap);
+            float capHeight = CapHeight * scale;
+            float overhang = CapOverhang * scale;
+            float capRadius = CapRadius * scale;
+            builder.AddRoundedRect(left - overhang, top - capHeight, right + overhang, top + capHeight * 0.5f, capRadius, cap);
+            builder.AddRoundedRect(left - overhang, bottom - capHeight * 0.5f, right + overhang, bottom + capHeight, capRadius, cap);
 
-            AddLabel(builder, multiplier, x, y - ShadowOffset, cap);
-            AddLabel(builder, multiplier, x, y, palette.hudText);
+            AddLabel(builder, multiplier, x, y - ShadowOffset * scale, scale, cap);
+            AddLabel(builder, multiplier, x, y, scale, palette.hudText);
         }
 
         public static Color32 GlassColor(PaletteSet palette, int multiplier)
@@ -92,7 +99,7 @@ namespace CastleDestroyers.Level
         }
 
         /// <summary>Надпись «xN» с центром в точке (x, y).</summary>
-        private static void AddLabel(FlatMeshBuilder builder, int multiplier, float x, float y, Color32 color)
+        private static void AddLabel(FlatMeshBuilder builder, int multiplier, float x, float y, float scale, Color32 color)
         {
             int count = 0;
             int rest = multiplier;
@@ -103,35 +110,35 @@ namespace CastleDestroyers.Level
                 count++;
             }
 
-            float width = MarkWidth + count * (GlyphWidth + GlyphGap);
+            float width = (MarkWidth + count * (GlyphWidth + GlyphGap)) * scale;
             float cursor = x - width * 0.5f;
-            AddMark(builder, cursor, y, color);
-            cursor += MarkWidth + GlyphGap;
+            AddMark(builder, cursor, y, scale, color);
+            cursor += (MarkWidth + GlyphGap) * scale;
             for (int i = count - 1; i >= 0; i--)
             {
-                AddDigit(builder, cursor, y, DigitsBuffer[i], color);
-                cursor += GlyphWidth + GlyphGap;
+                AddDigit(builder, cursor, y, DigitsBuffer[i], scale, color);
+                cursor += (GlyphWidth + GlyphGap) * scale;
             }
         }
 
         /// <summary>Знак умножения: две диагональные полосы.</summary>
-        private static void AddMark(FlatMeshBuilder builder, float left, float y, Color32 color)
+        private static void AddMark(FlatMeshBuilder builder, float left, float y, float scale, Color32 color)
         {
-            float right = left + MarkWidth;
-            float bottom = y - GlyphHeight * 0.5f;
-            float top = bottom + MarkHeight;
-            float stroke = GlyphStroke * 0.5f;
-            builder.AddQuad(left, bottom, left + stroke * 2f, bottom, right, top, right - stroke * 2f, top, color);
-            builder.AddQuad(right - stroke * 2f, bottom, right, bottom, left + stroke * 2f, top, left, top, color);
+            float right = left + MarkWidth * scale;
+            float bottom = y - GlyphHeight * 0.5f * scale;
+            float top = bottom + MarkHeight * scale;
+            float stroke = GlyphStroke * scale;
+            builder.AddQuad(left, bottom, left + stroke, bottom, right, top, right - stroke, top, color);
+            builder.AddQuad(right - stroke, bottom, right, bottom, left + stroke, top, left, top, color);
         }
 
-        private static void AddDigit(FlatMeshBuilder builder, float left, float y, int digit, Color32 color)
+        private static void AddDigit(FlatMeshBuilder builder, float left, float y, int digit, float scale, Color32 color)
         {
             int mask = DigitSegments[digit];
-            float right = left + GlyphWidth;
-            float top = y + GlyphHeight * 0.5f;
-            float bottom = y - GlyphHeight * 0.5f;
-            float stroke = GlyphStroke;
+            float right = left + GlyphWidth * scale;
+            float top = y + GlyphHeight * 0.5f * scale;
+            float bottom = y - GlyphHeight * 0.5f * scale;
+            float stroke = GlyphStroke * scale;
             float halfStroke = stroke * 0.5f;
             float radius = halfStroke;
             AddSegment(builder, mask, 0, left, top - stroke, right, top, radius, color);

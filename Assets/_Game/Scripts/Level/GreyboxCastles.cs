@@ -61,14 +61,16 @@ namespace CastleDestroyers.Level
         private const float SpikePitch = 0.42f;
         private const float SpikeHalfBase = 0.11f;
         private const float SpikeHeight = 0.17f;
+        private const int CrackSegments = 3;
+        private const float CrackHalfWidth = 0.09f;
+        private const float CrackDrift = 0.18f;
+        private const float CrackTaper = 0.6f;
 
         /// <summary>Башни красного замка: смещение от центра, ширина, верх стены, высота крыши, есть ли окно.</summary>
         private static readonly float[] RedTowerOffset = { -3.55f, 3.55f, -2.45f, 2.45f, -1.15f, 1.15f, 0f };
         private static readonly float[] RedTowerWidth = { 0.9f, 0.9f, 1f, 1f, 1.1f, 1.1f, 1.25f };
         private static readonly float[] RedTowerTop = { 3.1f, 3.1f, 3.9f, 3.9f, 7f, 7f, RedTop };
         private static readonly float[] RedTowerRoof = { 1.3f, 1.3f, 1.4f, 1.4f, 1.6f, 1.6f, RedRoofHeight };
-        /// <summary>Ступени силуэта красного замка: граница по расстоянию от центра и высота, парами.</summary>
-        private static readonly float[] RedHitSteps = { 0.65f, RedTop, 1.7f, 7f, 2.95f, 3.9f, RedHalfWidth, 3.1f };
 
         /// <summary>
         /// Точки крепления пушек: пары (x от центра замка, y от основания стены). Пушки стоят на стенах,
@@ -91,25 +93,28 @@ namespace CastleDestroyers.Level
             return RedTop + RedRoofHeight;
         }
 
-        /// <summary>Верх силуэта красного замка над основанием стены, по расстоянию от центра. Заглушка попаданий до масок этапа 5.</summary>
-        public static float RedHitTop(float offsetFromCenter)
+        /// <summary>Половина ширины платформы замка.</summary>
+        public static float PlatformHalfWidth(float castleHalfWidth)
         {
-            float distance = Mathf.Abs(offsetFromCenter);
-            for (int i = 0; i < RedHitSteps.Length; i += 2)
-            {
-                if (distance <= RedHitSteps[i])
-                {
-                    return RedHitSteps[i + 1];
-                }
-            }
-            return 0f;
+            return castleHalfWidth + PlatformOverhang;
         }
 
-        public static void DrawBlue(FlatMeshBuilder builder, PaletteSet palette, Rng rng, GameConfig config, float cx, float groundY)
+        /// <summary>Расстояние от центра замка до центра гусеницы.</summary>
+        public static float TrackCenter(float castleHalfWidth)
         {
-            float wallBase = groundY + config.trackHeight + config.platformHeight;
-            DrawUndercarriage(builder, palette, config, cx, BlueHalfWidth, groundY);
+            return PlatformHalfWidth(castleHalfWidth) - TrackInset - TrackWidth * 0.5f;
+        }
 
+        /// <summary>Половина длины гусеницы: её крайние точки стоят на ландшафте (ТЗ §3.7).</summary>
+        public static float TrackHalfLength()
+        {
+            return TrackWidth * 0.5f;
+        }
+
+        /// <summary>Каменная часть синего замка; низ стены на wallBase, центр на x = 0.</summary>
+        public static void DrawBlue(FlatMeshBuilder builder, PaletteSet palette, Rng rng, float wallBase)
+        {
+            float cx = 0f;
             float towerOffset = BlueHalfWidth - BlueTowerWidth * 0.5f;
             AddWall(builder, palette, rng, cx - BlueHalfWidth, cx + BlueHalfWidth, wallBase, wallBase + BlueBodyHeight);
             AddBlueTower(builder, palette, rng, cx - towerOffset, wallBase, true);
@@ -117,11 +122,10 @@ namespace CastleDestroyers.Level
             AddWindow(builder, palette, cx, wallBase + BlueBodyWindowY, BlueWindowWidth, BlueWindowHeight, true);
         }
 
-        public static void DrawRed(FlatMeshBuilder builder, PaletteSet palette, Rng rng, GameConfig config, float cx, float groundY)
+        /// <summary>Каменная часть красного замка; низ стены на wallBase, центр на x = 0.</summary>
+        public static void DrawRed(FlatMeshBuilder builder, PaletteSet palette, Rng rng, float wallBase)
         {
-            float wallBase = groundY + config.trackHeight + config.platformHeight;
-            DrawUndercarriage(builder, palette, config, cx, RedHalfWidth, groundY);
-
+            float cx = 0f;
             AddWall(builder, palette, rng, cx - RedHalfWidth, cx + RedHalfWidth, wallBase, wallBase + RedBodyHeight);
             AddWall(builder, palette, rng, cx - RedMidHalfWidth, cx + RedMidHalfWidth, wallBase, wallBase + RedMidHeight);
             // От края к центру: центральная башня рисуется последней и перекрывает средние.
@@ -193,19 +197,38 @@ namespace CastleDestroyers.Level
             }
         }
 
-        private static void DrawUndercarriage(FlatMeshBuilder builder, PaletteSet palette, GameConfig config, float cx, float halfWidth, float groundY)
+        /// <summary>Деревянная платформа: низ на y = 0, центр на x = 0.</summary>
+        public static void DrawPlatform(FlatMeshBuilder builder, PaletteSet palette, float halfWidth, float height)
         {
-            float trackTop = groundY + config.trackHeight;
-            float wallBase = trackTop + config.platformHeight;
-            float platformHalf = halfWidth + PlatformOverhang;
-            float trackCenter = platformHalf - TrackInset - TrackWidth * 0.5f;
-            AddTrack(builder, palette, cx - trackCenter, groundY, config.trackHeight);
-            AddTrack(builder, palette, cx + trackCenter, groundY, config.trackHeight);
+            float platformHalf = PlatformHalfWidth(halfWidth);
+            builder.AddRoundedRect(-platformHalf, 0f, platformHalf, height, PlatformRadius, palette.platform);
+            builder.AddRect(-platformHalf + PlatformRadius, 0f, platformHalf - PlatformRadius, PlatformShadeHeight, palette.platformShade);
+            AddGate(builder, palette, -GateOffset, 0f);
+            AddGate(builder, palette, GateOffset, 0f);
+        }
 
-            builder.AddRoundedRect(cx - platformHalf, trackTop, cx + platformHalf, wallBase, PlatformRadius, palette.platform);
-            builder.AddRect(cx - platformHalf + PlatformRadius, trackTop, cx + platformHalf - PlatformRadius, trackTop + PlatformShadeHeight, palette.platformShade);
-            AddGate(builder, palette, cx - GateOffset, trackTop);
-            AddGate(builder, palette, cx + GateOffset, trackTop);
+        /// <summary>Гусеница: низ на y = 0, центр на x = 0.</summary>
+        public static void DrawTrack(FlatMeshBuilder builder, PaletteSet palette, float height)
+        {
+            AddTrack(builder, palette, 0f, 0f, height);
+        }
+
+        /// <summary>Трещина-декаль платформы: плоская ломаная сверху вниз от точки x (ТЗ §3.6, кадр 12).</summary>
+        public static void AddPlatformCrack(FlatMeshBuilder builder, PaletteSet palette, Rng rng, float x, float height)
+        {
+            float y = height;
+            float half = CrackHalfWidth;
+            float step = height / CrackSegments;
+            for (int i = 0; i < CrackSegments; i++)
+            {
+                float nextX = x + rng.Range(-CrackDrift, CrackDrift);
+                float nextY = y - step;
+                float nextHalf = half * CrackTaper;
+                builder.AddQuad(x - half, y, nextX - nextHalf, nextY, nextX + nextHalf, nextY, x + half, y, palette.castleCrack);
+                x = nextX;
+                y = nextY;
+                half = nextHalf;
+            }
         }
 
         private static void AddGate(FlatMeshBuilder builder, PaletteSet palette, float cx, float y)

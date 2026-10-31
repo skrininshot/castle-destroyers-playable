@@ -36,6 +36,7 @@ namespace CastleDestroyers.Core
         [Header("Замки и пушки")]
         public Color32 castleStone;
         public Color32 castleStoneShade;
+        public Color32 castleCrack;
         public Color32 castleWindow;
         public Color32 castleWindowLit;
         public Color32 roofPlayer;
@@ -181,6 +182,7 @@ namespace CastleDestroyers.Core
         {
             set.castleStone = Hex(0xD7D3E6);
             set.castleStoneShade = Hex(0xA9A4C4);
+            set.castleCrack = Hex(0x56507A);
             set.castleWindow = Hex(0x3A3358);
             set.castleWindowLit = Hex(0xFFD27A);
             set.cannonPlayer = Hex(0x2E7BEA);

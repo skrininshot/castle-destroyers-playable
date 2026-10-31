@@ -14,7 +14,7 @@ namespace CastleDestroyers.DebugTools
     /// </summary>
     public sealed class DebugOverlay : MonoBehaviour, ITickable
     {
-        private const int HudTextCapacity = 448;
+        private const int HudTextCapacity = 512;
         private const float PortraitMatch = 0f;
         private const float LandscapeMatch = 1f;
 
@@ -142,6 +142,11 @@ namespace CastleDestroyers.DebugTools
 
             text.Append("boost honest ").Append(Mathf.RoundToInt(game.Boosters.HonestTotal));
             text.Append("  spawned ").Append(game.Boosters.SpawnedTotal).Append('\n');
+
+            text.Append("castle chunks ").Append(game.Castles.ChunksActive);
+            text.Append("  falling ").Append(game.Cannons.FallingCount);
+            text.Append("  E ").Append(game.Castles.Body(Side.Enemy).State.ToString());
+            text.Append(" sway ").Append((game.Castles.Body(Side.Enemy).Sway * Mathf.Rad2Deg).ToString("0.0")).Append('\n');
 
             text.Append("theme ").Append(game.ActivePreset.ToString());
             text.Append("  ").Append(screenWidth).Append('x').Append(screenHeight);

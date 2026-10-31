@@ -6,8 +6,8 @@ namespace CastleDestroyers.Flow
     /// <summary>
     /// Стейт-машина сессии (ТЗ §3.1): Boot → Intro → [Aim → Fire → Flight → Resolve] по очереди сторон →
     /// Victory / Defeat → EndCard. Aim игрока заканчивается жестом или таймером простоя, Flight держится, пока
-    /// ракеты в воздухе (FlightBusy), остальные переходы идут по таймерам. Потери пушек — заглушка из конфига до этапа 5.
-    /// Лимиты ходов и времени, Director и счётчик ходов настоящие.
+    /// ракеты в воздухе (FlightBusy), остальные переходы идут по таймерам. Счёт пушек ведёт бой, Director добивает
+    /// врага на последнем ходу игрока.
     /// </summary>
     public sealed class SessionFlow : ITickable
     {
@@ -214,7 +214,7 @@ namespace CastleDestroyers.Flow
             StateTime = 0f;
             if (state == SessionState.Resolve)
             {
-                ApplyStubDamage();
+                ApplyFinisher();
             }
             if (StateChanged != null)
             {
@@ -222,19 +222,12 @@ namespace CastleDestroyers.Flow
             }
         }
 
-        /// <summary>Заглушка потерь до этапа 5. Director: на последнем ходу игрока добивает врага, ИИ не убивает последнюю пушку игрока.</summary>
-        private void ApplyStubDamage()
+        /// <summary>Director: последний ход игрока добивает врага. Настоящий множитель урона — этап 6.</summary>
+        private void ApplyFinisher()
         {
-            if (ActiveSide == Side.Player)
+            if (ActiveSide == Side.Player && config.directorEnabled && PlayerTurn >= config.maxPlayerTurns)
             {
-                bool finisher = config.directorEnabled && PlayerTurn >= config.maxPlayerTurns;
-                int loss = finisher ? match.EnemyAlive : config.stubEnemyLossPerPlayerTurn;
-                match.Destroy(Side.Enemy, loss, 0);
-            }
-            else
-            {
-                int floor = config.directorEnabled ? 1 : 0;
-                match.Destroy(Side.Player, config.stubPlayerLossPerAiTurn, floor);
+                match.Destroy(Side.Enemy, match.EnemyAlive, 0);
             }
         }
     }

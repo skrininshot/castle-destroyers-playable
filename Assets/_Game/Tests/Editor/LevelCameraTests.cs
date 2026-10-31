@@ -403,7 +403,8 @@ namespace CastleDestroyers.Tests
         [Test]
         public void VictoryShowsLoserFirstThenWinner()
         {
-            config.stubEnemyLossPerPlayerTurn = 12;
+            AdvanceTo(SessionState.Resolve, Side.Player);
+            match.Destroy(Side.Enemy, config.enemyCannons, 0);
             AdvanceTo(SessionState.Victory, Side.Player);
             Assert.AreEqual(level.EnemyFocusX, FrameNow().x, 1e-4f);
             flow.Tick(config.victoryLoserHold + 0.1f);

@@ -1,4 +1,5 @@
 #if GAME_DEBUG
+using CastleDestroyers.CastleRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
 using CastleDestroyers.InputRig;
@@ -19,6 +20,7 @@ namespace CastleDestroyers.DebugTools
         private GameConfig config;
         private Camera cam;
         private TerrainSystem terrain;
+        private CastleSystem castles;
         private int radiusIndex = OffIndex;
         private float holdTimer;
         private bool wasPressed;
@@ -26,11 +28,12 @@ namespace CastleDestroyers.DebugTools
         public bool Active { get { return radiusIndex != OffIndex; } }
         public float Radius { get { return Active ? config.debugBlastRadii[radiusIndex] : 0f; } }
 
-        public void Init(GameConfig gameConfig, Camera camera, TerrainSystem terrainSystem)
+        public void Init(GameConfig gameConfig, Camera camera, TerrainSystem terrainSystem, CastleSystem castleSystem)
         {
             config = gameConfig;
             cam = camera;
             terrain = terrainSystem;
+            castles = castleSystem;
         }
 
         public void NextRadius()
@@ -59,6 +62,7 @@ namespace CastleDestroyers.DebugTools
                 holdTimer = config.debugBlastHoldInterval;
                 Vector3 world = cam.ScreenToWorldPoint(new Vector3(pointer.X, pointer.Y, -cam.transform.position.z));
                 terrain.Explode(world.x, world.y, Radius);
+                castles.DebugBlast(world.x, world.y, Radius);
             }
         }
     }

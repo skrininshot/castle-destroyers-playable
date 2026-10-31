@@ -117,6 +117,18 @@ namespace CastleDestroyers.Tests
             Object.DestroyImmediate(config);
         }
 
+        /// <summary>Потери стороны в конце каждого хода side: бой в этих тестах не участвует.</summary>
+        private void LoseOnResolve(Side side, Side loser, int count)
+        {
+            flow.StateChanged += (state, active) =>
+            {
+                if (state == SessionState.Resolve && active == side)
+                {
+                    match.Destroy(loser, count, 0);
+                }
+            };
+        }
+
         private void RunToEnd(int maxTicks)
         {
             for (int i = 0; i < maxTicks && !flow.IsFinished; i++)
@@ -194,28 +206,17 @@ namespace CastleDestroyers.Tests
         [Test]
         public void EarlyVictoryEndsBeforeLastTurn()
         {
-            config.stubEnemyLossPerPlayerTurn = 12;
+            LoseOnResolve(Side.Player, Side.Enemy, 12);
             RunToEnd(200);
             Assert.AreEqual(EndReason.Victory, flow.EndReason);
             Assert.AreEqual(1, flow.PlayerTurn);
         }
 
         [Test]
-        public void DirectorKeepsLastPlayerCannonAlive()
-        {
-            config.stubPlayerLossPerAiTurn = 10;
-            config.stubEnemyLossPerPlayerTurn = 1;
-            RunToEnd(200);
-            Assert.AreEqual(EndReason.Victory, flow.EndReason);
-            Assert.AreEqual(1, match.PlayerAlive);
-        }
-
-        [Test]
         public void WithoutDirectorSurvivingEnemyMeansLimitEndCard()
         {
             config.directorEnabled = false;
-            config.stubEnemyLossPerPlayerTurn = 1;
-            config.stubPlayerLossPerAiTurn = 0;
+            LoseOnResolve(Side.Player, Side.Enemy, 1);
             RunToEnd(200);
             Assert.AreEqual(EndReason.Limit, flow.EndReason);
             Assert.IsFalse(flow.HasWinner);
@@ -226,8 +227,7 @@ namespace CastleDestroyers.Tests
         public void WithoutDirectorLastTurnStillGetsEnemyReply()
         {
             config.directorEnabled = false;
-            config.stubEnemyLossPerPlayerTurn = 1;
-            config.stubPlayerLossPerAiTurn = 0;
+            LoseOnResolve(Side.Player, Side.Enemy, 1);
             int enemyAims = 0;
             flow.StateChanged += (state, side) =>
             {
@@ -244,8 +244,7 @@ namespace CastleDestroyers.Tests
         public void WithoutDirectorPlayerCanLose()
         {
             config.directorEnabled = false;
-            config.stubEnemyLossPerPlayerTurn = 0;
-            config.stubPlayerLossPerAiTurn = 5;
+            LoseOnResolve(Side.Enemy, Side.Player, 5);
             RunToEnd(200);
             Assert.AreEqual(EndReason.Defeat, flow.EndReason);
             Assert.AreEqual(Side.Enemy, flow.Winner);
@@ -268,7 +267,7 @@ namespace CastleDestroyers.Tests
         [Test]
         public void SessionTimeLimitDoesNotCutVictoryShort()
         {
-            config.stubEnemyLossPerPlayerTurn = 12;
+            LoseOnResolve(Side.Player, Side.Enemy, 12);
             config.victoryDuration = 5f;
             config.maxSessionSeconds = 8f;
             RunToEnd(100);

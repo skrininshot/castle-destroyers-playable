@@ -1,5 +1,6 @@
 using System;
 using CastleDestroyers.CameraRig;
+using CastleDestroyers.CastleRig;
 using CastleDestroyers.Combat;
 using CastleDestroyers.Core;
 using CastleDestroyers.Destruction;
@@ -29,9 +30,11 @@ namespace CastleDestroyers.Tests
         public readonly RocketSystem Rockets;
         public readonly BoosterSystem Boosters;
         public readonly CannonSystem Cannons;
+        public readonly CastleSystem Castles;
 
         private readonly GameObject root;
         private readonly Material material;
+        private readonly Material castleMaterial;
 
         public CombatRig(Action<GameConfig> tune = null)
         {
@@ -42,6 +45,7 @@ namespace CastleDestroyers.Tests
             }
             root = new GameObject("CombatTest");
             material = new Material(Shader.Find("Game/Terrain"));
+            castleMaterial = new Material(Shader.Find("Game/Castle"));
             Rng rng = new Rng(1u);
             PaletteSet palette = ThemePalette.CreateNight();
 
@@ -75,14 +79,35 @@ namespace CastleDestroyers.Tests
             Explosions.Init(Config, Terrain, Particles, fx, Shake, rng);
             Explosions.ApplyPalette(palette);
             Boosters = new BoosterSystem();
+            Castles = new CastleSystem();
             Rockets = new RocketSystem();
-            Rockets.Init(Config, Mask, Level, Explosions, Smoke, fx, Boosters);
+            Rockets.Init(Config, Mask, Castles, Explosions, Smoke, fx, Boosters);
             Rockets.ApplyPalette(palette);
             Boosters.Init(Config, Rockets, Particles, rng);
             Boosters.ApplyPalette(palette);
             Cannons = new CannonSystem();
-            Cannons.Init(Config, Level, Match, Rockets, Particles);
+            Cannons.Init(Config, Level, Match, Rockets, Particles, fx, rng);
             Cannons.ApplyPalette(palette);
+            MeshFilter[] filters =
+            {
+                new GameObject("Blue", typeof(MeshFilter), typeof(MeshRenderer)).GetComponent<MeshFilter>(),
+                new GameObject("Red", typeof(MeshFilter), typeof(MeshRenderer)).GetComponent<MeshFilter>()
+            };
+            filters[0].transform.SetParent(root.transform, false);
+            filters[1].transform.SetParent(root.transform, false);
+            Castles.Init(Config, Level, Mask, Cannons, fx, rng, castleMaterial, filters, root.transform, 2);
+            Castles.ApplyPalette(palette);
+        }
+
+        /// <summary>Один кадр боя в порядке GameLoop.</summary>
+        public void Step(float dt)
+        {
+            Cannons.Tick(dt);
+            Boosters.Tick(dt);
+            Rockets.Tick(dt);
+            Explosions.Tick(dt);
+            Terrain.Tick(dt);
+            Castles.Tick(dt);
         }
 
         public void Destroy()
@@ -98,6 +123,7 @@ namespace CastleDestroyers.Tests
             Object.DestroyImmediate(Level.FrontMesh);
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(material);
+            Object.DestroyImmediate(castleMaterial);
             Object.DestroyImmediate(Config);
         }
 
@@ -261,6 +287,7 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(1, rig.Rockets.ActiveCount, "player rocket exploded");
             Assert.AreEqual(1, rig.Explosions.ActiveCount);
             Assert.AreEqual(0, rig.Mask.DirtyCount, "castle hit leaves no terrain crater");
+            Assert.Greater(rig.Castles.Body(Side.Enemy).Mask.DirtyCount, 0, "castle mask got a crater");
         }
 
         [Test]
