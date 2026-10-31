@@ -135,7 +135,8 @@
         "startupScene": 0,
         "packages": {
             "default": {
-                "applicationName": "",
+                "applicationName": "Castle Destroyers",
+                "androidLink": "https://play.google.com/store/apps/details?id=com.example.castledestroyers",
                 "orientation": "unspecified",
                 "languages": [
                     "en"
@@ -189,8 +190,8 @@
         "rules": {
             "texture": {
                 "default": {
-                    "maxWidth": 512,
-                    "maxHeight": 512,
+                    "maxWidth": 1024,
+                    "maxHeight": 1024,
                     "format": "png32",
                     "compression": "quantSize",
                     "quality": 65,

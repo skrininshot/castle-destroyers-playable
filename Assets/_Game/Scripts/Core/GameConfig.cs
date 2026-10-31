@@ -10,6 +10,8 @@ namespace CastleDestroyers.Core
     [CreateAssetMenu(fileName = "GameConfig", menuName = "Castle Destroyers/Game Config")]
     public sealed class GameConfig : ScriptableObject
     {
+        private const string PlaygroundSection = "Balance";
+
         [Header("Сессия (ТЗ §3.1)")]
         [Tooltip("Палитра с пресетами Night / Sunset.")]
         public ThemePalette theme;
@@ -25,6 +27,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Ограничение шага времени кадра, секунды. Защищает от скачков после паузы.")]
         public float maxDeltaTime = 0.05f;
         [Tooltip("Director: игрок гарантированно побеждает к последнему разрешённому ходу, ИИ не добивает игрока.")]
+        [LunaPlaygroundField("Player always wins", 5, PlaygroundSection)]
         public bool directorEnabled = true;
         [Range(1, 3)]
         [Tooltip("Director: сколько пушек игрок теряет за один ход ИИ, не больше.")]
@@ -266,9 +269,11 @@ namespace CastleDestroyers.Core
         public int enemyCannons = 12;
         [Range(1, 20)]
         [Tooltip("Ракет, которые выпускает каждая пушка за залп.")]
+        [LunaPlaygroundField("Rockets per cannon", 0, PlaygroundSection)]
         public int rocketsPerCannon = 10;
         [Range(0.01f, 0.2f)]
         [Tooltip("Интервал между ракетами одной пушки, секунды.")]
+        [LunaPlaygroundField("Rocket interval, s", 1, PlaygroundSection)]
         public float rocketInterval = 0.06f;
         [Range(0.1f, 2f)]
         [Tooltip("Хитбокс пушки: на сколько взрыв может не дотянуться до крепления и ствола, метры.")]
@@ -422,6 +427,7 @@ namespace CastleDestroyers.Core
         public int maxTileUploadsPerFrame = 4;
         [Range(0.2f, 4f)]
         [Tooltip("Радиус кратера в земле, метры.")]
+        [LunaPlaygroundField("Ground crater radius, m", 3, PlaygroundSection)]
         public float craterRadiusGround = 1.5f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина каймы кратера, метры.")]
@@ -543,6 +549,7 @@ namespace CastleDestroyers.Core
         public float explosionMaxStrength = 1.6f;
         [Range(0.2f, 4f)]
         [Tooltip("Радиус внешнего круга взрыва, метры.")]
+        [LunaPlaygroundField("Explosion radius, m", 2, PlaygroundSection)]
         public float explosionRadius = 2.6f;
         [Range(0.05f, 1f)]
         [Tooltip("Длительность взрыва, секунды.")]
@@ -610,6 +617,7 @@ namespace CastleDestroyers.Core
         public int castleMinChunkCells = 24;
         [Range(0.1f, 2f)]
         [Tooltip("Радиус кратера в замке, метры.")]
+        [LunaPlaygroundField("Castle crater radius, m", 4, PlaygroundSection)]
         public float craterRadiusCastle = 0.288f;
         [Range(0.02f, 0.5f)]
         [Tooltip("Ширина каймы кратера в замке, метры.")]
@@ -737,6 +745,7 @@ namespace CastleDestroyers.Core
         [Header("Звук (ТЗ §3.13)")]
         [Range(0f, 1f)]
         [Tooltip("Громкость всех звуков.")]
+        [LunaPlaygroundField("Sound volume", 6, PlaygroundSection)]
         public float soundVolume = 0.8f;
         [Range(0.01f, 0.5f)]
         [Tooltip("Минимальная пауза между одинаковыми звуками, секунды: залп не должен трещать.")]

@@ -333,6 +333,11 @@ namespace CastleDestroyers.Core
         /// <summary>Переключает пресет палитры Night / Sunset без изменения ассета.</summary>
         public void SetPreset(ThemePreset preset)
         {
+            // В сборку под сети идёт только активная тема, у второй нет текстур.
+            if (config.theme.ArtOf(preset).atlas == null)
+            {
+                return;
+            }
             ActivePreset = preset;
             ApplyTheme();
         }

@@ -5,10 +5,13 @@
 Код возврата 1 — бюджет превышен.
 """
 import sys
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 GAME_ASSETS = ROOT / "Assets" / "_Game"
+PACKAGES = ROOT / "LunaTemp" / "stage4"
+ASSET_EXT = (".png", ".jpeg", ".jpg", ".mp3", ".blob")
 KB = 1024
 MB = 1024 * 1024
 
@@ -47,6 +50,31 @@ def find_html(argument):
     return max(candidates, key=lambda p: p.stat().st_size) if candidates else None
 
 
+def estimate_html(archive):
+    """Оценка HTML из архива Playground: код из cache/ уже сжат, блоки ассетов идут в base64 (D-064)."""
+    code = {}
+    assets = 0
+    with zipfile.ZipFile(archive) as package:
+        for item in package.infolist():
+            parts = item.filename.split("/")
+            if parts[0] == "cache" and len(parts) == 3:
+                code[parts[1]] = code.get(parts[1], 0) + item.file_size
+            elif parts[0] == "index.html":
+                assets += item.file_size
+            elif parts[0] == "assets" and item.filename.endswith(ASSET_EXT):
+                assets += item.file_size * BASE64_FACTOR
+    return max(code.values()) + assets
+
+
+def report_archives():
+    ok = True
+    for name, budget in (("main", HTML_BUDGET), ("lite", LITE_BUDGET)):
+        archive = PACKAGES / (name + ".zip")
+        if archive.exists():
+            ok &= report(f"html estimate, {name}", int(estimate_html(archive)), budget)
+    return ok
+
+
 def main():
     ok = True
     texture_size = total_size(TEXTURE_EXT)
@@ -54,6 +82,7 @@ def main():
     ok &= report("textures", texture_size, TEXTURE_BUDGET)
     ok &= report("audio", audio_size, AUDIO_BUDGET)
     print(f"     textures+audio after base64: {(texture_size + audio_size) * BASE64_FACTOR / KB:.1f} KB")
+    ok &= report_archives()
 
     html = find_html(sys.argv[1] if len(sys.argv) > 1 else None)
     if html is None:

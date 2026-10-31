@@ -8,7 +8,9 @@ namespace CastleDestroyers.InputRig
         private const float MouseAfterTouchGuard = 0.5f;
 
         private float lastTouchTime = -1f;
+        private bool touchHeld;
 
+        /// <summary>Палец или кнопка внизу. Тап короче кадра считается нажатием на один кадр.</summary>
         public bool Pressed { get; private set; }
         public float X { get; private set; }
         public float Y { get; private set; }
@@ -22,10 +24,14 @@ namespace CastleDestroyers.InputRig
                 Touch touch = Input.GetTouch(0);
                 X = touch.position.x;
                 Y = touch.position.y;
-                Pressed = touch.phase != TouchPhase.Ended && touch.phase != TouchPhase.Canceled;
+                bool held = touch.phase != TouchPhase.Ended && touch.phase != TouchPhase.Canceled;
+                Pressed = held || !touchHeld;
+                touchHeld = held;
                 lastTouchTime = now;
+                return;
             }
-            else if (now - lastTouchTime > MouseAfterTouchGuard && Input.GetMouseButton(0))
+            touchHeld = false;
+            if (now - lastTouchTime > MouseAfterTouchGuard && (Input.GetMouseButton(0) || Input.GetMouseButtonDown(0)))
             {
                 Vector3 mouse = Input.mousePosition;
                 X = mouse.x;
