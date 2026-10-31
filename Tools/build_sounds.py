@@ -13,6 +13,9 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "Assets" / "_Game" / "Audio"
 RATE = 22050
 SEED = 4177
+DEFAULT_LEVEL = 0.9
+# Пик клипа. Всплеск тише: слышен в районе 1 кГц, частый и накладывается сам на себя.
+LEVELS = {"Splash": 0.6}
 
 
 def time_axis(seconds):
@@ -27,6 +30,24 @@ def smooth(signal, width):
     """Скользящее среднее: простой низкочастотный фильтр."""
     kernel = numpy.ones(width) / width
     return numpy.convolve(signal, kernel, mode="same")
+
+
+def lowpass(signal, start, end):
+    """Фильтр 12 дБ/окт со срезом, плавно падающим от start к end Гц: скользящее среднее верхи не срезает."""
+    gains = 1 - numpy.exp(-2 * numpy.pi * numpy.geomspace(start, end, signal.size) / RATE)
+    result = numpy.zeros(signal.size)
+    first = second = 0.0
+    for index, gain in enumerate(gains):
+        first += gain * (signal[index] - first)
+        second += gain * (first - second)
+        result[index] = second
+    return result
+
+
+def bubble(t, start, frequency, seconds):
+    """Один пузырь: тон с подъёмом высоты и мягкими краями."""
+    phase = numpy.clip((t - start) / seconds, 0.0, 1.0)
+    return numpy.sin(2 * numpy.pi * frequency * seconds * (phase + 0.2 * phase ** 2)) * numpy.sin(numpy.pi * phase) ** 2
 
 
 def sine_sweep(start, end, seconds, curve=1.0):
@@ -60,11 +81,14 @@ def booster(rng):
 
 
 def splash(rng):
-    seconds = 0.42
-    wash = smooth(noise(int(seconds * RATE), rng), 6) * 1.5
-    attack = numpy.minimum(time_axis(seconds) / 0.03, 1.0)
-    bubbles = sine_sweep(700, 260, seconds, 1.2) * 0.2
-    return (wash + bubbles) * attack * decay(seconds, 7)
+    """Мягкий плеск: глухой удар, тёмный шум без верхов и пара пузырей. Шипение даёт верх шума, он срезан."""
+    seconds = 0.5
+    t = time_axis(seconds)
+    wash = lowpass(noise(t.size, rng), 1300, 300) * decay(seconds, 6)
+    plop = sine_sweep(230, 100, seconds, 0.7) * decay(seconds, 15) * 0.16
+    bubbles = sum(bubble(t, *params) for params in ((0.06, 340, 0.09), (0.15, 460, 0.07), (0.27, 390, 0.08))) * 0.05
+    attack = numpy.sin(numpy.minimum(t / 0.035, 1.0) * numpy.pi / 2) ** 2
+    return (wash + plop) * attack + bubbles
 
 
 def click(rng):
@@ -88,7 +112,7 @@ def victory(rng):
 def save(name, signal):
     peak = numpy.abs(signal).max()
     fade = numpy.minimum((signal.size - numpy.arange(signal.size)) / (RATE * 0.01), 1.0)
-    samples = (signal / peak * fade * 0.9 * 32767).astype(numpy.int16)
+    samples = (signal / peak * fade * LEVELS.get(name, DEFAULT_LEVEL) * 32767).astype(numpy.int16)
     path = OUTPUT / f"{name}.wav"
     with wave.open(str(path), "wb") as target:
         target.setnchannels(1)
