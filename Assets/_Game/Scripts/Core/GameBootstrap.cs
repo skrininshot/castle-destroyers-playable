@@ -72,9 +72,13 @@ namespace CastleDestroyers.Core
         public Image endCardButtonEdge;
         public Text endCardButtonText;
         public Image endCardDisc;
+        [Tooltip("Кнопка рестарта на EndCard: корень, круг, стрелка.")]
+        public RectTransform endCardRestart;
+        public Image endCardRestartDisc;
+        public Image endCardRestartIcon;
         public Sprite endCardBlueCastle;
         public Sprite endCardRedCastle;
-        [Tooltip("Что перестраивается в ландшафте: логотип, круг, замок, надпись, кнопка.")]
+        [Tooltip("Что перестраивается в ландшафте: логотип, круг, замок, надпись, кнопка, рестарт.")]
         public RectTransform[] endCardLayout;
         [Tooltip("Клипы в порядке SoundId и источники для них.")]
         public AudioClip[] soundClips;
@@ -273,8 +277,9 @@ namespace CastleDestroyers.Core
             handView.Init(config, Guide, mainCamera, handRoot, handImages);
             EndCard = new EndCardView();
             EndCard.Init(config, Flow, endCardRoot, endCardDim, endCardContent, endCardButton, endCardIcon, endCardCaption, endCardButtonFace, endCardButtonEdge,
-                endCardButtonText, endCardDisc, endCardBlueCastle, endCardRedCastle, endCardLayout);
+                endCardButtonText, endCardDisc, endCardBlueCastle, endCardRedCastle, endCardLayout, endCardRestart, endCardRestartDisc, endCardRestartIcon);
             EndCard.Sounds = Sounds;
+            EndCard.RestartPressed += Restart;
             victoryShow = new VictoryShow();
             victoryShow.Init(config, Flow, Cannons, Castles, levelFx, Rng);
             rain = new RainFx();
@@ -397,6 +402,9 @@ namespace CastleDestroyers.Core
             bannerView.ApplyPalette(palette);
             handView.ApplyPalette(palette);
             EndCard.ApplyPalette(palette);
+#if GAME_DEBUG
+            debugOverlay.ApplyPalette(palette);
+#endif
             rocketMaterial.SetColor(RocketBodyColor, palette.rocketBody);
             rocketMaterial.SetColor(RocketShadeColor, palette.rocketShade);
             mainCamera.backgroundColor = palette.skyHorizon;

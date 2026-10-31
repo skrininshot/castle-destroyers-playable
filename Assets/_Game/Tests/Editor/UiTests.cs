@@ -343,6 +343,9 @@ namespace CastleDestroyers.Tests
     {
         private const float ScreenHeight = 1000f;
         private const float UpperScreen = 700f;
+        private const float ScreenWidth = 500f;
+        private const float RestartAnchorX = 0.89f;
+        private const float RestartAnchorY = 0.17f;
 
         private GameConfig config;
         private MatchState match;
@@ -354,6 +357,7 @@ namespace CastleDestroyers.Tests
         private GameObject root;
         private GameObject endRoot;
         private Text caption;
+        private RectTransform restartButton;
 
         private GameObject MakeObject(string objectName, Transform parent)
         {
@@ -389,10 +393,15 @@ namespace CastleDestroyers.Tests
 
             endRoot = MakeObject("End", root.transform);
             caption = MakeText(endRoot.transform);
+            RectTransform endContent = MakeObject("Content", endRoot.transform).GetComponent<RectTransform>();
+            endContent.sizeDelta = new Vector2(720f, 1280f);
+            restartButton = MakeObject("Restart", endRoot.transform).GetComponent<RectTransform>();
+            restartButton.anchorMin = new Vector2(RestartAnchorX, RestartAnchorY);
             endCard = new EndCardView();
-            endCard.Init(config, flow, endRoot, MakeImage(endRoot.transform), MakeObject("Content", endRoot.transform).GetComponent<RectTransform>(),
+            endCard.Init(config, flow, endRoot, MakeImage(endRoot.transform), endContent,
                 MakeObject("Button", endRoot.transform).GetComponent<RectTransform>(), MakeImage(endRoot.transform), caption,
-                MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeText(endRoot.transform), MakeImage(endRoot.transform), null, null, new RectTransform[0]);
+                MakeImage(endRoot.transform), MakeImage(endRoot.transform), MakeText(endRoot.transform), MakeImage(endRoot.transform), null, null, new RectTransform[0],
+                restartButton, MakeImage(endRoot.transform), MakeImage(endRoot.transform));
             endCard.Scripted = true;
             PaletteSet palette = ThemePalette.CreateNight();
             banner.ApplyPalette(palette);
@@ -467,16 +476,36 @@ namespace CastleDestroyers.Tests
         {
             ToEndCard();
             endCard.Tick(0.01f);
-            endCard.Feed(true, UpperScreen, ScreenHeight);
+            endCard.Feed(true, ScreenWidth, UpperScreen, ScreenWidth, ScreenHeight);
             Assert.AreEqual(0, endCard.CtaCount);
             endCard.Tick(config.endCardTapDelay + 0.1f);
-            endCard.Feed(true, UpperScreen, ScreenHeight);
+            endCard.Feed(true, ScreenWidth, UpperScreen, ScreenWidth, ScreenHeight);
             Assert.AreEqual(0, endCard.CtaCount, "finger was already down");
-            endCard.Feed(false, UpperScreen, ScreenHeight);
-            endCard.Feed(true, UpperScreen, ScreenHeight);
+            endCard.Feed(false, ScreenWidth, UpperScreen, ScreenWidth, ScreenHeight);
+            endCard.Feed(true, ScreenWidth, UpperScreen, ScreenWidth, ScreenHeight);
             Assert.AreEqual(1, endCard.CtaCount);
-            endCard.Feed(true, UpperScreen, ScreenHeight);
+            endCard.Feed(true, ScreenWidth, UpperScreen, ScreenWidth, ScreenHeight);
             Assert.AreEqual(1, endCard.CtaCount, "one press is one click");
+        }
+
+        [Test]
+        public void RestartTapDoesNotOpenStore()
+        {
+            int restarts = 0;
+            endCard.RestartPressed += () => restarts++;
+            ToEndCard();
+            endCard.Tick(config.endCardTapDelay + 0.1f);
+            float x = ScreenWidth * RestartAnchorX;
+            float y = ScreenHeight * RestartAnchorY;
+            endCard.Feed(false, x, y, ScreenWidth, ScreenHeight);
+            endCard.Feed(true, x, y, ScreenWidth, ScreenHeight);
+            Assert.AreEqual(1, restarts);
+            Assert.AreEqual(0, endCard.CtaCount);
+
+            endCard.Feed(false, x, y, ScreenWidth, ScreenHeight);
+            endCard.Feed(true, ScreenWidth * 0.5f, y, ScreenWidth, ScreenHeight);
+            Assert.AreEqual(1, restarts, "PLAY NOW is outside the restart zone");
+            Assert.AreEqual(1, endCard.CtaCount);
         }
 
         [Test]

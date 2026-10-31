@@ -169,6 +169,9 @@ namespace CastleDestroyers.Core
         [Range(0f, 2f)]
         [Tooltip("EndCard не принимает тап первые секунды: хвост игрового жеста не должен вести в стор.")]
         public float endCardTapDelay = 0.5f;
+        [Range(40f, 140f)]
+        [Tooltip("Радиус зоны тапа кнопки рестарта на EndCard, единицы канваса. Мимо неё тап ведёт в стор.")]
+        public float restartHitRadius = 60f;
         [Range(0f, 0.3f)]
         [Tooltip("Пульс кнопки PLAY NOW, доля размера.")]
         public float ctaPulse = 0.07f;
@@ -838,6 +841,12 @@ namespace CastleDestroyers.Core
         [Range(0f, 0.5f)]
         [Tooltip("Верхняя доля экрана под кнопкой DEV: тапы там не идут в игру.")]
         public float debugToggleBand = 0.07f;
+        [Range(0.05f, 1f)]
+        [Tooltip("Непрозрачность надписи Developer при закрытом меню: кнопка должна быть едва заметна.")]
+        public float debugToggleAlpha = 0.28f;
+        [Range(0f, 1f)]
+        [Tooltip("Непрозрачность плашек меню разработчика.")]
+        public float debugPanelAlpha = 0.86f;
         [Range(20f, 160f)]
         [Tooltip("Ширина кадра ALL на debug-камере, метры.")]
         public float debugOverviewWidth = 106f;

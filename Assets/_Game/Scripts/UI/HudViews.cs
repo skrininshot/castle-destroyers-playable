@@ -1,3 +1,4 @@
+using System;
 using CastleDestroyers.CameraRig;
 using CastleDestroyers.Core;
 using CastleDestroyers.Flow;
@@ -566,7 +567,7 @@ namespace CastleDestroyers.UI
 
     /// <summary>
     /// EndCard (ТЗ §3.11): плоский оверлей, логотип, замок победителя на круге, пульсирующая PLAY NOW. Тап в любом месте после
-    /// короткой паузы ведёт в стор. Это единственное место, откуда вызывается CTA (ТЗ §3.1.1).
+    /// короткой паузы ведёт в стор, тап по круглой стрелке начинает матч заново. Это единственное место, откуда вызывается CTA (ТЗ §3.1.1).
     /// </summary>
     public sealed class EndCardView : ITickable
     {
@@ -574,8 +575,8 @@ namespace CastleDestroyers.UI
 
         private const float LandscapeScale = 0.62f;
 
-        // Ландшафт: логотип, надпись и кнопка слева, замок на круге справа. Порядок как у layout в Init.
-        private static readonly float[] LandscapeAnchors = { 0.3f, 0.68f, 0.72f, 0.5f, 0.72f, 0.5f, 0.3f, 0.4f, 0.3f, 0.24f };
+        // Ландшафт: логотип, надпись и кнопки слева, замок на круге справа. Порядок как у layout в Init.
+        private static readonly float[] LandscapeAnchors = { 0.3f, 0.68f, 0.72f, 0.5f, 0.72f, 0.5f, 0.3f, 0.4f, 0.3f, 0.24f, 0.45f, 0.24f };
 
         private readonly InputRig.PointerReader pointer = new InputRig.PointerReader();
         private GameConfig config;
@@ -584,6 +585,9 @@ namespace CastleDestroyers.UI
         private Image dim;
         private RectTransform content;
         private RectTransform button;
+        private RectTransform restart;
+        private Image restartDisc;
+        private Image restartIcon;
         private Image winnerIcon;
         private Text caption;
         private Image buttonFace;
@@ -606,13 +610,16 @@ namespace CastleDestroyers.UI
         public Platform.GameSounds Sounds { get; set; }
         /// <summary>Сколько раз сработал CTA.</summary>
         public int CtaCount { get; private set; }
+        /// <summary>Нажата кнопка рестарта.</summary>
+        public event Action RestartPressed;
 #if GAME_DEBUG
         /// <summary>Нижняя доля экрана под открытой debug-панелью: тапы там не ведут в стор.</summary>
         public float UiBand { get; set; }
 #endif
 
         public void Init(GameConfig gameConfig, SessionFlow sessionFlow, GameObject root, Image dimImage, RectTransform contentRoot, RectTransform ctaButton,
-            Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Image discImage, Sprite blueSprite, Sprite redSprite, RectTransform[] layoutRects)
+            Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Image discImage, Sprite blueSprite, Sprite redSprite, RectTransform[] layoutRects,
+            RectTransform restartButton, Image restartDiscImage, Image restartIconImage)
         {
             config = gameConfig;
             flow = sessionFlow;
@@ -629,6 +636,9 @@ namespace CastleDestroyers.UI
             blueWinner = blueSprite;
             redWinner = redSprite;
             layout = layoutRects;
+            restart = restartButton;
+            restartDisc = restartDiscImage;
+            restartIcon = restartIconImage;
             portraitAnchors = new Vector2[layout.Length];
             for (int i = 0; i < layout.Length; i++)
             {
@@ -647,6 +657,8 @@ namespace CastleDestroyers.UI
             buttonText.color = palette.hudTrack;
             disc.color = palette.hudPanel;
             caption.color = palette.hudText;
+            restartDisc.color = palette.hudPanel;
+            restartIcon.color = palette.hudText;
             if (rootObject.activeSelf)
             {
                 PaintWinner();
@@ -671,7 +683,7 @@ namespace CastleDestroyers.UI
             if (!Scripted)
             {
                 pointer.Read();
-                Feed(pointer.Pressed, pointer.Y, Screen.height);
+                Feed(pointer.Pressed, pointer.X, pointer.Y, Screen.width, Screen.height);
             }
         }
 
@@ -695,18 +707,36 @@ namespace CastleDestroyers.UI
         }
 
         /// <summary>Один кадр ввода. Тап считается по новому нажатию: палец, оставшийся с игры, в стор не ведёт.</summary>
-        public void Feed(bool pressed, float y, float screenHeight)
+        public void Feed(bool pressed, float x, float y, float screenWidth, float screenHeight)
         {
             if (pressed && !wasPressed && time >= config.endCardTapDelay && CanTapAt(y, screenHeight))
             {
-                CtaCount++;
                 if (Sounds != null)
                 {
                     Sounds.Play(Platform.SoundId.Click);
                 }
-                Platform.PlatformBridge.InstallFullGame();
+                if (IsOverRestart(x, y, screenWidth, screenHeight))
+                {
+                    if (RestartPressed != null)
+                    {
+                        RestartPressed();
+                    }
+                }
+                else
+                {
+                    CtaCount++;
+                    Platform.PlatformBridge.InstallFullGame();
+                }
             }
             wasPressed = pressed;
+        }
+
+        /// <summary>Точка экрана в зоне тапа кнопки рестарта. Расстояние считается в единицах канваса: кнопка стоит на долях экрана.</summary>
+        private bool IsOverRestart(float x, float y, float screenWidth, float screenHeight)
+        {
+            float dx = (x / screenWidth - restart.anchorMin.x) * content.rect.width;
+            float dy = (y / screenHeight - restart.anchorMin.y) * content.rect.height;
+            return dx * dx + dy * dy <= config.restartHitRadius * config.restartHitRadius;
         }
 
         private bool CanTapAt(float y, float screenHeight)

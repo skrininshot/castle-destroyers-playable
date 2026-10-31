@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Полная Luna-сборка из командной строки. Unity должна быть закрыта, вход в Playworks Plugin выполнен.
 
-Использование: python Tools/luna_build.py [develop|playground] [--release] [--all-themes] [--lite]
+Использование: python Tools/luna_build.py [develop|playground] [--release] [--lite]
 
 develop      сборка для браузера, LunaTemp/stage4/develop
-playground   архив для Playground, LunaTemp/stage4/create-hub/_build.zip; всегда идёт как --release
+playground   архив для Playground, LunaTemp/stage4/create-hub/_build.zip
 
---release     без GAME_DEBUG и без DebugRoot в сцене: в сборке нет debug-панели и читов
---all-themes  оставить обе темы, нужно только кнопке THEME
+По умолчанию сборка идёт с меню разработчика и обеими темами: это сборка для заказчика (D-073).
+
+--release     без GAME_DEBUG, без DebugRoot в сцене и с одной темой: как в рекламе
 --lite        текстуры и звук из LITE_RULES (ТЗ §2.2)
 
 Jake пишет задание Assets/.export-assets и ждёт экспорта, но завершение batchmode-экспорта не замечает.
@@ -145,12 +146,11 @@ def apply_lite_rules(originals):
     LUNA_CONFIG.write_text(json.dumps(config, indent=4, ensure_ascii=False), encoding="utf8")
 
 
-def apply_variant(release, all_themes, lite):
+def apply_variant(release, lite):
     originals = {}
     apply_build_config(originals, release)
-    if not all_themes:
-        strip_inactive_theme(originals)
     if release:
+        strip_inactive_theme(originals)
         strip_debug_scene(originals)
     if lite:
         apply_lite_rules(originals)
@@ -190,10 +190,10 @@ def main():
     flags = {a for a in arguments if a.startswith("--")}
     targets = [a for a in arguments if not a.startswith("--")]
     target = targets[0] if targets else "develop"
-    release = "--release" in flags or target != "develop"
+    release = "--release" in flags
     lite = "--lite" in flags
 
-    originals = apply_variant(release, "--all-themes" in flags, lite)
+    originals = apply_variant(release, lite)
     try:
         build(target)
     finally:

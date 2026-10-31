@@ -6,6 +6,8 @@ namespace CastleDestroyers.Platform
     /// <summary>Обёртка над Luna API. В редакторе — заглушки с логом.</summary>
     public static class PlatformBridge
     {
+        private static bool gameEnded;
+
         public static void Init(Action onPause, Action onResume)
         {
 #if UNITY_LUNA
@@ -23,8 +25,14 @@ namespace CastleDestroyers.Platform
 #endif
         }
 
+        /// <summary>Конец геймплея для сети. После рестарта с EndCard повторно не отправляется.</summary>
         public static void GameEnded()
         {
+            if (gameEnded)
+            {
+                return;
+            }
+            gameEnded = true;
 #if UNITY_LUNA
             Luna.Unity.LifeCycle.GameEnded();
 #else

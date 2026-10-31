@@ -14,7 +14,7 @@ import flat_svg
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "Assets" / "_Game" / "Art" / "Ui" / "Rubik-Game.ttf"
-GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 +!%°.,-"
+GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 +!%°.,-/()"
 
 
 def main():

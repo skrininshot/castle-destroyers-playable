@@ -9,9 +9,9 @@ using UnityEngine.UI;
 namespace CastleDestroyers.DebugTools
 {
     /// <summary>
-    /// Debug-оверлей: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
-    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера, сценарии бустеров). Панель открывается кнопкой DEV.
-    /// Целиком вырезается из сборки без GAME_DEBUG.
+    /// Меню разработчика: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
+    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера, сценарии бустеров). Открывается едва заметной надписью Developer.
+    /// Целиком вырезается из сборки без GAME_DEBUG (D-073).
     /// </summary>
     public sealed class DebugOverlay : MonoBehaviour, ITickable
     {
@@ -22,7 +22,11 @@ namespace CastleDestroyers.DebugTools
         public CanvasScaler canvasScaler;
         public GameObject panelRoot;
         public Button toggleButton;
+        public Text toggleLabel;
         public Text statsText;
+        public Image statsBackground;
+        public Image[] buttonImages;
+        public Text[] buttonLabels;
         public Button nextStateButton;
         public Button slowButton;
         public Button rocketsButton;
@@ -36,6 +40,7 @@ namespace CastleDestroyers.DebugTools
         public Text blastLabel;
         public Text cameraLabel;
         public Text rocketsLabel;
+        public Text themeLabel;
 
         private GameBootstrap game;
         private StringBuilder text;
@@ -45,6 +50,7 @@ namespace CastleDestroyers.DebugTools
         private float windowTime;
         private float windowMaxDelta;
         private bool slow;
+        private Color toggleColor;
         private static readonly string[] CameraNames = { "CAM AUTO", "CAM MTN", "CAM BLUE", "CAM RED", "CAM ALL" };
 
         public void Init(GameBootstrap bootstrap)
@@ -67,6 +73,25 @@ namespace CastleDestroyers.DebugTools
             SetPanelVisible(false);
         }
 
+        public void ApplyPalette(PaletteSet palette)
+        {
+            Color panel = palette.hudPanel;
+            panel.a = game.config.debugPanelAlpha;
+            statsBackground.color = panel;
+            statsText.color = palette.hudText;
+            for (int i = 0; i < buttonImages.Length; i++)
+            {
+                buttonImages[i].color = panel;
+            }
+            for (int i = 0; i < buttonLabels.Length; i++)
+            {
+                buttonLabels[i].color = palette.hudText;
+            }
+            toggleColor = palette.hudText;
+            UpdateToggleLabel();
+            themeLabel.text = game.ActivePreset == ThemePreset.Night ? "THEME NIGHT" : "THEME SUNSET";
+        }
+
         /// <summary>Открытая панель занимает низ экрана: тапы там не должны доходить до прицела и CTA.</summary>
         public void SetPanelVisible(bool visible)
         {
@@ -75,6 +100,14 @@ namespace CastleDestroyers.DebugTools
             game.Aim.UiBand = band;
             game.EndCard.UiBand = band;
             game.Blaster.UiBand = band;
+            UpdateToggleLabel();
+        }
+
+        private void UpdateToggleLabel()
+        {
+            Color color = toggleColor;
+            color.a = panelRoot.activeSelf ? 1f : game.config.debugToggleAlpha;
+            toggleLabel.color = color;
         }
 
         public void Tick(float dt)
@@ -89,7 +122,15 @@ namespace CastleDestroyers.DebugTools
             ApplyLayoutIfResized();
             if (windowTime >= game.config.debugHudRefresh)
             {
-                Refresh();
+                // Закрытое меню не должно аллоцировать строки в кадре: оно идёт и в сборке для заказчика.
+                if (panelRoot.activeSelf)
+                {
+                    Refresh();
+                }
+                else
+                {
+                    ResetWindow();
+                }
             }
         }
 
@@ -171,7 +212,11 @@ namespace CastleDestroyers.DebugTools
             text.Append("theme ").Append(game.ActivePreset.ToString());
             text.Append("  ").Append(screenWidth).Append('x').Append(screenHeight);
             statsText.text = text.ToString();
+            ResetWindow();
+        }
 
+        private void ResetWindow()
+        {
             windowFrames = 0;
             windowTime = 0f;
             windowMaxDelta = 0f;

@@ -10,6 +10,7 @@ namespace CastleDestroyers.EditorTools
         public const string PillPath = UiFolder + "UiPill.png";
         public const string CirclePath = UiFolder + "UiCircle.png";
         public const string DegreePath = UiFolder + "UiDegree.png";
+        public const string RestartPath = UiFolder + "UiRestart.png";
         public const string HandPath = UiFolder + "UiHand.png";
         public const string LogoPath = UiFolder + "UiLogo.png";
         public const string EndBluePath = UiFolder + "UiEndBlue.png";

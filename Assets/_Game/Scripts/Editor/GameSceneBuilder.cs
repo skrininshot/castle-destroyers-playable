@@ -57,11 +57,11 @@ namespace CastleDestroyers.EditorTools
         private const int DebugCanvasOrder = 10;
         private const int SafeBottom = 130;
         private const int StatsFontSize = 16;
-        private const int ButtonFontSize = 15;
+        private const float StatsPadding = 16f;
+        private const int ButtonFontSize = 17;
         private const float CameraStartSize = 8f;
-        private const float StatsWidth = 380f;
-        private const float StatsHeight = 190f;
-        private const float StatsAlpha = 0.4f;
+        private const float StatsWidth = 500f;
+        private const float StatsHeight = 250f;
         private const float AimPanelWidth = 250f;
         private const float AimPanelHeight = 110f;
         private const float AimCaptionShare = 0.3f;
@@ -89,13 +89,18 @@ namespace CastleDestroyers.EditorTools
         private const float EndButtonHeight = 104f;
         private const float EndButtonEdge = 10f;
         private const int EndButtonFontSize = 50;
+        private const float EndRestartAnchorX = 0.89f;
+        private const float EndRestartSize = 104f;
+        private const float EndRestartIconSize = 68f;
         private const float PillPixelsPerUnit = 1f;
         private const int ButtonWidth = 128;
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
         private const int ButtonRows = 3;
-        private const int ToggleWidth = 96;
-        private const int ToggleMargin = 20;
+        private const int ToggleWidth = 150;
+        private const int ToggleHeight = 52;
+        private const int ToggleMargin = 8;
+        private const int ToggleFontSize = 20;
         private const int SoundSources = 6;
         private static readonly string[] SoundNames = { "Shot", "ExplosionA", "ExplosionB", "Booster", "Splash", "Victory", "Click" };
 
@@ -418,7 +423,12 @@ namespace CastleDestroyers.EditorTools
             bootstrap.endCardButtonEdge = edge;
             bootstrap.endCardButtonText = CreatePanelText(face.rectTransform, "Label", 0f, 1f, 0f, 1f, EndButtonFontSize, "PLAY NOW", font);
 
-            bootstrap.endCardLayout = new[] { logo.rectTransform, bootstrap.endCardDisc.rectTransform, bootstrap.endCardIcon.rectTransform, captionRect, button };
+            RectTransform restart = CreateRect(content, "Restart", EndRestartAnchorX, EndButtonAnchorY, EndRestartSize, EndRestartSize);
+            bootstrap.endCardRestart = restart;
+            bootstrap.endCardRestartDisc = CreateImage(restart, "Disc", 0.5f, 0.5f, EndRestartSize, EndRestartSize, circle);
+            bootstrap.endCardRestartIcon = CreateImage(restart, "Icon", 0.5f, 0.5f, EndRestartIconSize, EndRestartIconSize, LoadSprite(GameTextureImport.RestartPath));
+
+            bootstrap.endCardLayout = new[] { logo.rectTransform, bootstrap.endCardDisc.rectTransform, bootstrap.endCardIcon.rectTransform, captionRect, button, restart };
             bootstrap.endCardRoot = root.gameObject;
             bootstrap.endCardDim = dim;
             bootstrap.endCardContent = content;
@@ -457,28 +467,32 @@ namespace CastleDestroyers.EditorTools
             GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             eventSystem.transform.SetParent(canvasObject.transform, false);
 
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Font font = AssetDatabase.LoadAssetAtPath<Font>(GameTextureImport.FontPath);
+            Sprite pill = LoadSprite(GameTextureImport.PillPath);
             DebugOverlay overlay = canvasObject.AddComponent<DebugOverlay>();
             overlay.canvasScaler = scaler;
             GameObject panelRoot = CreateStretched("Panel", canvasObject.transform);
             overlay.panelRoot = panelRoot;
-            overlay.statsText = CreateStats(panelRoot.transform, font);
-            overlay.toggleButton = CreateToggleButton(canvasObject.transform, font);
+            overlay.statsText = CreateStats(panelRoot.transform, font, pill, overlay);
+            overlay.toggleButton = CreateToggleButton(canvasObject.transform, font, overlay);
 
             RectTransform panel = CreateButtonsPanel(panelRoot.transform);
-            overlay.nextStateButton = CreateButton(panel, "NEXT STATE", font);
-            overlay.slowButton = CreateButton(panel, "SLOW x0.25", font);
-            overlay.rocketsButton = CreateButton(panel, "STRESS OFF", font);
+            overlay.nextStateButton = CreateButton(panel, "NEXT STATE", font, pill);
+            overlay.slowButton = CreateButton(panel, "SLOW x0.25", font, pill);
+            overlay.rocketsButton = CreateButton(panel, "STRESS OFF", font, pill);
             overlay.rocketsLabel = overlay.rocketsButton.GetComponentInChildren<Text>();
-            overlay.themeButton = CreateButton(panel, "THEME", font);
-            overlay.restartButton = CreateButton(panel, "RESTART", font);
-            overlay.blastButton = CreateButton(panel, "BLAST", font);
+            overlay.themeButton = CreateButton(panel, "THEME", font, pill);
+            overlay.themeLabel = overlay.themeButton.GetComponentInChildren<Text>();
+            overlay.restartButton = CreateButton(panel, "RESTART", font, pill);
+            overlay.blastButton = CreateButton(panel, "BLAST", font, pill);
             overlay.blastLabel = overlay.blastButton.GetComponentInChildren<Text>();
-            overlay.cameraButton = CreateButton(panel, "CAM AUTO", font);
+            overlay.cameraButton = CreateButton(panel, "CAM AUTO", font, pill);
             overlay.cameraLabel = overlay.cameraButton.GetComponentInChildren<Text>();
-            overlay.shotX20Button = CreateButton(panel, "SHOT x20", font);
-            overlay.shotX10Button = CreateButton(panel, "SHOT x10", font);
-            overlay.shotX50Button = CreateButton(panel, "SHOT x50", font);
+            overlay.shotX20Button = CreateButton(panel, "SHOT x20", font, pill);
+            overlay.shotX10Button = CreateButton(panel, "SHOT x10", font, pill);
+            overlay.shotX50Button = CreateButton(panel, "SHOT x50", font, pill);
+            overlay.buttonImages = panel.GetComponentsInChildren<Image>();
+            overlay.buttonLabels = panel.GetComponentsInChildren<Text>();
 
             bootstrap.debugRoot = canvasObject;
             bootstrap.debugOverlay = overlay;
@@ -496,20 +510,33 @@ namespace CastleDestroyers.EditorTools
             return root;
         }
 
-        /// <summary>Кнопка DEV в верхнем левом углу: в Luna нижний край debug-канваса уходил за экран, а этот угол всегда на месте (D-068).</summary>
-        private static Button CreateToggleButton(Transform canvas, Font font)
+        /// <summary>
+        /// Едва заметная надпись Developer в верхнем левом углу: в Luna нижний край debug-канваса уходил за экран, а этот угол всегда на месте (D-068).
+        /// Без подложки: нажатие ловит сама надпись, в кадре это один лишний вызов отрисовки.
+        /// </summary>
+        private static Button CreateToggleButton(Transform canvas, Font font, DebugOverlay overlay)
         {
-            Button button = CreateButton(canvas, "DEV", font);
-            RectTransform rect = button.GetComponent<RectTransform>();
+            GameObject buttonObject = new GameObject("Developer", typeof(RectTransform), typeof(Text), typeof(Button));
+            buttonObject.transform.SetParent(canvas, false);
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.up;
             rect.anchorMax = Vector2.up;
             rect.pivot = Vector2.up;
             rect.anchoredPosition = new Vector2(ToggleMargin, -ToggleMargin);
-            rect.sizeDelta = new Vector2(ToggleWidth, ButtonHeight);
+            rect.sizeDelta = new Vector2(ToggleWidth, ToggleHeight);
+            Text text = buttonObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = ToggleFontSize;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.text = "Developer";
+            overlay.toggleLabel = text;
+            Button button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = text;
+            button.transition = Selectable.Transition.None;
             return button;
         }
 
-        private static Text CreateStats(Transform canvas, Font font)
+        private static Text CreateStats(Transform canvas, Font font, Sprite pill, DebugOverlay overlay)
         {
             GameObject panel = new GameObject("StatsPanel", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(canvas, false);
@@ -520,20 +547,21 @@ namespace CastleDestroyers.EditorTools
             panelRect.offsetMin = new Vector2(20f, -StatsTop - StatsHeight);
             panelRect.offsetMax = new Vector2(20f + StatsWidth, -StatsTop);
             Image background = panel.GetComponent<Image>();
-            background.color = new Color(0f, 0f, 0f, StatsAlpha);
+            background.sprite = pill;
+            background.type = Image.Type.Sliced;
             background.raycastTarget = false;
+            overlay.statsBackground = background;
 
             GameObject textObject = new GameObject("Stats", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(panel.transform, false);
             RectTransform rect = textObject.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(10f, 6f);
-            rect.offsetMax = new Vector2(-10f, -6f);
+            rect.offsetMin = new Vector2(StatsPadding, StatsPadding);
+            rect.offsetMax = new Vector2(-StatsPadding, -StatsPadding);
             Text text = textObject.GetComponent<Text>();
             text.font = font;
             text.fontSize = StatsFontSize;
-            text.color = Color.white;
             text.raycastTarget = false;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;
@@ -558,12 +586,14 @@ namespace CastleDestroyers.EditorTools
             return rect;
         }
 
-        private static Button CreateButton(Transform parent, string label, Font font)
+        private static Button CreateButton(Transform parent, string label, Font font, Sprite pill)
         {
             GameObject buttonObject = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button));
             buttonObject.transform.SetParent(parent, false);
             buttonObject.GetComponent<RectTransform>().sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
-            buttonObject.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.85f);
+            Image background = buttonObject.GetComponent<Image>();
+            background.sprite = pill;
+            background.type = Image.Type.Sliced;
 
             GameObject labelObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
             labelObject.transform.SetParent(buttonObject.transform, false);
@@ -575,7 +605,6 @@ namespace CastleDestroyers.EditorTools
             Text text = labelObject.GetComponent<Text>();
             text.font = font;
             text.fontSize = ButtonFontSize;
-            text.color = Color.black;
             text.alignment = TextAnchor.MiddleCenter;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;

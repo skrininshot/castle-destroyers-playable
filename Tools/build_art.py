@@ -533,6 +533,10 @@ def ui_documents():
     docs["UiDegree"] = svg.document(32, 32)
 
     svg = Svg()
+    draw_restart_icon(svg)
+    docs["UiRestart"] = svg.document(128, 128)
+
+    svg = Svg()
     svg.open("translate(112 160) rotate(-18) scale(1.45)")
     for x, y, w, h, r in ((-11, -62, 22, 74, 11), (10, -20, 20, 46, 10), (28, -14, 18, 40, 9), (-28, -4, 18, 34, 9), (-24, 2, 66, 58, 18)):
         svg.rect(x, y, w, h, "#FFFFFF", r)
@@ -552,6 +556,23 @@ def ui_documents():
     ss.on_platform(svg, lambda s: draw_end_castle(s, ss.red_castle), 256, 490, 30.0)
     docs["UiEndRed"] = svg.document(512, 512)
     return docs
+
+
+def draw_restart_icon(svg):
+    """Круговая стрелка: кольцо с разрывом справа сверху и треугольник на конце, идёт по часовой."""
+    center, outer, inner = 64.0, 50.0, 32.0
+    start, end, steps = 0.0, 310.0, 48
+    angles = [math.radians(start + (end - start) * i / steps) for i in range(steps + 1)]
+    ring = [(center + outer * math.cos(a), center + outer * math.sin(a)) for a in angles]
+    ring += [(center + inner * math.cos(a), center + inner * math.sin(a)) for a in reversed(angles)]
+    svg.parts.append('<polygon points="%s" fill="#FFFFFF"/>' % " ".join("%.2f,%.2f" % p for p in ring))
+    tip = angles[-1]
+    middle = (outer + inner) * 0.5
+    x, y = center + middle * math.cos(tip), center + middle * math.sin(tip)
+    normal = (math.cos(tip), math.sin(tip))
+    tangent = (-normal[1], normal[0])
+    head = ((x + normal[0] * 25, y + normal[1] * 25), (x - normal[0] * 25, y - normal[1] * 25), (x + tangent[0] * 30, y + tangent[1] * 30))
+    svg.parts.append('<polygon points="%s" fill="#FFFFFF"/>' % " ".join("%.2f,%.2f" % p for p in head))
 
 
 def draw_end_castle(svg, castle):
