@@ -27,6 +27,8 @@ namespace CastleDestroyers.DebugTools
 
         public bool Active { get { return radiusIndex != OffIndex; } }
         public float Radius { get { return Active ? config.debugBlastRadii[radiusIndex] : 0f; } }
+        /// <summary>Нижняя доля экрана под открытой debug-панелью: там тап не взрывает.</summary>
+        public float UiBand { get; set; }
 
         public void Init(GameConfig gameConfig, Camera camera, TerrainSystem terrainSystem, CastleSystem castleSystem)
         {
@@ -54,7 +56,7 @@ namespace CastleDestroyers.DebugTools
             pointer.Read();
             bool pressed = pointer.Pressed;
             holdTimer -= dt;
-            bool overUi = pointer.Y < Screen.height * config.debugBlastUiBand;
+            bool overUi = pointer.Y < Screen.height * UiBand || pointer.Y > Screen.height * (1f - config.debugToggleBand);
             bool fire = pressed && !overUi && (!wasPressed || holdTimer <= 0f);
             wasPressed = pressed;
             if (fire)

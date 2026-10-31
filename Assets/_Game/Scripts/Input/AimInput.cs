@@ -38,6 +38,8 @@ namespace CastleDestroyers.InputRig
 #if GAME_DEBUG
         /// <summary>Debug-взрывы забрали ввод.</summary>
         public bool Blocked { get; set; }
+        /// <summary>Нижняя доля экрана под открытой debug-панелью: жест там не начинается.</summary>
+        public float UiBand { get; set; }
 #endif
 
         public void Init(GameConfig gameConfig, SessionFlow sessionFlow, CannonSystem cannonSystem, Camera camera)
@@ -132,7 +134,7 @@ namespace CastleDestroyers.InputRig
         private bool CanStartAt(float y, float screenHeight)
         {
 #if GAME_DEBUG
-            if (Blocked || y < screenHeight * config.debugBlastUiBand)
+            if (Blocked || y < screenHeight * UiBand || y > screenHeight * (1f - config.debugToggleBand))
             {
                 return false;
             }

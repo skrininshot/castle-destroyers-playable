@@ -10,7 +10,8 @@ namespace CastleDestroyers.DebugTools
 {
     /// <summary>
     /// Debug-оверлей: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
-    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера, сценарии бустеров). Целиком вырезается из сборки без GAME_DEBUG.
+    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера, сценарии бустеров). Панель открывается кнопкой DEV.
+    /// Целиком вырезается из сборки без GAME_DEBUG.
     /// </summary>
     public sealed class DebugOverlay : MonoBehaviour, ITickable
     {
@@ -19,6 +20,8 @@ namespace CastleDestroyers.DebugTools
         private const float LandscapeMatch = 1f;
 
         public CanvasScaler canvasScaler;
+        public GameObject panelRoot;
+        public Button toggleButton;
         public Text statsText;
         public Button nextStateButton;
         public Button slowButton;
@@ -48,6 +51,7 @@ namespace CastleDestroyers.DebugTools
         {
             game = bootstrap;
             text = new StringBuilder(HudTextCapacity);
+            toggleButton.onClick.AddListener(OnTogglePanel);
             nextStateButton.onClick.AddListener(OnNextState);
             slowButton.onClick.AddListener(OnToggleSlow);
             rocketsButton.onClick.AddListener(OnSpawnRockets);
@@ -60,6 +64,17 @@ namespace CastleDestroyers.DebugTools
             shotX50Button.onClick.AddListener(OnShotX50);
             UpdateBlastLabel();
             UpdateStressLabel();
+            SetPanelVisible(false);
+        }
+
+        /// <summary>Открытая панель занимает низ экрана: тапы там не должны доходить до прицела и CTA.</summary>
+        public void SetPanelVisible(bool visible)
+        {
+            panelRoot.SetActive(visible);
+            float band = visible ? game.config.debugBlastUiBand : 0f;
+            game.Aim.UiBand = band;
+            game.EndCard.UiBand = band;
+            game.Blaster.UiBand = band;
         }
 
         public void Tick(float dt)
@@ -76,6 +91,11 @@ namespace CastleDestroyers.DebugTools
             {
                 Refresh();
             }
+        }
+
+        private void OnTogglePanel()
+        {
+            SetPanelVisible(!panelRoot.activeSelf);
         }
 
         /// <summary>Немедленно обновляет текст (для editor-захвата, где нет реального времени кадра).</summary>

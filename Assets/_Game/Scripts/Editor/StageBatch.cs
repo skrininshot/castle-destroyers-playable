@@ -12,5 +12,13 @@ namespace CastleDestroyers.EditorTools
             UnityEditor.AssetDatabase.SaveAssets();
             UnityEditor.EditorApplication.Exit(0);
         }
+
+        /// <summary>Только пересборка сцены, без долгого захвата скриншотов.</summary>
+        public static void BuildScene()
+        {
+            GameSceneBuilder.Build();
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEditor.EditorApplication.Exit(0);
+        }
     }
 }

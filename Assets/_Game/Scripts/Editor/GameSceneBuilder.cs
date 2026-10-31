@@ -108,6 +108,8 @@ namespace CastleDestroyers.EditorTools
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
         private const int ButtonRows = 3;
+        private const int ToggleWidth = 96;
+        private const int ToggleMargin = 20;
         private const int SoundSources = 6;
         private static readonly string[] SoundNames = { "Shot", "ExplosionA", "ExplosionB", "Booster", "Splash", "Victory", "Click" };
 
@@ -527,9 +529,12 @@ namespace CastleDestroyers.EditorTools
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             DebugOverlay overlay = canvasObject.AddComponent<DebugOverlay>();
             overlay.canvasScaler = scaler;
-            overlay.statsText = CreateStats(canvasObject.transform, font);
+            GameObject panelRoot = CreateStretched("Panel", canvasObject.transform);
+            overlay.panelRoot = panelRoot;
+            overlay.statsText = CreateStats(panelRoot.transform, font);
+            overlay.toggleButton = CreateToggleButton(canvasObject.transform, font);
 
-            RectTransform panel = CreateButtonsPanel(canvasObject.transform);
+            RectTransform panel = CreateButtonsPanel(panelRoot.transform);
             overlay.nextStateButton = CreateButton(panel, "NEXT STATE", font);
             overlay.slowButton = CreateButton(panel, "SLOW x0.25", font);
             overlay.rocketsButton = CreateButton(panel, "STRESS OFF", font);
@@ -546,6 +551,31 @@ namespace CastleDestroyers.EditorTools
 
             bootstrap.debugRoot = canvasObject;
             bootstrap.debugOverlay = overlay;
+        }
+
+        private static GameObject CreateStretched(string name, Transform parent)
+        {
+            GameObject root = new GameObject(name, typeof(RectTransform));
+            root.transform.SetParent(parent, false);
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            return root;
+        }
+
+        /// <summary>Кнопка DEV в верхнем левом углу: в Luna нижний край debug-канваса уходил за экран, а этот угол всегда на месте (D-068).</summary>
+        private static Button CreateToggleButton(Transform canvas, Font font)
+        {
+            Button button = CreateButton(canvas, "DEV", font);
+            RectTransform rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.up;
+            rect.anchorMax = Vector2.up;
+            rect.pivot = Vector2.up;
+            rect.anchoredPosition = new Vector2(ToggleMargin, -ToggleMargin);
+            rect.sizeDelta = new Vector2(ToggleWidth, ButtonHeight);
+            return button;
         }
 
         private static Text CreateStats(Transform canvas, Font font)

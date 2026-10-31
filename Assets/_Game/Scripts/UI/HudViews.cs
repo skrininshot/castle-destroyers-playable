@@ -390,6 +390,10 @@ namespace CastleDestroyers.UI
         public Platform.GameSounds Sounds { get; set; }
         /// <summary>Сколько раз сработал CTA.</summary>
         public int CtaCount { get; private set; }
+#if GAME_DEBUG
+        /// <summary>Нижняя доля экрана под открытой debug-панелью: тапы там не ведут в стор.</summary>
+        public float UiBand { get; set; }
+#endif
 
         public void Init(GameConfig gameConfig, SessionFlow sessionFlow, GameObject root, Image dimImage, RectTransform contentRoot, RectTransform ctaButton,
             Image iconImage, Text captionText, Image ctaFace, Image ctaEdge, Text ctaText, Image discImage, Sprite blueSprite, Sprite redSprite, RectTransform[] layoutRects)
@@ -492,7 +496,7 @@ namespace CastleDestroyers.UI
         private bool CanTapAt(float y, float screenHeight)
         {
 #if GAME_DEBUG
-            return y >= screenHeight * config.debugBlastUiBand;
+            return y >= screenHeight * UiBand && y <= screenHeight * (1f - config.debugToggleBand);
 #else
             return true;
 #endif

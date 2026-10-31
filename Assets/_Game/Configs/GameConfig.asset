@@ -318,6 +318,7 @@ MonoBehaviour:
   - 0.6
   debugBlastHoldInterval: 0.08
   debugBlastUiBand: 0.26
+  debugToggleBand: 0.07
   debugOverviewWidth: 106
   debugBoosterShots:
   - label: shot x20

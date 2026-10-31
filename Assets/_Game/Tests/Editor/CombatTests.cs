@@ -813,9 +813,25 @@ namespace CastleDestroyers.Tests
         public void TouchInDebugButtonBandDoesNotStartGesture()
         {
 #if GAME_DEBUG
-            aim.Feed(true, 500f, 10f, Height);
-            aim.Feed(true, 300f, 200f, Height);
+            aim.Feed(true, 500f, Height - 10f, Height);
+            aim.Feed(true, 300f, Height - 200f, Height);
             Assert.IsFalse(aim.Aiming);
+#endif
+        }
+
+        [Test]
+        public void OpenDebugPanelTakesLowerPartOfScreen()
+        {
+#if GAME_DEBUG
+            float y = Height * rig.Config.debugBlastUiBand * 0.5f;
+            aim.UiBand = rig.Config.debugBlastUiBand;
+            aim.Feed(true, 500f, y, Height);
+            Assert.IsFalse(aim.Aiming);
+            aim.Feed(false, 500f, y, Height);
+            aim.UiBand = 0f;
+            aim.Feed(true, 500f, y, Height);
+            aim.Feed(true, 300f, y - 100f, Height);
+            Assert.IsTrue(aim.Aiming);
 #endif
         }
     }

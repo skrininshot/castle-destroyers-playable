@@ -821,8 +821,11 @@ namespace CastleDestroyers.Core
         [Tooltip("Период повторения взрыва при удержании пальца, секунды.")]
         public float debugBlastHoldInterval = 0.08f;
         [Range(0f, 0.5f)]
-        [Tooltip("Нижняя доля экрана, где тапы не взрывают: там кнопки debug-панели.")]
+        [Tooltip("Нижняя доля экрана под открытой debug-панелью: тапы там не идут в игру.")]
         public float debugBlastUiBand = 0.26f;
+        [Range(0f, 0.5f)]
+        [Tooltip("Верхняя доля экрана под кнопкой DEV: тапы там не идут в игру.")]
+        public float debugToggleBand = 0.07f;
         [Range(20f, 160f)]
         [Tooltip("Ширина кадра ALL на debug-камере, метры.")]
         public float debugOverviewWidth = 106f;

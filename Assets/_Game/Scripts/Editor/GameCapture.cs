@@ -210,6 +210,7 @@ namespace CastleDestroyers.EditorTools
 #if GAME_DEBUG
             Canvas canvas = game.debugOverlay.GetComponent<Canvas>();
             AttachCanvas(canvas, camera);
+            game.debugOverlay.SetPanelVisible(true);
             game.debugOverlay.ForceRefresh();
             Canvas.ForceUpdateCanvases();
             return canvas;
