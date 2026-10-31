@@ -7,7 +7,7 @@ namespace CastleDestroyers.Level
 {
     /// <summary>
     /// Greybox уровня 1 (ТЗ §3.8, §3.10): статичные меши вокруг земли. BackLayers — слои фона для параллакса, рисуются до неё;
-    /// FrontMesh — вода, замки и бустеры, рисуется после неё и обломков. Порядок внутри меша = порядок добавления.
+    /// FrontMesh — вода и замки, рисуется после неё и обломков. Порядок внутри меша = порядок добавления.
     /// Заменяется масками и артом на этапах 5 и 7; геометрия мест (замки, бустеры) остаётся.
     /// </summary>
     public sealed class GreyboxLevel
@@ -155,7 +155,6 @@ namespace CastleDestroyers.Level
             AddWater(palette, extent);
             GreyboxCastles.DrawBlue(builder, palette, decorRng, config, config.playerCastleX, playerGroundY);
             GreyboxCastles.DrawRed(builder, palette, decorRng, config, config.enemyCastleX, enemyGroundY);
-            GreyboxBoosters.Draw(builder, palette, config);
             builder.Apply(FrontMesh);
         }
 

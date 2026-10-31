@@ -14,21 +14,23 @@ namespace CastleDestroyers.Combat
         private SessionFlow flow;
         private CannonSystem cannons;
         private RocketSystem rockets;
+        private BoosterSystem boosters;
         private CameraDirector cameraDirector;
 
-        public void Init(GameConfig gameConfig, SessionFlow sessionFlow, CannonSystem cannonSystem, RocketSystem rocketSystem, CameraDirector director)
+        public void Init(GameConfig gameConfig, SessionFlow sessionFlow, CannonSystem cannonSystem, RocketSystem rocketSystem, BoosterSystem boosterSystem, CameraDirector director)
         {
             config = gameConfig;
             flow = sessionFlow;
             cannons = cannonSystem;
             rockets = rocketSystem;
+            boosters = boosterSystem;
             cameraDirector = director;
             flow.StateChanged += OnStateChanged;
         }
 
         public void Tick(float dt)
         {
-            flow.FlightBusy = cannons.IsFiring || rockets.ActiveCount > 0;
+            flow.FlightBusy = cannons.IsFiring || rockets.ActiveCount > 0 || boosters.PendingCopies > 0;
             Side side = flow.ActiveSide;
             if (flow.State != SessionState.Flight || rockets.Count(side) == 0)
             {

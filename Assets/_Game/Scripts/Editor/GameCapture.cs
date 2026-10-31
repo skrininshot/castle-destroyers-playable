@@ -14,7 +14,7 @@ namespace CastleDestroyers.EditorTools
     public static class GameCapture
     {
         private const string OutputDir = "docs/reports/img";
-        private const string FilePrefix = "stage03_";
+        private const string FilePrefix = "stage04_";
         private const int PortraitWidth = 720;
         private const int PortraitHeight = 1280;
         private const int LandscapeWidth = 1280;
@@ -25,13 +25,14 @@ namespace CastleDestroyers.EditorTools
         private const int MaxSkips = 32;
         private const float DragStartX = 500f;
         private const float DragStartY = 700f;
-        private const float EnemyLobAngle = 45f;
-        private const float EnemyLobPower = 0.66f;
-        private const float TunnelAngle = 8f;
-        private const float TunnelPower = 0.9f;
+        private const float MaxWaitSeconds = 4f;
+        private const int ShotX20 = 0;
+        private const int ShotX10 = 1;
+        private const int ShotX50 = 2;
+        private const int CopiesAtTrigger = 60;
+        private const int BudgetDemo = 120;
 
         // Кадры debug-камеры (CameraDirector.DebugView).
-        private const int ViewAuto = 0;
         private const int ViewMountain = 1;
         private const int ViewRed = 3;
         private const int ViewAll = 4;
@@ -45,56 +46,81 @@ namespace CastleDestroyers.EditorTools
             game.Aim.Scripted = true;
             Directory.CreateDirectory(OutputDir);
 
-            // Навес через x20: жест, залп, поток над горой.
-            Fresh(game, ThemePreset.Night);
-            Drag(game, game.config.GetHint(0).handAngleDeg, game.config.GetHint(0).handPower01);
-            Shoot(game, "01_aim", ViewAuto, false, ThemePreset.Night, false);
-            Release(game);
+            // Навес через x20: срабатывание, потоки, вся дуга, подход к красному замку.
+            FireShot(game, ShotX20, ThemePreset.Night);
+            Shoot(game, "01_x20_trigger", ViewMountain, false, ThemePreset.Night, true);
+            Settle(game, 0.45f);
+            Shoot(game, "02_x20_streams", ViewMountain, false, ThemePreset.Night, false);
+            Shoot(game, "03_x20_overview", ViewAll, true, ThemePreset.Night, true);
+            Settle(game, 0.55f);
+            Shoot(game, "04_x20_at_red", ViewRed, false, ThemePreset.Night, true);
+
+            // Тоннель через левую половину, x10, пролом правой половины.
+            FireShot(game, ShotX10, ThemePreset.Night);
+            Shoot(game, "05_x10_trigger", ViewMountain, false, ThemePreset.Night, true);
+            Settle(game, 0.5f);
+            Shoot(game, "06_x10_through", ViewMountain, false, ThemePreset.Night, true);
+            Settle(game, 1.2f);
+            Shoot(game, "07_x10_result", ViewMountain, false, ThemePreset.Night, false);
+
+            // Низ горы, x50.
+            FireShot(game, ShotX50, ThemePreset.Night);
+            Shoot(game, "08_x50_trigger", ViewMountain, false, ThemePreset.Night, true);
             Settle(game, 0.4f);
-            Shoot(game, "02_salvo", ViewAuto, false, ThemePreset.Night, true);
-            Settle(game, 0.7f);
-            Shoot(game, "03_stream_center", ViewAuto, false, ThemePreset.Night, true);
-            Settle(game, 0.3f);
-            Shoot(game, "04_arc_overview", ViewAll, true, ThemePreset.Night, true);
+            Shoot(game, "09_x50_avalanche", ViewMountain, false, ThemePreset.Night, true);
+            Settle(game, 1.5f);
+            Shoot(game, "10_x50_result", ViewMountain, false, ThemePreset.Night, false);
 
-            // Полная дуга до красного замка.
+            // Бюджет: поп-ап честный, ракет меньше.
             Fresh(game, ThemePreset.Night);
-            Drag(game, EnemyLobAngle, EnemyLobPower);
-            Release(game);
-            Settle(game, 3.2f);
-            Shoot(game, "05_hits_red_castle", ViewRed, false, ThemePreset.Night, true);
+            game.Rockets.Budget = BudgetDemo;
+            AimShot(game, ShotX20);
+            WaitForCopies(game, BudgetDemo / 2);
+            Settle(game, 0.5f);
+            Shoot(game, "11_budget", ViewMountain, false, ThemePreset.Night, false);
+            game.Rockets.Budget = game.config.maxActiveRockets;
 
-            // Низкий выстрел прогрызает гору.
+            // Ответный залп красных без ракет игрока в воздухе.
             Fresh(game, ThemePreset.Night);
-            Drag(game, TunnelAngle, TunnelPower);
-            Release(game);
-            Settle(game, 1.0f);
-            Shoot(game, "06_tunnel_impact", ViewMountain, false, ThemePreset.Night, true);
-            Settle(game, 1.4f);
-            Shoot(game, "07_tunnel_result", ViewMountain, false, ThemePreset.Night, false);
-
-            // Ответный залп красных.
-            for (int i = 0; i < MaxSkips && !(game.Flow.State == Flow.SessionState.Fire && game.Flow.ActiveSide == Side.Enemy); i++)
+            for (int i = 0; i < MaxSkips && !(game.Flow.State == Flow.SessionState.Aim && game.Flow.ActiveSide == Side.Enemy); i++)
             {
                 game.Flow.Skip();
             }
-            Settle(game, 1.5f);
-            Shoot(game, "08_enemy_salvo", ViewAll, true, ThemePreset.Night, true);
+            game.Cannons.Clear();
+            game.Rockets.Clear();
+            game.Cannons.SetAim(Side.Enemy, game.config.stubAiAngleDeg, game.config.stubAiPower);
+            game.Flow.Skip();
+            Settle(game, 2.2f);
+            Debug.Log("[GameCapture] enemy salvo honest " + game.Boosters.HonestTotal + " spawned " + game.Boosters.SpawnedTotal + " rockets " + game.Rockets.ActiveCount);
+            Shoot(game, "12_enemy_salvo", ViewAll, true, ThemePreset.Night, true);
 
-            Fresh(game, ThemePreset.Sunset);
-            Drag(game, TunnelAngle, TunnelPower);
+            FireShot(game, ShotX20, ThemePreset.Sunset);
+            Settle(game, 0.3f);
+            Shoot(game, "13_sunset", ViewMountain, false, ThemePreset.Sunset, true);
+        }
+
+        /// <summary>Выстрел сценария кнопки SHOT с чистого уровня; возвращается, когда бустер уже выпускает копии.</summary>
+        private static void FireShot(GameBootstrap game, int shot, ThemePreset preset)
+        {
+            Fresh(game, preset);
+            AimShot(game, shot);
+            WaitForCopies(game, CopiesAtTrigger);
+        }
+
+        private static void AimShot(GameBootstrap game, int shot)
+        {
+            TurnHint hint = game.config.debugBoosterShots[shot];
+            Drag(game, hint.handAngleDeg, hint.handPower01);
             Release(game);
-            Settle(game, 1.0f);
-            Shoot(game, "09_sunset", ViewMountain, false, ThemePreset.Sunset, true);
+        }
 
-            Fresh(game, ThemePreset.Night);
-#if GAME_DEBUG
-            game.Stress.SetActive(true);
-#endif
-            Settle(game, 1.5f);
-            Shoot(game, "10_stress", ViewMountain, false, ThemePreset.Night, false);
-            Settle(game, 1.5f);
-            Shoot(game, "11_stress_later", ViewMountain, false, ThemePreset.Night, false);
+        private static void WaitForCopies(GameBootstrap game, int copies)
+        {
+            int steps = Mathf.RoundToInt(MaxWaitSeconds / StepSeconds);
+            for (int i = 0; i < steps && game.Boosters.SpawnedTotal < copies; i++)
+            {
+                game.Loop.Tick(StepSeconds);
+            }
         }
 
         private static void Fresh(GameBootstrap game, ThemePreset preset)

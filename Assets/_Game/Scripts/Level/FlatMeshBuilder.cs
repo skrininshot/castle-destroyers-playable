@@ -136,6 +136,19 @@ namespace CastleDestroyers.Level
             mesh.RecalculateBounds();
         }
 
+        /// <summary>
+        /// Копирует накопленные вершины в массив-приёмник (для мешей, которые двигаются в кадре). Поля пишутся по одному:
+        /// Array.Copy в Luna может оставить в двух массивах один и тот же struct (D-011).
+        /// </summary>
+        public void CopyVertices(Vector3[] target)
+        {
+            for (int i = 0; i < vertexCount; i++)
+            {
+                target[i].x = vertices[i].x;
+                target[i].y = vertices[i].y;
+            }
+        }
+
         private void SetVertex(int index, float x, float y, Color32 color)
         {
             vertices[index] = new Vector3(x, y, 0f);

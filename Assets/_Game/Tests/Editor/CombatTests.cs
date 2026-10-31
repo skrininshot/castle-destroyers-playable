@@ -27,6 +27,7 @@ namespace CastleDestroyers.Tests
         public readonly SmokeTrails Smoke;
         public readonly ExplosionSystem Explosions;
         public readonly RocketSystem Rockets;
+        public readonly BoosterSystem Boosters;
         public readonly CannonSystem Cannons;
 
         private readonly GameObject root;
@@ -69,9 +70,12 @@ namespace CastleDestroyers.Tests
             Explosions = new ExplosionSystem();
             Explosions.Init(Config, Terrain, Particles, fx, Shake, rng);
             Explosions.ApplyPalette(palette);
+            Boosters = new BoosterSystem();
             Rockets = new RocketSystem();
-            Rockets.Init(Config, Mask, Level, Explosions, Smoke, fx);
+            Rockets.Init(Config, Mask, Level, Explosions, Smoke, fx, Boosters);
             Rockets.ApplyPalette(palette);
+            Boosters.Init(Config, Rockets, Particles, rng);
+            Boosters.ApplyPalette(palette);
             Cannons = new CannonSystem();
             Cannons.Init(Config, Level, Match, Rockets, Particles);
             Cannons.ApplyPalette(palette);
@@ -799,7 +803,7 @@ namespace CastleDestroyers.Tests
             director = new CameraDirector();
             director.Init(cameraObject.GetComponent<Camera>(), rig.Config, rig.Level, rig.Flow, rig.Shake);
             combat = new TurnCombat();
-            combat.Init(rig.Config, rig.Flow, rig.Cannons, rig.Rockets, director);
+            combat.Init(rig.Config, rig.Flow, rig.Cannons, rig.Rockets, rig.Boosters, director);
         }
 
         [TearDown]

@@ -74,7 +74,7 @@ MonoBehaviour:
     position: {x: 0, y: 1.6}
   boosterWidth: 1
   boosterHeight: 2
-  boosterSpreadDeg: 12
+  boosterSpreadDeg: 18
   boosterSpawnStagger: 0.04
   boosterPulse: 0.03
   terrainMask: {fileID: 11400000, guid: f07d6423099f0bf4f97e65071c67d9ae, type: 2}
@@ -151,5 +151,5 @@ MonoBehaviour:
   - 4
   - 0.6
   debugBlastHoldInterval: 0.08
-  debugBlastUiBand: 0.22
+  debugBlastUiBand: 0.26
   debugOverviewWidth: 74

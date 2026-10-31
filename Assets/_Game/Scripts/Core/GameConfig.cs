@@ -201,13 +201,61 @@ namespace CastleDestroyers.Core
         public float boosterHeight = 2f;
         [Range(0f, 45f)]
         [Tooltip("Разброс угла копий ракет после бустера, градусы.")]
-        public float boosterSpreadDeg = 12f;
+        public float boosterSpreadDeg = 18f;
         [Range(0f, 0.2f)]
-        [Tooltip("Разнос копий ракет по времени, секунды.")]
+        [Tooltip("Разнос рядов копий по времени, секунды. В ряду по одной копии на поток.")]
         public float boosterSpawnStagger = 0.04f;
+        [Range(1, 9)]
+        [Tooltip("Потоков в веере после бустера. Нечётное число даёт поток по центру.")]
+        public int boosterStreams = 5;
+        [Range(0f, 1f)]
+        [Tooltip("Насколько точка выхода копий стянута к оси бустера. 1 — все потоки расходятся из одной точки.")]
+        public float boosterExitFocus = 1f;
+        [Range(1f, 4f)]
+        [Tooltip("Предел роста кратера у ракеты с весом, доля радиуса. Лишние копии сверх бюджета превращаются в вес.")]
+        public float boosterMaxCraterScale = 2f;
         [Range(0f, 0.1f)]
         [Tooltip("Амплитуда пульса бустера, доля масштаба.")]
         public float boosterPulse = 0.03f;
+        [Range(0.5f, 10f)]
+        [Tooltip("Скорость пульса бустера, рад/с.")]
+        public float boosterPulseSpeed = 3f;
+        [Range(0f, 0.5f)]
+        [Tooltip("Сквош при срабатывании: насколько корпус шире и ниже, доля размера.")]
+        public float boosterSquash = 0.14f;
+        [Range(1f, 20f)]
+        [Tooltip("Скорость затухания сквоша, 1/с.")]
+        public float boosterSquashDecay = 8f;
+        [Range(0, 32)]
+        [Tooltip("Плоских пуфов в одном «пыхе».")]
+        public int boosterPuffCount = 12;
+        [Range(0.02f, 1f)]
+        [Tooltip("Минимальный интервал между «пыхами» одного бустера, секунды.")]
+        public float boosterPuffInterval = 0.12f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Размер пуфа, метры.")]
+        public float boosterPuffSize = 0.7f;
+        [Range(0f, 12f)]
+        [Tooltip("Скорость разлёта пуфов, м/с.")]
+        public float boosterPuffSpeed = 5f;
+        [Range(0.1f, 2f)]
+        [Tooltip("Время жизни пуфа, секунды.")]
+        public float boosterPuffLife = 0.4f;
+        [Range(0.2f, 2f)]
+        [Tooltip("Высота цифр поп-апа «+N», метры.")]
+        public float boosterPopupHeight = 0.8f;
+        [Range(0f, 3f)]
+        [Tooltip("Отступ поп-апа от верха бустера, метры.")]
+        public float boosterPopupOffsetY = 0.4f;
+        [Range(0.1f, 3f)]
+        [Tooltip("Сколько поп-ап держится после последней ракеты, секунды.")]
+        public float boosterPopupHold = 0.7f;
+        [Range(0.05f, 1f)]
+        [Tooltip("За сколько поп-ап тает, секунды.")]
+        public float boosterPopupFade = 0.25f;
+        [Range(0f, 6f)]
+        [Tooltip("Скорость всплытия поп-апа, м/с.")]
+        public float boosterPopupRise = 1.2f;
 
         [Header("Разрушаемость (ТЗ §3.6, §5.3)")]
         [Tooltip("Запечённая маска ландшафта. Создаётся из Level1_TerrainMask.png.")]
@@ -475,10 +523,17 @@ namespace CastleDestroyers.Core
         public float debugBlastHoldInterval = 0.08f;
         [Range(0f, 0.5f)]
         [Tooltip("Нижняя доля экрана, где тапы не взрывают: там кнопки debug-панели.")]
-        public float debugBlastUiBand = 0.22f;
+        public float debugBlastUiBand = 0.26f;
         [Range(20f, 120f)]
         [Tooltip("Ширина кадра ALL на debug-камере, метры.")]
         public float debugOverviewWidth = 74f;
+        [Tooltip("Сценарии кнопок SHOT: угол и сила выстрела игрока (навес x20, тоннель x10, низ x50).")]
+        public TurnHint[] debugBoosterShots =
+        {
+            new TurnHint("shot x20", 20, false, 32f, 0.6f),
+            new TurnHint("shot x10", 10, false, 12f, 0.9f),
+            new TurnHint("shot x50", 50, false, 6f, 0.45f)
+        };
 
         /// <summary>Подсказка для хода игрока (индекс с нуля); за пределами массива — последняя.</summary>
         public TurnHint GetHint(int turnIndex)

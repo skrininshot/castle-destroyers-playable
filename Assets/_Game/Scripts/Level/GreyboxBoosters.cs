@@ -5,7 +5,7 @@ namespace CastleDestroyers.Level
 {
     /// <summary>
     /// Бустеры (ТЗ §3.5): полупрозрачная колба, блики, скруглённые заглушки на тон темнее и надпись «x20».
-    /// Цифры собраны из сегментов, шрифт для этого не нужен. Анимация и «пых» появятся на этапе 4.
+    /// Цифры собраны из сегментов, шрифт для этого не нужен. Анимацию и поп-апы даёт BoosterView.
     /// </summary>
     public static class GreyboxBoosters
     {
@@ -35,16 +35,16 @@ namespace CastleDestroyers.Level
         private static readonly int[] DigitSegments = { 0x77, 0x24, 0x5D, 0x6D, 0x2E, 0x6B, 0x7B, 0x25, 0x7F, 0x6F };
         private static readonly int[] DigitsBuffer = new int[MaxDigits];
 
-        public static void Draw(FlatMeshBuilder builder, PaletteSet palette, GameConfig config)
+        public static void Draw(FlatMeshBuilder builder, PaletteSet palette, GameConfig config, int index)
         {
-            BoosterSpec[] boosters = config.boosters;
-            float halfWidth = config.boosterWidth * 0.5f;
-            float halfHeight = config.boosterHeight * 0.5f;
-            for (int i = 0; i < boosters.Length; i++)
-            {
-                int multiplier = boosters[i].multiplier;
-                DrawOne(builder, palette, multiplier, boosters[i].position.x, boosters[i].position.y, halfWidth, halfHeight);
-            }
+            BoosterSpec booster = config.boosters[index];
+            DrawOne(builder, palette, booster.multiplier, booster.position.x, booster.position.y, config.boosterWidth * 0.5f, config.boosterHeight * 0.5f);
+        }
+
+        /// <summary>Биты сегментов цифры: порядок описан у DigitSegments.</summary>
+        public static int DigitMask(int digit)
+        {
+            return DigitSegments[digit];
         }
 
         private static void DrawOne(FlatMeshBuilder builder, PaletteSet palette, int multiplier, float x, float y, float halfWidth, float halfHeight)
@@ -73,7 +73,7 @@ namespace CastleDestroyers.Level
             AddLabel(builder, multiplier, x, y, palette.hudText);
         }
 
-        private static Color32 GlassColor(PaletteSet palette, int multiplier)
+        public static Color32 GlassColor(PaletteSet palette, int multiplier)
         {
             if (multiplier >= MultiplierHigh)
             {
@@ -82,7 +82,7 @@ namespace CastleDestroyers.Level
             return multiplier >= MultiplierMid ? palette.booster20 : palette.booster10;
         }
 
-        private static Color32 CapColor(PaletteSet palette, int multiplier)
+        public static Color32 CapColor(PaletteSet palette, int multiplier)
         {
             if (multiplier >= MultiplierHigh)
             {

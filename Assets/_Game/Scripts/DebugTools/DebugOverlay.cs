@@ -10,7 +10,7 @@ namespace CastleDestroyers.DebugTools
 {
     /// <summary>
     /// Debug-оверлей: FPS, состояние FSM, ходы, счётчики и чит-кнопки (следующее состояние, замедление,
-    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера). Целиком вырезается из сборки без GAME_DEBUG.
+    /// стресс 1000 ракет, смена темы, рестарт, радиус взрыва, камера, сценарии бустеров). Целиком вырезается из сборки без GAME_DEBUG.
     /// </summary>
     public sealed class DebugOverlay : MonoBehaviour, ITickable
     {
@@ -27,6 +27,9 @@ namespace CastleDestroyers.DebugTools
         public Button restartButton;
         public Button blastButton;
         public Button cameraButton;
+        public Button shotX20Button;
+        public Button shotX10Button;
+        public Button shotX50Button;
         public Text blastLabel;
         public Text cameraLabel;
         public Text rocketsLabel;
@@ -52,6 +55,9 @@ namespace CastleDestroyers.DebugTools
             restartButton.onClick.AddListener(OnRestart);
             blastButton.onClick.AddListener(OnNextBlast);
             cameraButton.onClick.AddListener(OnNextCamera);
+            shotX20Button.onClick.AddListener(OnShotX20);
+            shotX10Button.onClick.AddListener(OnShotX10);
+            shotX50Button.onClick.AddListener(OnShotX50);
             UpdateBlastLabel();
             UpdateStressLabel();
         }
@@ -134,6 +140,9 @@ namespace CastleDestroyers.DebugTools
             text.Append("  smoke ").Append(game.Smoke.ActiveCount);
             text.Append("  boom ").Append(game.Explosions.ActiveCount).Append('\n');
 
+            text.Append("boost honest ").Append(Mathf.RoundToInt(game.Boosters.HonestTotal));
+            text.Append("  spawned ").Append(game.Boosters.SpawnedTotal).Append('\n');
+
             text.Append("theme ").Append(game.ActivePreset.ToString());
             text.Append("  ").Append(screenWidth).Append('x').Append(screenHeight);
             statsText.text = text.ToString();
@@ -174,6 +183,27 @@ namespace CastleDestroyers.DebugTools
         {
             game.Restart();
             UpdateStressLabel();
+        }
+
+        private void OnShotX20()
+        {
+            RunScenario(0);
+        }
+
+        private void OnShotX10()
+        {
+            RunScenario(1);
+        }
+
+        private void OnShotX50()
+        {
+            RunScenario(2);
+        }
+
+        private void RunScenario(int scenario)
+        {
+            OnRestart();
+            game.Scenarios.Run(scenario);
         }
 
         private void OnNextBlast()

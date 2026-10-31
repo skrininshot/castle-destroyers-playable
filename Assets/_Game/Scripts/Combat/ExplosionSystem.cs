@@ -112,7 +112,15 @@ namespace CastleDestroyers.Combat
         /// <summary>Взрыв в точке мира. crater = false — без кратера: попадание в замок до масок этапа 5.</summary>
         public void Explode(float x, float y, bool crater)
         {
-            bool hit = crater && terrain.Stamp(x, y, config.craterRadiusGround);
+            Explode(x, y, crater, 1f);
+        }
+
+        /// <summary>Взрыв ракеты с весом (ТЗ §3.5): копии, не влезшие в бюджет, увеличивают её кратер и вспышку.</summary>
+        public void Explode(float x, float y, bool crater, float weight)
+        {
+            float scale = BoosterSystem.CraterScale(weight, config.boosterMaxCraterScale);
+            float radius = config.craterRadiusGround * scale;
+            bool hit = crater && terrain.Stamp(x, y, radius);
 
             float mergeSquared = config.explosionMergeRadius * config.explosionMergeRadius;
             for (int n = 0; n < frameCount; n++)
@@ -136,7 +144,7 @@ namespace CastleDestroyers.Combat
             posX[i] = x;
             posY[i] = y;
             age[i] = 0f;
-            strength[i] = 1f;
+            strength[i] = Mathf.Min(scale, config.explosionMaxStrength);
             frameSlots[frameCount] = i;
             frameCount++;
 
@@ -144,7 +152,7 @@ namespace CastleDestroyers.Combat
             SpawnShards(x, y);
             if (hit)
             {
-                fx.Dust(x, y, config.craterRadiusGround, config.craterDustPuffs);
+                fx.Dust(x, y, radius, config.craterDustPuffs);
             }
         }
 

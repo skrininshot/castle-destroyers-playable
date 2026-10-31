@@ -35,6 +35,7 @@ namespace CastleDestroyers.Core
         public MeshFilter particlesFilter;
         public MeshFilter smokeFilter;
         public MeshFilter rocketsFilter;
+        public MeshFilter boostersFilter;
         public MeshFilter explosionsFilter;
         public MeshFilter aimDotsFilter;
         [Tooltip("Плашка POWER / ANGLE.")]
@@ -65,6 +66,7 @@ namespace CastleDestroyers.Core
         public SurfaceDecor Decor { get; private set; }
         public FlatParticles Particles { get; private set; }
         public RocketSystem Rockets { get; private set; }
+        public BoosterSystem Boosters { get; private set; }
         public CannonSystem Cannons { get; private set; }
         public ExplosionSystem Explosions { get; private set; }
         public SmokeTrails Smoke { get; private set; }
@@ -76,6 +78,7 @@ namespace CastleDestroyers.Core
 #if GAME_DEBUG
         public DebugRocketStress Stress { get; private set; }
         public DebugBlaster Blaster { get; private set; }
+        public DebugBoosterScenarios Scenarios { get; private set; }
 #endif
 
         private LevelFx levelFx;
@@ -83,6 +86,7 @@ namespace CastleDestroyers.Core
         private ChunkSystem chunks;
         private WaterStrip water;
         private CannonMarkers cannonView;
+        private BoosterView boosterView;
         private ScreenShake shake;
         private AimPreview aimPreview;
         private AimPanelView aimPanelView;
@@ -157,9 +161,14 @@ namespace CastleDestroyers.Core
             Explosions = new ExplosionSystem();
             Explosions.Init(config, Terrain, Particles, levelFx, shake, Rng);
             explosionsFilter.sharedMesh = Explosions.Mesh;
+            Boosters = new BoosterSystem();
             Rockets = new RocketSystem();
-            Rockets.Init(config, terrainMask, Level, Explosions, Smoke, levelFx);
+            Rockets.Init(config, terrainMask, Level, Explosions, Smoke, levelFx, Boosters);
             rocketsFilter.sharedMesh = Rockets.Mesh;
+            Boosters.Init(config, Rockets, Particles, Rng);
+            boosterView = new BoosterView();
+            boosterView.Init(config, Boosters);
+            boostersFilter.sharedMesh = boosterView.Mesh;
 
             Cannons = new CannonSystem();
             Cannons.Init(config, Level, Match, Rockets, Particles);
@@ -173,7 +182,7 @@ namespace CastleDestroyers.Core
             Parallax.Init(config, mainCamera, backLayers);
 
             TurnCombat combat = new TurnCombat();
-            combat.Init(config, Flow, Cannons, Rockets, CameraDirector);
+            combat.Init(config, Flow, Cannons, Rockets, Boosters, CameraDirector);
             Aim = new AimInput();
             Aim.Init(config, Flow, Cannons, mainCamera);
             aimPreview = new AimPreview();
@@ -189,11 +198,13 @@ namespace CastleDestroyers.Core
             Stress.Init(config, Level, Rockets);
             Blaster = new DebugBlaster();
             Blaster.Init(config, mainCamera, Terrain);
+            Scenarios = new DebugBoosterScenarios();
+            Scenarios.Init(config, Flow, Cannons);
             debugOverlay.Init(this);
             ITickable[] systems =
             {
-                Flow, Aim, combat, Cannons, Stress, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Decor, water,
-                Particles, Smoke, cannonView, aimPreview, aimPanelView, debugOverlay
+                Flow, Aim, Scenarios, combat, Cannons, Stress, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Blaster, Terrain, chunks, Decor, water,
+                Particles, Smoke, cannonView, boosterView, aimPreview, aimPanelView, debugOverlay
             };
 #else
             if (debugRoot != null)
@@ -202,8 +213,8 @@ namespace CastleDestroyers.Core
             }
             ITickable[] systems =
             {
-                Flow, Aim, combat, Cannons, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Decor, water,
-                Particles, Smoke, cannonView, aimPreview, aimPanelView
+                Flow, Aim, combat, Cannons, Boosters, Rockets, Explosions, shake, CameraDirector, Parallax, Terrain, chunks, Decor, water,
+                Particles, Smoke, cannonView, boosterView, aimPreview, aimPanelView
             };
 #endif
             Loop = new GameLoop();
@@ -234,6 +245,7 @@ namespace CastleDestroyers.Core
             Decor.Reset();
             Particles.Clear();
             Rockets.Clear();
+            Boosters.Clear();
             Cannons.Clear();
             Explosions.Clear();
             Smoke.Clear();
@@ -259,6 +271,8 @@ namespace CastleDestroyers.Core
             Cannons.ApplyPalette(palette);
             cannonView.ApplyPalette(palette);
             Rockets.ApplyPalette(palette);
+            Boosters.ApplyPalette(palette);
+            boosterView.ApplyPalette(palette);
             Explosions.ApplyPalette(palette);
             Smoke.ApplyPalette(palette);
             aimPreview.ApplyPalette(palette);

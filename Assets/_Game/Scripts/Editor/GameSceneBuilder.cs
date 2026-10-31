@@ -28,7 +28,7 @@ namespace CastleDestroyers.EditorTools
         private const string RocketMaterialPath = "Assets/_Game/Art/Mat_Rocket.mat";
         private const string RocketShaderName = "Game/Rocket";
 
-        // Порядок отрисовки: слои фона, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, дым, ракеты, взрывы, пунктир.
+        // Порядок отрисовки: слои фона, деревья, земля, обломки, вода с замками, кромка воды, пушки, частицы, дым, ракеты, бустеры, взрывы, пунктир.
         private const int OrderDecor = GreyboxLevel.BackLayerCount;
         private const int OrderTerrain = OrderDecor + 1;
         private const int OrderChunks = OrderDecor + 2;
@@ -38,14 +38,15 @@ namespace CastleDestroyers.EditorTools
         private const int OrderParticles = OrderDecor + 6;
         private const int OrderSmoke = OrderDecor + 7;
         private const int OrderRockets = OrderDecor + 8;
-        private const int OrderExplosions = OrderDecor + 9;
-        private const int OrderAimDots = OrderDecor + 10;
+        private const int OrderBoosters = OrderDecor + 9;
+        private const int OrderExplosions = OrderDecor + 10;
+        private const int OrderAimDots = OrderDecor + 11;
 
         private const int ReferenceWidth = 720;
         private const int ReferenceHeight = 1280;
         private const int SafeTop = 130;
         private const int SafeBottom = 130;
-        private const int StatsFontSize = 17;
+        private const int StatsFontSize = 16;
         private const int ButtonFontSize = 15;
         private const float CameraStartSize = 8f;
         private const float StatsWidth = 380f;
@@ -60,7 +61,7 @@ namespace CastleDestroyers.EditorTools
         private const int ButtonWidth = 128;
         private const int ButtonHeight = 56;
         private const int ButtonSpacing = 8;
-        private const int ButtonRows = 2;
+        private const int ButtonRows = 3;
 
         [MenuItem("Tools/Castle Destroyers/Build Game Scene")]
         public static void Build()
@@ -100,6 +101,7 @@ namespace CastleDestroyers.EditorTools
             MeshFilter particles = CreateBatch("Particles", particleMaterial, OrderParticles);
             MeshFilter smoke = CreateBatch("Smoke", particleMaterial, OrderSmoke);
             MeshFilter rockets = CreateBatch("Rockets", rocketMaterial, OrderRockets);
+            MeshFilter boosters = CreateBatch("Boosters", material, OrderBoosters);
             MeshFilter explosions = CreateBatch("Explosions", particleMaterial, OrderExplosions);
             MeshFilter aimDots = CreateBatch("AimDots", particleMaterial, OrderAimDots);
 
@@ -114,6 +116,7 @@ namespace CastleDestroyers.EditorTools
             bootstrap.particlesFilter = particles;
             bootstrap.smokeFilter = smoke;
             bootstrap.rocketsFilter = rockets;
+            bootstrap.boostersFilter = boosters;
             bootstrap.explosionsFilter = explosions;
             bootstrap.aimDotsFilter = aimDots;
             bootstrap.rocketMaterial = rocketMaterial;
@@ -267,6 +270,9 @@ namespace CastleDestroyers.EditorTools
             overlay.blastLabel = overlay.blastButton.GetComponentInChildren<Text>();
             overlay.cameraButton = CreateButton(panel, "CAM AUTO", font);
             overlay.cameraLabel = overlay.cameraButton.GetComponentInChildren<Text>();
+            overlay.shotX20Button = CreateButton(panel, "SHOT x20", font);
+            overlay.shotX10Button = CreateButton(panel, "SHOT x10", font);
+            overlay.shotX50Button = CreateButton(panel, "SHOT x50", font);
 
             bootstrap.debugRoot = canvasObject;
             bootstrap.debugOverlay = overlay;

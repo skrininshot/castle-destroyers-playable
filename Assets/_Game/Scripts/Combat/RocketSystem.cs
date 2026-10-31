@@ -27,6 +27,7 @@ namespace CastleDestroyers.Combat
         private ExplosionSystem explosions;
         private SmokeTrails smoke;
         private LevelFx fx;
+        private BoosterSystem boosters;
         private IndexPool pool;
 
         private float[] originX;
@@ -38,7 +39,9 @@ namespace CastleDestroyers.Combat
         private float[] noseY;
         private float[] facing;
         private float[] smokeTimer;
+        private float[] weight;
         private byte[] side;
+        private byte[] boosterBits;
         private int[] countBySide;
         private float[] headBySide;
         private Vector3[] vertices;
@@ -54,7 +57,7 @@ namespace CastleDestroyers.Combat
         /// <summary>Лимит одновременно летящих ракет. Стресс-режим поднимает его до размера буфера.</summary>
         public int Budget { get; set; }
 
-        public void Init(GameConfig gameConfig, DestructibleMask terrainMask, GreyboxLevel greyboxLevel, ExplosionSystem explosionSystem, SmokeTrails smokeTrails, LevelFx levelFx)
+        public void Init(GameConfig gameConfig, DestructibleMask terrainMask, GreyboxLevel greyboxLevel, ExplosionSystem explosionSystem, SmokeTrails smokeTrails, LevelFx levelFx, BoosterSystem boosterSystem)
         {
             config = gameConfig;
             mask = terrainMask;
@@ -62,6 +65,7 @@ namespace CastleDestroyers.Combat
             explosions = explosionSystem;
             smoke = smokeTrails;
             fx = levelFx;
+            boosters = boosterSystem;
 
             int capacity = Mathf.Max(config.maxActiveRockets, config.stressRocketCount);
             Budget = config.maxActiveRockets;
@@ -75,7 +79,9 @@ namespace CastleDestroyers.Combat
             noseY = new float[capacity];
             facing = new float[capacity];
             smokeTimer = new float[capacity];
+            weight = new float[capacity];
             side = new byte[capacity];
+            boosterBits = new byte[capacity];
             for (int i = 0; i < capacity; i++)
             {
                 side[i] = NoSide;
@@ -143,6 +149,12 @@ namespace CastleDestroyers.Combat
         /// <summary>Выпускает ракету из точки (x, y). startAge — время, на которое она уже опоздала внутри кадра. False, если бюджет исчерпан.</summary>
         public bool Spawn(float x, float y, float speedX, float speedY, Side owner, float startAge)
         {
+            return SpawnCopy(x, y, speedX, speedY, owner, startAge, 0, 1f);
+        }
+
+        /// <summary>Как Spawn, но с маской пройденных бустеров и весом урона.</summary>
+        public bool SpawnCopy(float x, float y, float speedX, float speedY, Side owner, float startAge, byte usedBoosters, float rocketWeight)
+        {
             if (pool.ActiveCount >= Budget)
             {
                 return false;
@@ -161,6 +173,8 @@ namespace CastleDestroyers.Combat
             noseY[i] = y;
             facing[i] = speedX >= 0f ? 1f : -1f;
             smokeTimer[i] = 0f;
+            weight[i] = rocketWeight;
+            boosterBits[i] = usedBoosters;
             byte ownerIndex = (byte)owner;
             if (side[i] != ownerIndex)
             {
@@ -224,8 +238,23 @@ namespace CastleDestroyers.Combat
                 float fromY = noseY[i];
                 float toX = x + dirX * halfLength;
                 float toY = y + dirY * halfLength;
-                if (ResolveHit(i, fromX, fromY, toX, toY, step, waterLevel) || Mathf.Abs(x) > levelEdge)
+                // Препятствие ищется только до входа в бустер: ракета внутри него уже заменена.
+                int booster = boosters.FindEntry(fromX, fromY, toX, toY, boosterBits[i]);
+                float endX = toX;
+                float endY = toY;
+                if (booster >= 0)
                 {
+                    endX = fromX + (toX - fromX) * boosters.EntryFraction;
+                    endY = fromY + (toY - fromY) * boosters.EntryFraction;
+                }
+                if (ResolveHit(i, fromX, fromY, endX, endY, step, waterLevel) || Mathf.Abs(x) > levelEdge)
+                {
+                    Remove(i);
+                    continue;
+                }
+                if (booster >= 0)
+                {
+                    boosters.Multiply(booster, endX, endY, velX[i], velY[i] - gravity * t, (Side)side[i], boosterBits[i], weight[i]);
                     Remove(i);
                     continue;
                 }
@@ -286,7 +315,7 @@ namespace CastleDestroyers.Combat
             float water = toY < waterLevel ? (fromY - waterLevel) / (fromY - toY) : -1f;
             if (solid >= 0f && (water < 0f || solid <= water))
             {
-                explosions.Explode(fromX + (toX - fromX) * solid, fromY + (toY - fromY) * solid, true);
+                explosions.Explode(fromX + (toX - fromX) * solid, fromY + (toY - fromY) * solid, true, weight[i]);
                 return true;
             }
             if (water >= 0f)
@@ -297,7 +326,7 @@ namespace CastleDestroyers.Combat
             Side target = side[i] == (byte)Side.Player ? Side.Enemy : Side.Player;
             if (level.CastleContains(target, toX, toY))
             {
-                explosions.Explode(toX, toY, false);
+                explosions.Explode(toX, toY, false, weight[i]);
                 return true;
             }
             return false;
