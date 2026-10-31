@@ -16,22 +16,28 @@ MonoBehaviour:
   night:
     sky:
       serializedVersion: 2
-      rgba: 4288687385
+      rgba: 4282913037
+    skyHorizon:
+      serializedVersion: 2
+      rgba: 4289085244
+    backgroundHaze:
+      serializedVersion: 2
+      rgba: 4292645516
     backgroundFar:
       serializedVersion: 2
-      rgba: 4290999385
+      rgba: 4290011222
     backgroundFarShade:
       serializedVersion: 2
-      rgba: 4288760384
+      rgba: 4287906619
     backgroundMid:
       serializedVersion: 2
-      rgba: 4287052036
+      rgba: 4286196517
     backgroundNear:
       serializedVersion: 2
-      rgba: 4286004561
+      rgba: 4283570710
     backgroundNearLight:
       serializedVersion: 2
-      rgba: 4286993785
+      rgba: 4285673259
     skyStar:
       serializedVersion: 2
       rgba: 4294960092
@@ -40,61 +46,61 @@ MonoBehaviour:
       rgba: 4292013045
     moonShade:
       serializedVersion: 2
-      rgba: 4290039772
+      rgba: 4289775830
     ground:
       serializedVersion: 2
-      rgba: 4287146240
+      rgba: 4284702476
     groundShade:
       serializedVersion: 2
-      rgba: 4286355712
+      rgba: 4283978506
     groundBuried:
       serializedVersion: 2
-      rgba: 4285894400
+      rgba: 4285558288
     groundBand:
       serializedVersion: 2
-      rgba: 4287422769
+      rgba: 4285823508
     groundRim:
       serializedVersion: 2
       rgba: 4287422769
     groundRimLight:
       serializedVersion: 2
-      rgba: 4289128823
+      rgba: 4290048651
     groundCrater:
       serializedVersion: 2
-      rgba: 4285300480
+      rgba: 4283846666
     bush:
       serializedVersion: 2
-      rgba: 4287620178
+      rgba: 4286094878
     bushLight:
       serializedVersion: 2
-      rgba: 4289128823
+      rgba: 4287547189
     treeLight:
       serializedVersion: 2
-      rgba: 4287412500
+      rgba: 4286089755
     treeShade:
       serializedVersion: 2
-      rgba: 4286618374
+      rgba: 4284507663
     water:
       serializedVersion: 2
-      rgba: 4293441055
+      rgba: 4288567827
     waterHighlight:
       serializedVersion: 2
-      rgba: 4293971276
+      rgba: 4291067946
     waterRim:
       serializedVersion: 2
-      rgba: 4294635957
+      rgba: 4294106527
     castleStone:
       serializedVersion: 2
-      rgba: 4292273901
+      rgba: 4293317848
     castleStoneShade:
       serializedVersion: 2
-      rgba: 4290692815
+      rgba: 4291601576
     castleBrick:
       serializedVersion: 2
-      rgba: 4291154908
+      rgba: 4292526790
     castleCrack:
       serializedVersion: 2
-      rgba: 4286078827
+      rgba: 4289627786
     castleWindow:
       serializedVersion: 2
       rgba: 4283970362
@@ -103,16 +109,16 @@ MonoBehaviour:
       rgba: 4286239487
     roofPlayer:
       serializedVersion: 2
-      rgba: 4292921148
+      rgba: 4292129848
     roofPlayerShade:
       serializedVersion: 2
-      rgba: 4290551850
+      rgba: 4289628197
     roofEnemy:
       serializedVersion: 2
-      rgba: 4283579362
+      rgba: 4283446998
     roofEnemyShade:
       serializedVersion: 2
-      rgba: 4282395320
+      rgba: 4282262692
     cannonPlayer:
       serializedVersion: 2
       rgba: 4293557038
@@ -127,10 +133,10 @@ MonoBehaviour:
       rgba: 4280293022
     platform:
       serializedVersion: 2
-      rgba: 4282146443
+      rgba: 4282273908
     platformShade:
       serializedVersion: 2
-      rgba: 4280894830
+      rgba: 4281350743
     track:
       serializedVersion: 2
       rgba: 4282394155
@@ -206,73 +212,79 @@ MonoBehaviour:
   sunset:
     sky:
       serializedVersion: 2
-      rgba: 4283021053
+      rgba: 4284370904
+    skyHorizon:
+      serializedVersion: 2
+      rgba: 4285449727
+    backgroundHaze:
+      serializedVersion: 2
+      rgba: 4289123071
     backgroundFar:
       serializedVersion: 2
-      rgba: 4285960444
+      rgba: 4286356213
     backgroundFarShade:
       serializedVersion: 2
-      rgba: 4286610687
+      rgba: 4285167333
     backgroundMid:
       serializedVersion: 2
-      rgba: 4283988721
+      rgba: 4284109513
     backgroundNear:
       serializedVersion: 2
-      rgba: 4282672105
+      rgba: 4282919548
     backgroundNearLight:
       serializedVersion: 2
-      rgba: 4282075370
+      rgba: 4283446682
     skyStar:
       serializedVersion: 2
       rgba: 4292076543
     moon:
       serializedVersion: 2
-      rgba: 4285457407
+      rgba: 4289786111
     moonShade:
       serializedVersion: 2
-      rgba: 4279487742
+      rgba: 4283357439
     ground:
       serializedVersion: 2
-      rgba: 4283912694
+      rgba: 4283385826
     groundShade:
       serializedVersion: 2
-      rgba: 4282926321
+      rgba: 4282793174
     groundBuried:
       serializedVersion: 2
-      rgba: 4285228543
+      rgba: 4284767982
     groundBand:
       serializedVersion: 2
-      rgba: 4282926321
+      rgba: 4282793174
     groundRim:
       serializedVersion: 2
-      rgba: 4280097480
+      rgba: 4280948136
     groundRimLight:
       serializedVersion: 2
-      rgba: 4281085662
+      rgba: 4281278658
     groundCrater:
       serializedVersion: 2
-      rgba: 4282003401
+      rgba: 4282266822
     bush:
       serializedVersion: 2
-      rgba: 4283347087
+      rgba: 4283342991
     bushLight:
       serializedVersion: 2
-      rgba: 4289716443
+      rgba: 4286368196
     treeLight:
       serializedVersion: 2
-      rgba: 4283347087
+      rgba: 4282946686
     treeShade:
       serializedVersion: 2
-      rgba: 4282027116
+      rgba: 4281889884
     water:
       serializedVersion: 2
-      rgba: 4293428794
+      rgba: 4290797370
     waterHighlight:
       serializedVersion: 2
-      rgba: 4293443945
+      rgba: 4292906862
     waterRim:
       serializedVersion: 2
-      rgba: 4294960836
+      rgba: 4290828799
     castleStone:
       serializedVersion: 2
       rgba: 4292273901
@@ -284,7 +296,7 @@ MonoBehaviour:
       rgba: 4291154908
     castleCrack:
       serializedVersion: 2
-      rgba: 4286078827
+      rgba: 4287798953
     castleWindow:
       serializedVersion: 2
       rgba: 4283970362

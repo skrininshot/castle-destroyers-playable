@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="52" height="48" viewBox="0 0 52 48">
 <g transform="translate(37.120 23.680) scale(64.000 -64.000)">
-<rect x="-0.55" y="-0.34" width="0.74" height="0.68" rx="0.20" fill="var(--cannonEnemyShade)" opacity="1"/>
-<rect x="-0.55" y="-0.02" width="0.74" height="0.36" rx="0.18" fill="var(--cannonEnemy)" opacity="1"/>
+<rect x="-0.55" y="-0.34" width="0.74" height="0.68" rx="0.22" fill="var(--cannonEnemy)" opacity="1"/>
+<rect x="-0.55" y="-0.34" width="0.74" height="0.30" rx="0.20" fill="var(--cannonEnemyShade)" opacity="1"/>
 </g>
 </svg>

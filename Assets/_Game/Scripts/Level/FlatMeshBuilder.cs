@@ -105,6 +105,15 @@ namespace CastleDestroyers.Level
             SetQuadUv(v, uv[r], uv[r + 1], uv[r + 2], uv[r + 3]);
         }
 
+        /// <summary>Прямоугольник с вертикальным переходом цвета: только небо (ТЗ §3.10).</summary>
+        public void AddGradientRect(float minX, float minY, float maxX, float maxY, Color32 bottom, Color32 top)
+        {
+            int v = vertexCount;
+            AddRect(minX, minY, maxX, maxY, bottom);
+            colors[v + 2] = top;
+            colors[v + 3] = top;
+        }
+
         /// <summary>Спрайт без поворота с равномерным масштабом.</summary>
         public void AddSprite(int sprite, float x, float y, float scale, Color32 color)
         {

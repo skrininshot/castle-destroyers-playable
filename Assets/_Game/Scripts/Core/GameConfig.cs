@@ -425,7 +425,7 @@ namespace CastleDestroyers.Core
         public float craterRadiusGround = 1.5f;
         [Range(0.05f, 1f)]
         [Tooltip("Ширина каймы кратера, метры.")]
-        public float rimWidth = 0.3f;
+        public float rimWidth = 0.18f;
         [Tooltip("Фестонная кромка у кратеров земли.")]
         public bool rimScallop;
         [Range(4, 40)]
@@ -543,7 +543,7 @@ namespace CastleDestroyers.Core
         public float explosionMaxStrength = 1.6f;
         [Range(0.2f, 4f)]
         [Tooltip("Радиус внешнего круга взрыва, метры.")]
-        public float explosionRadius = 1.5f;
+        public float explosionRadius = 2.6f;
         [Range(0.05f, 1f)]
         [Tooltip("Длительность взрыва, секунды.")]
         public float explosionLife = 0.32f;
@@ -555,7 +555,7 @@ namespace CastleDestroyers.Core
         public float explosionShardSpeed = 8f;
         [Range(0.05f, 1f)]
         [Tooltip("Размер осколка, метры.")]
-        public float explosionShardSize = 0.34f;
+        public float explosionShardSize = 0.5f;
         [Range(0.1f, 2f)]
         [Tooltip("Время жизни осколка, секунды.")]
         public float explosionShardLife = 0.5f;
@@ -616,7 +616,7 @@ namespace CastleDestroyers.Core
         public float castleRimWidth = 0.13f;
         [Range(0f, 1f)]
         [Tooltip("Кайма кратера: во сколько раз темнее исходного цвета.")]
-        public float castleRimDarken = 0.72f;
+        public float castleRimDarken = 0.88f;
         [Range(4, 16)]
         [Tooltip("Минимум зубцов «погрызанного» кратера.")]
         public int castleCraterTeethMin = 8;
@@ -628,16 +628,16 @@ namespace CastleDestroyers.Core
         public float castleCraterNoise = 0.3f;
         [Range(0f, 1f)]
         [Tooltip("Вероятность, что кратер пустит трещины. Под потоком ракет трещин не должно быть слишком много.")]
-        public float castleCrackChance = 0.6f;
+        public float castleCrackChance = 0.3f;
         [Range(1, 6)]
         [Tooltip("Трещин от одного кратера.")]
-        public int castleCrackCount = 3;
+        public int castleCrackCount = 2;
         [Range(0.2f, 4f)]
         [Tooltip("Длина трещины, метры.")]
         public float castleCrackLength = 1.3f;
         [Range(0.05f, 0.6f)]
         [Tooltip("Ширина клина трещины у кратера, метры.")]
-        public float castleCrackWidth = 0.2f;
+        public float castleCrackWidth = 0.12f;
         [Range(1, 8)]
         [Tooltip("Звеньев в ломаной трещины.")]
         public int castleCrackSegments = 4;
@@ -727,12 +727,12 @@ namespace CastleDestroyers.Core
         [Tooltip("Параллакс слоёв от дальнего к ближнему: звёзды, луна, горы, лес, кусты. 0 — слой стоит на экране, 1 — движется с уровнем.")]
         public float[] parallaxFactors = { 0f, 0.05f, 0.15f, 0.3f, 0.5f };
         [Tooltip("Низ полос фона над водой, метры: горы, лес или город, ближний план.")]
-        public float[] backBandBase = { 6f, 4f, 2f };
+        public float[] backBandBase = { 5f, 3f, 1.5f };
         [Tooltip("Центр луны или солнца на слое, метры.")]
-        public Vector2 moonPosition = new Vector2(7f, 31f);
+        public Vector2 moonPosition = new Vector2(6f, 29f);
         [Range(0f, 40f)]
         [Tooltip("Шаг облаков-пилюль по X на слое луны, метры.")]
-        public float cloudStep = 23f;
+        public float cloudStep = 15f;
 
         [Header("Звук (ТЗ §3.13)")]
         [Range(0f, 1f)]

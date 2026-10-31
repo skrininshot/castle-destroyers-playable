@@ -91,16 +91,14 @@ def pixel_sprite(name, size, half_meters, draw):
 
 def draw_cannon_body(side):
     def draw(svg):
-        svg.rect(-0.55, -0.34, 0.74, 0.68, var(f"cannon{side}Shade"), 0.2)
-        svg.rect(-0.55, -0.02, 0.74, 0.36, var(f"cannon{side}"), 0.18)
+        svg.rect(-0.55, -0.34, 0.74, 0.68, var(f"cannon{side}"), 0.22)
+        svg.rect(-0.55, -0.34, 0.74, 0.3, var(f"cannon{side}Shade"), 0.2)
     return draw
 
 
 def draw_cannon_barrel(side):
     def draw(svg):
-        svg.rect(-0.25, -0.09, 1.28, 0.18, var(f"cannon{side}"), 0.07)
-        svg.rect(0.0, 0.015, 1.03, 0.05, var("rocketBody"), 0.025, 0.45)
-        svg.rect(1.03, -0.105, 0.2, 0.21, var(f"cannon{side}Shade"), 0.06)
+        svg.rect(-0.25, -0.09, 1.48, 0.18, var(f"cannon{side}"), 0.09)
     return draw
 
 
@@ -156,8 +154,11 @@ def draw_moon(theme):
 
 
 def draw_cloud(svg):
-    svg.rect(4, 44, 232, 34, var("backgroundFar"), 17)
-    svg.rect(50, 18, 112, 38, var("backgroundFar"), 19)
+    """Тонкие вытянутые облака: полосы лежат над диском луны и дают ей глубину."""
+    svg.rect(4, 52, 232, 14, var("backgroundHaze"), 7)
+    svg.rect(44, 36, 150, 14, var("backgroundHaze"), 7)
+    svg.rect(92, 20, 74, 12, var("backgroundHaze"), 6)
+    svg.rect(20, 68, 120, 10, var("backgroundHaze"), 5)
 
 
 def draw_booster(label, color):
@@ -249,17 +250,196 @@ def periodic(svg, width, draw):
         svg.close()
 
 
+def faceted_peak(svg, cx, base, half, height, light, dark, cap, seed):
+    """Гора с гранями: светлая сторона, теневая сторона по ломаному хребту, шапка с рваным краем. Скруглённой вершины хватает на силуэт."""
+    rng = random.Random(seed)
+    top = base - height
+    shoulder = height * 0.1
+    svg.path(f"M{cx - half:.1f} {base:.1f} L{cx - half * 0.16:.1f} {top + shoulder:.1f} Q{cx:.1f} {top:.1f} {cx + half * 0.16:.1f} {top + shoulder:.1f} L{cx + half:.1f} {base:.1f} Z", light)
+    ridge = [(cx, top + shoulder * 0.45)]
+    y = top + shoulder
+    x = cx
+    while y < base:
+        step = height * rng.uniform(0.09, 0.16)
+        y = min(base, y + step)
+        x += half * rng.uniform(-0.14, 0.2)
+        ridge.append((x, y))
+    svg.poly(ridge + [(cx + half, base), (cx + half * 0.16, top + shoulder)], dark)
+    edge = top + height * 0.3
+    tooth = half * 0.11
+    points = [(cx - half * 0.16, top + shoulder), (cx + half * 0.16, top + shoulder)]
+    right = cx + half * 0.3
+    left = cx - half * 0.3
+    points.append((right, edge))
+    x = right
+    drop = False
+    while x > left:
+        x -= tooth
+        points.append((x, edge + (height * rng.uniform(0.05, 0.1) if drop else -height * 0.02)))
+        drop = not drop
+    points.append((left, edge))
+    svg.poly(points, cap)
+
+
+def fog(svg, width, y, rows, color, opacity, seed):
+    """Туман: длинные полупрозрачные полосы, ступени вместо размытия."""
+    rng = random.Random(seed)
+    for row in range(rows):
+        x = rng.uniform(-140, 40)
+        while x < width + 140:
+            length = rng.uniform(180, 460)
+            svg.rect(x, y + row * 20 + rng.uniform(-5, 5), length, 26, color, 13, opacity)
+            x += length + rng.uniform(40, 170)
+
+
+def rolling_ridge(svg, width, height, y, swell, color, phase):
+    """Плавный холм: период равен ширине полосы, поэтому стыкуется без шва."""
+    points = []
+    for x in range(0, width + 8, 8):
+        u = x / width * math.tau
+        points.append((x, y - swell * (math.sin(u + phase) * 0.6 + math.sin(u * 2 + phase * 1.7) * 0.4)))
+    svg.poly(points + [(width, height), (0, height)], color)
+
+
+def fir(svg, x, base, size, color, shade):
+    """Ель со свисающими ярусами: не треугольник, а силуэт с плечами."""
+    half = size * 0.3
+    svg.rect(x - size * 0.03, base - size * 0.12, size * 0.06, size * 0.14, shade)
+    for level in range(4):
+        y = base - size * (0.1 + level * 0.2)
+        w = half * (1.0 - level * 0.2)
+        h = size * 0.34
+        svg.path(f"M{x:.1f} {y - h:.1f} Q{x - w * 0.34:.1f} {y - h * 0.34:.1f} {x - w:.1f} {y:.1f} Q{x - w * 0.5:.1f} {y - h * 0.08:.1f} {x:.1f} {y - h * 0.02:.1f} Z", color)
+        svg.path(f"M{x:.1f} {y - h:.1f} Q{x + w * 0.34:.1f} {y - h * 0.34:.1f} {x + w:.1f} {y:.1f} Q{x + w * 0.5:.1f} {y - h * 0.08:.1f} {x:.1f} {y - h * 0.02:.1f} Z", shade)
+
+
+def building(svg, rng, x, base, w, h, fill, window, lit_share, roof=None):
+    svg.rect(x, base - h, w, h + 60, fill, 3)
+    if roof == "spire":
+        svg.poly([(x - 3, base - h), (x + w * 0.5, base - h - w * 1.5), (x + w + 3, base - h)], fill)
+    elif roof == "gable":
+        svg.poly([(x - 4, base - h), (x + w * 0.5, base - h - w * 0.5), (x + w + 4, base - h)], fill)
+    wy = base - h + 12
+    while wy < base - 12:
+        wx = x + 8
+        while wx < x + w - 12:
+            if rng.random() < lit_share:
+                svg.rect(wx, wy, 7, 11, window, 1.5)
+            wx += 15
+        wy += 19
+
+
+def town(svg, width, base, seed, fill, window, tall):
+    rng = random.Random(seed)
+    x = 30.0
+    while x < width - 40:
+        if rng.random() < 0.55:
+            run = rng.randint(3, 6)
+            for _ in range(run):
+                w = rng.uniform(26, 48)
+                h = rng.uniform(40, 96) * tall
+                kind = rng.choice(("gable", "gable", "spire", None))
+                building(svg, rng, x, base, w, h, fill, window, 0.34, kind)
+                x += w + rng.uniform(-3, 5)
+        x += rng.uniform(70, 170)
+
+
+def organic_tree(svg, x, base, size, seed, color):
+    """Изогнутое голое дерево: сужающиеся ветви из коротких отрезков, а не прямые палки."""
+    rng = random.Random(seed)
+
+    def branch(px, py, angle, length, width, depth):
+        segments = 5
+        points = [(px, py)]
+        for i in range(segments):
+            angle += rng.uniform(-0.2, 0.2)
+            px += math.cos(angle) * length / segments
+            py -= math.sin(angle) * length / segments
+            points.append((px, py))
+            svg.line(points[-2:], color, width * (1.0 - 0.5 * i / segments))
+        if depth == 0:
+            return
+        count = 3 if depth > 2 else 2
+        for i in range(count):
+            spread = (i - (count - 1) * 0.5) * rng.uniform(0.5, 0.8)
+            branch(px, py, angle + spread, length * rng.uniform(0.6, 0.76), width * 0.55, depth - 1)
+
+    branch(x, base, math.pi * 0.5 + rng.uniform(-0.1, 0.1), size * 0.28, size * 0.07, 4)
+
+
+def tombstone(svg, x, base, scale, fill, light):
+    w = 24 * scale
+    h = 44 * scale
+    svg.path(f"M{x - w:.1f} {base:.1f} L{x - w:.1f} {base - h:.1f} Q{x:.1f} {base - h * 1.5:.1f} {x + w:.1f} {base - h:.1f} L{x + w:.1f} {base:.1f} Z", fill)
+    svg.path(f"M{x - w:.1f} {base:.1f} L{x - w:.1f} {base - h:.1f} Q{x - w * 0.6:.1f} {base - h * 1.3:.1f} {x - w * 0.2:.1f} {base - h * 1.34:.1f} L{x - w * 0.2:.1f} {base:.1f} Z", light)
+
+
+def cross(svg, x, base, scale, fill):
+    svg.rect(x - 5 * scale, base - 70 * scale, 10 * scale, 72 * scale, fill, 3)
+    svg.rect(x - 22 * scale, base - 52 * scale, 44 * scale, 10 * scale, fill, 3)
+
+
+def lantern(svg, x, base, height, post, light):
+    svg.rect(x - 3, base - height, 6, height, post, 2)
+    for radius, opacity in ((54, 0.1), (36, 0.14), (22, 0.2)):
+        svg.circle(x, base - height, radius, light, opacity)
+    svg.rect(x - 8, base - height - 12, 16, 22, light, 5)
+
+
+def fence(svg, x0, x1, base, fill):
+    x = x0
+    while x < x1:
+        svg.poly([(x, base), (x, base - 40), (x + 4, base - 50), (x + 8, base - 40), (x + 8, base)], fill)
+        x += 20
+    svg.rect(x0 - 6, base - 34, x1 - x0 + 12, 6, fill, 2)
+    svg.rect(x0 - 6, base - 16, x1 - x0 + 12, 6, fill, 2)
+
+
+def cactus(svg, x, base, scale, fill):
+    svg.rect(x - 9 * scale, base - 96 * scale, 18 * scale, 98 * scale, fill, 9 * scale)
+    svg.rect(x - 34 * scale, base - 62 * scale, 34 * scale, 13 * scale, fill, 6 * scale)
+    svg.rect(x - 34 * scale, base - 84 * scale, 13 * scale, 34 * scale, fill, 6 * scale)
+    svg.rect(x, base - 44 * scale, 32 * scale, 13 * scale, fill, 6 * scale)
+    svg.rect(x + 20 * scale, base - 70 * scale, 13 * scale, 38 * scale, fill, 6 * scale)
+
+
+def telegraph(svg, width, base, fill):
+    posts = (120, 460, 800)
+    for x in posts:
+        svg.rect(x - 4, base - 190, 8, 192, fill, 2)
+        svg.rect(x - 34, base - 176, 68, 7, fill, 2)
+    for start, end in ((120, 460), (460, 800), (800, 1144)):
+        for offset in (-30, 30):
+            points = []
+            for i in range(21):
+                t = i / 20
+                x = start + (end - start) * t + offset
+                points.append((x, base - 172 + 44 * 4 * t * (1 - t)))
+            svg.line(points, fill, 2.5)
+    svg.line([(i * 8 - 24, base - 172 + 44 * 4 * ((i * 8 + 224) / 340) * (1 - (i * 8 + 224) / 340)) for i in range(0, 19)], fill, 2.5)
+
+
 def far_band(theme):
     width = BAND_WIDTH
     height, _ = BANDS["BackFar"]
     svg = Svg()
 
-    def peaks(target):
-        ss.add_mountain(target, 170, height, 300, 470)
-        ss.add_mountain(target, 560, height, 340, 420)
-        ss.add_mountain(target, 860, height, 280, 490)
-    periodic(svg, width, peaks)
+    def back(target):
+        faceted_peak(target, 110, height, 250, 360, var("backgroundHaze"), var("backgroundFar"), var("backgroundHaze"), 3)
+        faceted_peak(target, 640, height, 300, 410, var("backgroundHaze"), var("backgroundFar"), var("backgroundHaze"), 5)
+        faceted_peak(target, 960, height, 220, 300, var("backgroundHaze"), var("backgroundFar"), var("backgroundHaze"), 7)
+
+    def front(target):
+        faceted_peak(target, 330, height, 320, 300, var("backgroundFar"), var("backgroundFarShade"), var("backgroundHaze"), 11)
+        faceted_peak(target, 800, height, 280, 250, var("backgroundFar"), var("backgroundFarShade"), var("backgroundHaze"), 13)
+
+    svg.parts.append('<g opacity="0.62">')
+    periodic(svg, width, back)
+    svg.parts.append('</g>')
+    fog(svg, width, 268, 2, var("backgroundHaze"), 0.2, 31)
+    periodic(svg, width, front)
     svg.rect(0, height - 24, width, 24, var("backgroundFarShade"))
+    fog(svg, width, height - 150, 4, var("backgroundHaze"), 0.22, 37)
     return svg.document(width, height)
 
 
@@ -267,14 +447,22 @@ def mid_band(theme):
     width = BAND_WIDTH
     height, _ = BANDS["BackMid"]
     svg = Svg()
-
-    def draw(target):
-        if theme == "Night":
-            ss.add_forest(target, width, height - 110, 9)
-        else:
-            ss.add_city(target, width, height - 90, 9)
-    periodic(svg, width, draw)
-    svg.rect(0, height - 120, width, 120, var("backgroundMid"))
+    window = var("castleWindowLit")
+    if theme == "Night":
+        town(svg, width, height - 140, 21, var("backgroundMid"), window, 1.2)
+        rolling_ridge(svg, width, height, height - 150, 34, var("backgroundMid"), 0.7)
+        rng = random.Random(9)
+        x = 0.0
+        while x < width:
+            size = rng.uniform(70, 150)
+            fir(svg, x, height - 118 + rng.uniform(-14, 14), size, var("backgroundMid"), var("backgroundNearLight"))
+            x += size * rng.uniform(0.4, 1.3)
+    else:
+        rng = random.Random(9)
+        town(svg, width, height - 120, 21, var("backgroundMid"), var("backgroundHaze"), 1.6)
+        rolling_ridge(svg, width, height, height - 122, 24, var("backgroundMid"), 0.7)
+    fog(svg, width, height - 96, 4, var("backgroundHaze"), 0.13, 41)
+    svg.rect(0, height - 12, width, 12, var("backgroundMid"))
     return svg.document(width, height)
 
 
@@ -282,13 +470,29 @@ def near_band(theme):
     width = BAND_WIDTH
     height, _ = BANDS["BackNear"]
     svg = Svg()
+    base = height - 74
+    tone = var("backgroundNearLight")
 
-    def draw(target):
-        ss.add_bare_tree(target, 250, height - 60, 420, 4)
-        ss.add_bare_tree(target, 760, height - 60, 340, 8)
-        ss.add_near_bushes(target, width, height - 44, 12)
-    periodic(svg, width, draw)
-    svg.rect(0, height - 50, width, 50, var("backgroundNear"))
+    def trees(target):
+        organic_tree(target, 300, base + 18, 470, 4, tone)
+        organic_tree(target, 830, base + 18, 380, 8, tone)
+    periodic(svg, width, trees)
+    rolling_ridge(svg, width, height, base, 16, var("backgroundNear"), 2.1)
+    if theme == "Night":
+        fence(svg, 40, 240, base - 2, var("backgroundNearLight"))
+        fence(svg, 560, 720, base + 6, var("backgroundNearLight"))
+        for x, scale in ((420, 1.0), (500, 0.8), (930, 0.9)):
+            tombstone(svg, x, base + 10, scale, var("backgroundNear"), var("backgroundNearLight"))
+        cross(svg, 468, base + 12, 0.8, var("backgroundNearLight"))
+        cross(svg, 975, base + 10, 1.0, var("backgroundNearLight"))
+        lantern(svg, 352, base + 8, 74, var("backgroundNear"), var("castleWindowLit"))
+        lantern(svg, 760, base + 12, 64, var("backgroundNear"), var("castleWindowLit"))
+    else:
+        telegraph(svg, width, base + 8, var("backgroundNear"))
+        cactus(svg, 240, base + 12, 0.9, var("backgroundNearLight"))
+        cactus(svg, 610, base + 10, 1.15, var("backgroundNearLight"))
+        cactus(svg, 960, base + 12, 0.75, var("backgroundNearLight"))
+    svg.rect(0, height - 30, width, 30, var("backgroundNear"))
     return svg.document(width, height)
 
 

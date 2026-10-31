@@ -172,7 +172,10 @@ class Renderer:
         alpha = mask.crop(box)
         if opacity < 1:
             alpha = alpha.point(lambda value: int(value * opacity))
-        self.canvas.paste(color + (255,), box, alpha)
+        # Композиция по альфе: простое смешивание тянуло бы прозрачный чёрный холст в цвет полупрозрачной формы.
+        layer = Image.new("RGBA", alpha.size, color + (0,))
+        layer.putalpha(alpha)
+        self.canvas.alpha_composite(layer, (box[0], box[1]))
 
     def fill_polygon(self, points, color, opacity):
         scaled = [(x * self.scale, y * self.scale) for x, y in points]

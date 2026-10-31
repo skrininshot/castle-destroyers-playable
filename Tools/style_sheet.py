@@ -296,10 +296,21 @@ def wall(svg, rng, x0, x1, y0, y1, bricks=True):
     svg.rect(x1 - w * 0.26, y0, w * 0.26, h, var("castleStoneShade"), 0.05)
     if not bricks:
         return
-    for _ in range(int(w * h * 0.55)):
-        x = rng.uniform(x0 + 0.1, x1 - 0.55)
-        y = rng.uniform(y0 + 0.1, y1 - 0.3)
-        svg.rect(x, y, 0.42, 0.17, var("castleBrick"), 0.085)
+    # Кирпичи кладкой: редкие короткие ряды по сетке, а не россыпь.
+    light_width = w * 0.74
+    row_height = 0.42
+    rows = int(h / row_height)
+    for row in range(rows):
+        if rng.random() > 0.3:
+            continue
+        y = y0 + 0.14 + row * row_height
+        offset = 0.0 if row % 2 == 0 else 0.26
+        count = rng.randint(1, 3)
+        start = rng.randint(0, 2)
+        for i in range(count):
+            x = x0 + 0.12 + offset + (start + i) * 0.52
+            if x + 0.46 < x0 + light_width:
+                svg.rect(x, y, 0.46, 0.2, var("castleBrick"), 0.06)
 
 
 def roof(svg, cx, width, base, height, light, shade, flag):
@@ -313,20 +324,15 @@ def roof(svg, cx, width, base, height, light, shade, flag):
 
 def collar(svg, cx, wall_width, top):
     half = wall_width * 0.5 + 0.2
-    svg.rect(cx - wall_width * 0.5, top - 0.42, wall_width, 0.2, var("castleStoneShade"))
     svg.rect(cx - half, top - 0.22, half * 2, 0.34, var("castleStone"), 0.15)
     svg.rect(cx - half, top - 0.22, half * 2, 0.12, var("castleStoneShade"), 0.06)
 
 
 def window(svg, cx, y, width, height, lit):
+    """Арка одним тоном: тёмная рамка вокруг горящего стекла читалась бы как обводка."""
     half = width * 0.5
     arch = f"M{{a:.2f}} {y:.2f} L{{a:.2f}} {y + height - half:.2f} Q{{a:.2f}} {y + height:.2f} {cx:.2f} {y + height:.2f} Q{{b:.2f}} {y + height:.2f} {{b:.2f}} {y + height - half:.2f} L{{b:.2f}} {y:.2f} Z"
-    svg.path(arch.format(a=cx - half, b=cx + half), var("castleWindow"))
-    if lit:
-        inset = width * 0.17
-        svg.path(arch.format(a=cx - half + inset, b=cx + half - inset), var("castleWindowLit"))
-        svg.rect(cx - 0.025, y, 0.05, height, var("castleWindow"))
-    svg.rect(cx - half - 0.1, y - 0.1, width + 0.2, 0.13, var("castleStoneShade"), 0.06)
+    svg.path(arch.format(a=cx - half, b=cx + half), var("castleWindowLit" if lit else "castleWindow"))
 
 
 def platform(svg, half, height):

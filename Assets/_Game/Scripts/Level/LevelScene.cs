@@ -19,13 +19,20 @@ namespace CastleDestroyers.Level
         private const int GroundSamples = 5;
         private const uint DecorSeed = 7321u;
 
-        private const int StarCount = 80;
+        private const int StarCount = 90;
+        private const int SparkStep = 6;
+        private const float SparkSize = 0.34f;
+        private const float SkyHorizonY = 2f;
+        private const float SkyTopY = 44f;
+        private const float SkyReach = 200f;
+        private const byte MoonHaloAlpha = 15;
         private const float StarMinY = 10f;
         private const float StarMaxY = 60f;
         private const float StarMinSize = 0.06f;
         private const float StarMaxSize = 0.14f;
-        private const float CloudMinY = 24f;
-        private const float CloudMaxY = 38f;
+        private const float CloudMinY = 17f;
+        private const float CloudMaxY = 35f;
+        private const byte CloudAlpha = 150;
         private const float CloudMinScale = 0.7f;
         private const float CloudMaxScale = 1.2f;
         // Полосы шире уровня: слой уменьшается вместе с камерой и не должен кончаться в кадре.
@@ -47,6 +54,8 @@ namespace CastleDestroyers.Level
         private const float WaterPillDepth = 24f;
         private const float WaterPillTop = 0.6f;
 
+        // Ореолы луны: плоские круги, радиус в метрах.
+        private static readonly float[] MoonHalos = { 5.2f, 7f, 9.4f, 12.6f };
         private static readonly float[] BandWidth = { ArtSprites.BackFarWidthMeters, ArtSprites.BackMidWidthMeters, ArtSprites.BackNearWidthMeters };
         private static readonly float[] BandHeight = { ArtSprites.BackFarHeightMeters, ArtSprites.BackMidHeightMeters, ArtSprites.BackNearHeightMeters };
 
@@ -167,12 +176,22 @@ namespace CastleDestroyers.Level
 
         private void AddStars(PaletteSet palette, float extent)
         {
+            builder.AddRect(-SkyReach, -SkyReach, SkyReach, SkyHorizonY, palette.skyHorizon);
+            builder.AddGradientRect(-SkyReach, SkyHorizonY, SkyReach, SkyTopY, palette.skyHorizon, palette.sky);
+            builder.AddRect(-SkyReach, SkyTopY, SkyReach, SkyReach, palette.sky);
             for (int i = 0; i < StarCount; i++)
             {
                 float x = decorRng.Range(-extent, extent);
                 float y = decorRng.Range(StarMinY, StarMaxY);
                 float size = decorRng.Range(StarMinSize, StarMaxSize);
-                builder.AddQuad(x - size, y, x, y - size, x + size, y, x, y + size, palette.skyStar);
+                if (i % SparkStep == 0)
+                {
+                    builder.AddSprite(ArtSprites.Spark, x, y, SparkSize, palette.skyStar);
+                }
+                else
+                {
+                    builder.AddSprite(ArtSprites.Circle, x, y, size, palette.skyStar);
+                }
             }
         }
 
@@ -185,14 +204,23 @@ namespace CastleDestroyers.Level
                 beam.a = BeamAlpha;
                 builder.AddQuad(BeamMinX, 0f, BeamMaxX, 0f, BeamMaxX + BeamDrift * 2f, BeamReach, BeamMinX + BeamDrift, BeamReach, beam);
             }
+            Color32 halo = palette.moon;
+            halo.a = MoonHaloAlpha;
+            for (int i = MoonHalos.Length - 1; i >= 0; i--)
+            {
+                builder.AddSprite(ArtSprites.Circle, config.moonPosition.x, config.moonPosition.y, MoonHalos[i], halo);
+            }
+            builder.AddSprite(ArtSprites.Moon, config.moonPosition.x, config.moonPosition.y, 1f, Color.white);
+            // Облака идут после луны: тонкие полосы перекрывают диск.
             float step = config.cloudStep;
             int clouds = (int)(extent * 2f / step);
+            Color32 cloud = Color.white;
+            cloud.a = CloudAlpha;
             for (int i = 0; i < clouds; i++)
             {
                 float x = -extent + (i + decorRng.NextFloat()) * step;
-                builder.AddSprite(ArtSprites.Cloud, x, decorRng.Range(CloudMinY, CloudMaxY), decorRng.Range(CloudMinScale, CloudMaxScale), Color.white);
+                builder.AddSprite(ArtSprites.Cloud, x, decorRng.Range(CloudMinY, CloudMaxY), decorRng.Range(CloudMinScale, CloudMaxScale), cloud);
             }
-            builder.AddSprite(ArtSprites.Moon, config.moonPosition.x, config.moonPosition.y, 1f, Color.white);
         }
 
         /// <summary>Полоса-слой фона: тайлится по X, ниже неё до дна меша идёт её нижний сплошной цвет.</summary>

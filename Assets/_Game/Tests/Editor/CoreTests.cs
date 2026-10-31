@@ -265,7 +265,7 @@ namespace CastleDestroyers.Tests
         {
             PaletteSet night = ThemePalette.CreateNight();
             Assert.Greater(Brightness(night.backgroundFar), Brightness(night.backgroundMid));
-            Assert.Greater(Brightness(night.backgroundFar), Brightness(night.backgroundNear), "D-054: near layer is muted purple");
+            Assert.Greater(Brightness(night.backgroundMid), Brightness(night.backgroundNear), "D-061: aerial perspective");
             Assert.Less(Brightness(night.sky), Brightness(night.backgroundFar), "D-023: night sky is dark");
         }
 
@@ -273,7 +273,7 @@ namespace CastleDestroyers.Tests
         public void SunsetBackgroundGetsLighterWithDistance()
         {
             PaletteSet sunset = ThemePalette.CreateSunset();
-            Assert.Greater(Brightness(sunset.sky), Brightness(sunset.backgroundFar));
+            Assert.Greater(Brightness(sunset.skyHorizon), Brightness(sunset.backgroundFar));
             Assert.Greater(Brightness(sunset.backgroundFar), Brightness(sunset.backgroundMid));
             Assert.Greater(Brightness(sunset.backgroundMid), Brightness(sunset.backgroundNear));
         }

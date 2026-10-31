@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="240" height="84" viewBox="0 0 240 84">
-<rect x="4.00" y="44.00" width="232.00" height="34.00" rx="17.00" fill="var(--backgroundFar)" opacity="1"/>
-<rect x="50.00" y="18.00" width="112.00" height="38.00" rx="19.00" fill="var(--backgroundFar)" opacity="1"/>
+<rect x="4.00" y="52.00" width="232.00" height="14.00" rx="7.00" fill="var(--backgroundHaze)" opacity="1"/>
+<rect x="44.00" y="36.00" width="150.00" height="14.00" rx="7.00" fill="var(--backgroundHaze)" opacity="1"/>
+<rect x="92.00" y="20.00" width="74.00" height="12.00" rx="6.00" fill="var(--backgroundHaze)" opacity="1"/>
+<rect x="20.00" y="68.00" width="120.00" height="10.00" rx="5.00" fill="var(--backgroundHaze)" opacity="1"/>
 </svg>

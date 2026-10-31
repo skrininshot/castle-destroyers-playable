@@ -177,7 +177,7 @@ MonoBehaviour:
   maskTileSize: 128
   maxTileUploadsPerFrame: 4
   craterRadiusGround: 1.5
-  rimWidth: 0.3
+  rimWidth: 0.18
   rimScallop: 0
   rimScallopTeeth: 14
   rimScallopDepth: 0.12
@@ -216,11 +216,11 @@ MonoBehaviour:
   explosionMergeRadius: 0.5
   explosionMergeGrowth: 0.12
   explosionMaxStrength: 1.6
-  explosionRadius: 1.5
+  explosionRadius: 2.6
   explosionLife: 0.32
   explosionShards: 4
   explosionShardSpeed: 8
-  explosionShardSize: 0.34
+  explosionShardSize: 0.5
   explosionShardLife: 0.5
   shakeMax: 0.6
   shakeDecay: 4
@@ -240,14 +240,14 @@ MonoBehaviour:
   castleMinChunkCells: 24
   craterRadiusCastle: 0.288
   castleRimWidth: 0.13
-  castleRimDarken: 0.72
+  castleRimDarken: 0.88
   castleCraterTeethMin: 8
   castleCraterTeethMax: 12
   castleCraterNoise: 0.3
-  castleCrackChance: 0.6
-  castleCrackCount: 3
+  castleCrackChance: 0.3
+  castleCrackCount: 2
   castleCrackLength: 1.3
-  castleCrackWidth: 0.2
+  castleCrackWidth: 0.12
   castleCrackSegments: 4
   castleCrackBendDeg: 32
   castleDustPuffs: 4

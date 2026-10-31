@@ -61,6 +61,11 @@ SCALLOP_SEED = 2203
 SCALLOP_MIN_RADIUS = 0.62
 SCALLOP_MAX_RADIUS = 0.86
 SCALLOP_STEP = 1.72
+SLOPE_PROBE = 0.4
+SLOPE_MAX_FACTOR = 3.0
+RIM_FADE_START = 0.7
+RIM_FADE_END = 1.3
+DRIP_BAND = 2.4
 
 
 def flatten_path(data):
@@ -104,9 +109,26 @@ def surface_rows(solid):
     return tops
 
 
+def surface_slope(tops, meter):
+    probe = int(SLOPE_PROBE * meter)
+    return numpy.abs(numpy.roll(tops, -probe) - numpy.roll(tops, probe)) / (2.0 * probe)
+
+
+def slope_factor(tops, meter):
+    """Широкая полоса считается по вертикали: множитель держит её ширину на склоне постоянной."""
+    slope = surface_slope(tops, meter)
+    return numpy.minimum(numpy.sqrt(1.0 + slope * slope), SLOPE_MAX_FACTOR)
+
+
+def gentle_share(tops, meter):
+    """Яркая кромка живёт на пологой земле и сходит на нет по склону: контур горы не должен читаться как обводка."""
+    slope = surface_slope(tops, meter)
+    return numpy.clip((RIM_FADE_END - slope) / (RIM_FADE_END - RIM_FADE_START), 0.0, 1.0)
+
+
 def drip_depth(tops, meter):
     """Толщина кромки Night: лента и капли с круглым дном и скруглёнными впадинами, как на кладбище Bowmasters."""
-    depth = numpy.full(tops.shape, DRIP_RIM * meter)
+    depth = DRIP_RIM * meter * gentle_share(tops, meter)
     columns = numpy.arange(tops.size, dtype=numpy.float64)
     rng = random.Random(DRIP_SEED)
     x = rng.uniform(DRIP_MIN_STEP, DRIP_MAX_STEP) * meter
@@ -134,7 +156,8 @@ def drip_depth(tops, meter):
 
 def scallop_depth(tops, meter):
     """Толщина фестона Sunset: ряд полукругов вниз от ленты."""
-    depth = numpy.full(tops.shape, SCALLOP_RIM * meter)
+    gentle = gentle_share(tops, meter)
+    depth = SCALLOP_RIM * meter * gentle
     columns = numpy.arange(tops.size, dtype=numpy.float64)
     rng = random.Random(SCALLOP_SEED)
     x = 0.0
@@ -142,7 +165,8 @@ def scallop_depth(tops, meter):
         radius = rng.uniform(SCALLOP_MIN_RADIUS, SCALLOP_MAX_RADIUS) * meter
         offset = numpy.abs(columns - x)
         inside = offset < radius
-        depth[inside] = numpy.maximum(depth[inside], SCALLOP_RIM * meter * 0.4 + numpy.sqrt(radius * radius - offset[inside] ** 2))
+        scallop = SCALLOP_RIM * meter * 0.4 + numpy.sqrt(radius * radius - offset[inside] ** 2)
+        depth[inside] = numpy.maximum(depth[inside], scallop * gentle[inside])
         x += radius * SCALLOP_STEP
     return depth
 
@@ -160,10 +184,11 @@ def rim_levels(solid, theme):
     levels = numpy.zeros(solid.shape, dtype=numpy.uint8)
     lift = RIM_LIFT * meter
     if theme == "Night":
+        paint_band(levels, tops, DRIP_BAND * meter * slope_factor(tops, meter), lift, BAND_LEVEL)
         paint_band(levels, tops, drip_depth(tops, meter), lift, RIM_LEVEL)
-        paint_band(levels, tops, numpy.full(tops.shape, DRIP_LIGHT * meter), lift, LIGHT_LEVEL)
+        paint_band(levels, tops, DRIP_LIGHT * meter * gentle_share(tops, meter), lift, LIGHT_LEVEL)
     else:
-        paint_band(levels, tops, numpy.full(tops.shape, SCALLOP_BAND * meter), lift, BAND_LEVEL)
+        paint_band(levels, tops, SCALLOP_BAND * meter * slope_factor(tops, meter), lift, BAND_LEVEL)
         paint_band(levels, tops, scallop_depth(tops, meter), lift, RIM_LEVEL)
     return Image.fromarray(levels)
 

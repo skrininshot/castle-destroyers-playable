@@ -14,7 +14,7 @@ namespace CastleDestroyers.Level
     {
         private const uint DecorSeed = 5309u;
         private const float TreeSink = 0.15f;
-        private const float TreeTilt = 0.2f;
+        private const float TreeTilt = 0f;
         private const float TreeMinScale = 0.85f;
         private const float TreeMaxScale = 1.35f;
         private const float OtherMinScale = 0.85f;
@@ -26,19 +26,19 @@ namespace CastleDestroyers.Level
         private const byte Falling = 1;
         private const byte Gone = 2;
 
-        // Декор на склонах и у подножий: X, метры. Сперва ёлки, за ними остальное.
+        // Декор группами у подножий, X в метрах. Сперва ёлки, за ними кусты, камни и маркеры. Выше по склону пусто: силуэт горы чистый.
         private static readonly float[] TreeX =
         {
-            -27f, -25.2f, -22.6f, -19.7f, -16.8f, -14.6f, -12.1f, -10f, -7.8f, -5.6f, -3.6f,
-            3.9f, 6.1f, 8.5f, 10.9f, 13.3f, 15.6f, 18.4f, 21.4f, 25.2f, 27f,
-            -26.1f, -23.7f, -20.9f, -15.6f, -11.2f, -6.7f, 5f, 9.7f, 14.5f, 19.9f, 24f, 26.2f,
-            -24.4f, -13.4f, -8.8f, 7.3f, 12.1f, 22.6f,
-            -28.2f, -18.2f, 16.9f, 28.1f
+            -28.9f, -28f, -26.9f, -21.3f, -20.3f, -19.2f, -18.2f, -13.9f, -12.9f,
+            12.7f, 13.8f, 18.3f, 19.4f, 20.4f, 21.5f, 26.8f, 28.1f, 29f,
+            -27.5f, -19.8f, -13.3f, 13.3f, 19.9f, 27.5f,
+            -22.6f, 15f, 23f,
+            -25.3f, -16.2f, 16.4f, 25f
         };
 
-        private const int SpruceCount = 21;
-        private const int BushCount = 12;
-        private const int RockCount = 6;
+        private const int SpruceCount = 18;
+        private const int BushCount = 6;
+        private const int RockCount = 3;
 
         private readonly FlatMeshBuilder builder = new FlatMeshBuilder();
         private readonly Rng decorRng = new Rng(DecorSeed);

@@ -16,6 +16,9 @@ namespace CastleDestroyers.Level
         private const int QuadsPerCannon = 1 + CannonSystem.BarrelCount;
         private const int BodyQuad = CannonSystem.BarrelCount;
         private const float BoundsPadding = 4f;
+        // Пушка на виду стройнее своего игрового размера: двенадцать пушек не должны закрывать фасад замка.
+        private const float ViewLength = 0.86f;
+        private const float ViewThickness = 0.74f;
 
         private GameConfig config;
         private MatchState match;
@@ -150,8 +153,8 @@ namespace CastleDestroyers.Level
                 }
 
                 float squash = Squash(cannon);
-                float thick = 1f + squash;
-                float longer = 1f - squash * config.cannonSquashLengthShare;
+                float thick = (1f + squash) * ViewThickness;
+                float longer = (1f - squash * config.cannonSquashLengthShare) * ViewLength;
                 for (int barrel = 0; barrel < CannonSystem.BarrelCount; barrel++)
                 {
                     float offset = CannonSystem.BarrelOffset(barrel) * thick;

@@ -400,7 +400,7 @@ namespace CastleDestroyers.Core
             EndCard.ApplyPalette(palette);
             rocketMaterial.SetColor(RocketBodyColor, palette.rocketBody);
             rocketMaterial.SetColor(RocketShadeColor, palette.rocketShade);
-            mainCamera.backgroundColor = palette.sky;
+            mainCamera.backgroundColor = palette.skyHorizon;
         }
 
         private void OnStateChanged(SessionState state, Side side)

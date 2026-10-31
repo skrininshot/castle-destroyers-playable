@@ -823,7 +823,7 @@ namespace CastleDestroyers.Tests
             int x = (int)mask.TexelX(config.playerCastleX);
             int top = (int)mask.TexelY(mask.SurfaceHeight(config.playerCastleX));
             Assert.Greater(mask.Grass[(top - 1) * mask.Width + x], 200);
-            Assert.AreEqual(0, mask.Grass[(top - 30) * mask.Width + x]);
+            Assert.AreEqual(0, mask.Grass[(top - 50) * mask.Width + x]);
         }
 
         [Test]
@@ -1064,7 +1064,7 @@ namespace CastleDestroyers.Tests
         [Test]
         public void TreeFallsWhenGroundUnderItIsGone()
         {
-            terrain.Explode(-11.6f, mask.SurfaceHeight(-11.6f), 2.5f);
+            terrain.Explode(-13.4f, mask.SurfaceHeight(-13.4f), 2.5f);
             Run(Step);
             Assert.Greater(decor.FallingCount, 0);
         }
@@ -1081,7 +1081,7 @@ namespace CastleDestroyers.Tests
         public void FallenTreeDisappearsAndResetBringsItBack()
         {
             Vector3[] standing = decor.Mesh.vertices;
-            terrain.Explode(-11.6f, mask.SurfaceHeight(-11.6f), 2.5f);
+            terrain.Explode(-13.4f, mask.SurfaceHeight(-13.4f), 2.5f);
             Run(3f);
             Assert.AreEqual(0, decor.FallingCount);
             CollectionAssert.AreNotEqual(standing, decor.Mesh.vertices);
@@ -1094,7 +1094,7 @@ namespace CastleDestroyers.Tests
         [Test]
         public void ThemeRebuildKeepsFallenTrees()
         {
-            terrain.Explode(-11.6f, mask.SurfaceHeight(-11.6f), 2.5f);
+            terrain.Explode(-13.4f, mask.SurfaceHeight(-13.4f), 2.5f);
             Run(3f);
             Vector3[] fallen = decor.Mesh.vertices;
             decor.Build(ThemePalette.CreateSunset());
