@@ -42,10 +42,10 @@ namespace CastleDestroyers.Level
         public const int Glyph10 = 35;
         public const int GlyphPlus = Glyph10;
 
-        public const float CastleArtWidthMeters = 8.82759f;
-        public const float CastleArtHeightMeters = 17.65517f;
+        public const float CastleArtWidthMeters = 11.47586f;
+        public const float CastleArtHeightMeters = 22.95172f;
         /// <summary>Низ текстуры замка ниже низа стены на столько метров.</summary>
-        public const float CastleArtBaseMeters = 0.13793f;
+        public const float CastleArtBaseMeters = 0.17931f;
         public const float BackFarWidthMeters = 51.2000f;
         public const float BackFarHeightMeters = 25.6000f;
         public const float BackMidWidthMeters = 36.5714f;
@@ -106,9 +106,9 @@ namespace CastleDestroyers.Level
             -0.580000f, -0.370000f, 0.220000f, 0.370000f,
             -0.280000f, -0.130000f, 1.260000f, 0.130000f,
             -0.280000f, -0.130000f, 1.260000f, 0.130000f,
-            -1.390000f, -0.220000f, 1.390000f, 1.420000f,
-            -3.890000f, -0.040000f, 3.890000f, 0.840000f,
-            -4.390000f, -0.040000f, 4.390000f, 0.840000f,
+            -1.807000f, -0.286000f, 1.807000f, 1.846000f,
+            -5.057000f, -0.052000f, 5.057000f, 1.092000f,
+            -5.707000f, -0.052000f, 5.707000f, 1.092000f,
             -0.750000f, -0.100000f, 0.750000f, 2.500000f,
             -0.800000f, -0.140000f, 0.800000f, 0.860000f,
             -0.650000f, -0.080000f, 0.650000f, 0.620000f,

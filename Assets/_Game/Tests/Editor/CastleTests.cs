@@ -97,6 +97,8 @@ namespace CastleDestroyers.Tests
 
     public sealed class CastleMaskTests
     {
+        private const float MaxUploadTexelsPerSecond = 700000f;
+
         private CombatRig rig;
 
         [SetUp]
@@ -153,14 +155,15 @@ namespace CastleDestroyers.Tests
         public void MaskStaysCheapToUpload()
         {
             DestructibleMask red = rig.Castles.Body(Side.Enemy).Mask;
-            Assert.LessOrEqual(red.Width * red.Height, 2 * rig.Config.maskTileSize * rig.Config.maskTileSize);
+            Assert.LessOrEqual(red.Width * red.Height / rig.Config.castleUploadInterval, MaxUploadTexelsPerSecond);
         }
     }
 
     public sealed class CastleDamageTests
     {
         private const float Step = 0.02f;
-        private const float TopCutHeight = 9.2f;
+        private const float TopCutHeight = 9.2f * CastleShapes.Scale;
+        private const float TopCutHalf = 1.1f * CastleShapes.Scale;
 
         private CombatRig rig;
         private CastleBody red;
@@ -431,17 +434,17 @@ namespace CastleDestroyers.Tests
         {
             int alive = rig.Match.EnemyAlive;
             // Верх центральной башни выше крыш средних: иначе кусок держится на них. Рядом первая пушка.
-            CutRedTower(rig.Config.platformHeight + TopCutHeight, 1.1f);
+            CutRedTower(rig.Config.platformHeight + TopCutHeight, TopCutHalf);
             Run(rig.Config.connectivityInterval * 2f);
             Assert.AreEqual(1, rig.Castles.ChunksActive);
             Assert.Less(rig.Match.EnemyAlive, alive);
-            Assert.IsFalse(red.Mask.IsSolidWorld(0f, rig.Config.platformHeight + TopCutHeight + 1.2f));
+            Assert.IsFalse(red.Mask.IsSolidWorld(0f, rig.Config.platformHeight + TopCutHeight + 1.6f));
         }
 
         [Test]
         public void ChunkFallsIntoWaterAndIsRecycled()
         {
-            CutRedTower(rig.Config.platformHeight + TopCutHeight, 1.1f);
+            CutRedTower(rig.Config.platformHeight + TopCutHeight, TopCutHalf);
             Run(4f);
             Assert.AreEqual(0, rig.Castles.ChunksActive);
             Assert.Greater(rig.Particles.ActiveCount, 0);
@@ -595,20 +598,9 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void ScorchBurnsFarMoreStoneThanARocket()
-        {
-            int solid = red.Mask.SolidCount;
-            rig.Castles.HitWall(Side.Enemy, red.CenterX, red.PivotY + 3f, 1f);
-            int rocket = solid - red.Mask.SolidCount;
-            solid = red.Mask.SolidCount;
-            rig.Castles.ScorchStone(Side.Enemy, red.CenterX, red.PivotY + 5f, rig.Config.finaleBlastRadius);
-            Assert.Greater(solid - red.Mask.SolidCount, rocket * 4);
-        }
-
-        [Test]
         public void VaporizeRemovesEverythingAndStopsChunks()
         {
-            rig.Castles.ScorchStone(Side.Enemy, red.CenterX, red.PivotY + 3f, 1.5f);
+            rig.Castles.HitWall(Side.Enemy, red.CenterX, red.PivotY + 3f, 1f);
             rig.Castles.Vaporize(Side.Enemy);
             Assert.AreEqual(CastleState.Gone, red.State);
             Assert.AreEqual(0, rig.Match.EnemyAlive);
@@ -632,7 +624,7 @@ namespace CastleDestroyers.Tests
         public void ResetRestoresCastleAndCannons()
         {
             int solid = red.Mask.SolidCount;
-            CutRedTower(rig.Config.platformHeight + TopCutHeight, 1.1f);
+            CutRedTower(rig.Config.platformHeight + TopCutHeight, TopCutHalf);
             red.AddSway(100f);
             Run(0.5f);
             rig.Match.Reset();

@@ -33,8 +33,11 @@ namespace CastleDestroyers.Core
         [Tooltip("Director: сколько пушек игрок теряет за один ход ИИ, не больше.")]
         public int directorMaxLossPerAiTurn = 1;
         [Range(0, 6)]
-        [Tooltip("Director: сколько пушек врага переживает залпы до последнего хода игрока, чтобы у него были все 3 клика.")]
-        public int directorEnemyKeepCannons = 0;
+        [Tooltip("Director: сколько пушек врага переживает залпы защищённых ходов: враг не падает с первого выстрела (D-077).")]
+        public int directorEnemyKeepCannons = 2;
+        [Range(0, 3)]
+        [Tooltip("Director: сколько первых ходов игрока защищены. 1: полностью уничтожить врага можно начиная со второго хода.")]
+        public int directorEnemyKeepTurns = 1;
         [Range(1f, 16f)]
         [Tooltip("Director: вес урона ракет последнего залпа игрока (ТЗ §3.1.1). Растит кратер.")]
         public float directorFinisherWeight = 4f;
@@ -43,9 +46,9 @@ namespace CastleDestroyers.Core
         [Tooltip("Подсказки к ходам игрока по порядку. Если ходов больше, чем подсказок, используется последняя.")]
         public TurnHint[] turnHints =
         {
-            new TurnHint("x20 lob", 20, true, 50f, 0.68f),
+            new TurnHint("x20 lob", 20, true, 50f, 0.64f),
             new TurnHint("x20 steep lob", 20, true, 54f, 0.6f),
-            new TurnHint("free shot", 0, false, 50f, 0.68f)
+            new TurnHint("free shot", 0, false, 50f, 0.6f)
         };
 
         [Header("Тайминги состояний")]
@@ -75,10 +78,10 @@ namespace CastleDestroyers.Core
         public float resolveDuration = 0.7f;
         [Range(0.5f, 6f)]
         [Tooltip("Victory: от победы до EndCard, секунды (ТЗ §3.11: ~2 с).")]
-        public float victoryDuration = 4.2f;
+        public float victoryDuration = 4.1f;
         [Range(0f, 3f)]
         [Tooltip("Victory/Defeat: сколько камера держит кадр на проигравшем замке, секунды.")]
-        public float victoryLoserHold = 2.1f;
+        public float victoryLoserHold = 2f;
         [Range(0.5f, 6f)]
         [Tooltip("Defeat: от поражения до EndCard, секунды.")]
         public float defeatDuration = 2f;
@@ -182,24 +185,30 @@ namespace CastleDestroyers.Core
         public string storeUrl = "https://play.google.com/store";
 
         [Header("Аннигиляция замка (D-075)")]
-        [Range(1, 30)]
-        [Tooltip("Взрывов в цепи, которая выжигает камень проигравшего.")]
-        public int finaleBlasts = 12;
-        [Range(0.02f, 0.3f)]
-        [Tooltip("Пауза между взрывами цепи, секунды.")]
-        public float finaleBlastInterval = 0.09f;
-        [Range(0.3f, 4f)]
-        [Tooltip("Сколько камня выжигает один взрыв цепи: радиус, метры.")]
-        public float finaleBlastRadius = 1.5f;
-        [Range(1f, 16f)]
-        [Tooltip("Вес взрыва цепи: размер вспышки.")]
-        public float finaleBlastWeight = 4f;
-        [Range(0, 8)]
-        [Tooltip("Кратеров в земле под замком при финальном взрыве.")]
-        public int finaleCraters = 3;
-        [Range(1f, 16f)]
-        [Tooltip("Вес этих кратеров: радиус растёт как корень.")]
-        public float finaleCraterWeight = 4f;
+        [Range(0f, 1.5f)]
+        [Tooltip("Пауза от победы до финального взрыва, секунды: видно, как падает последняя пушка.")]
+        public float finaleBlastDelay = 0.3f;
+        [Range(1f, 10f)]
+        [Tooltip("Размер финального взрыва, во сколько раз больше обычного.")]
+        public float finaleBlastPower = 5f;
+        [Range(0.2f, 2f)]
+        [Tooltip("Сколько живёт финальный взрыв, секунды игрового времени.")]
+        public float finaleBlastLife = 0.7f;
+        [Range(0f, 12f)]
+        [Tooltip("Высота центра финального взрыва над землёй, метры.")]
+        public float finaleBlastLift = 4f;
+        [Range(2f, 12f)]
+        [Tooltip("Радиус кратера на месте замка, метры.")]
+        public float finaleCraterRadius = 7.5f;
+        [Range(0f, 10f)]
+        [Tooltip("Насколько центр кратера выше земли, метры. Чем выше, тем мельче чаша.")]
+        public float finaleCraterLift = 3.5f;
+        [Range(0, 40)]
+        [Tooltip("Клубов пыли над кратером.")]
+        public int finaleDustPuffs = 18;
+        [Range(0f, 1f)]
+        [Tooltip("Тряска камеры от финального взрыва, метры.")]
+        public float finaleShake = 0.3f;
         [Range(0.05f, 1f)]
         [Tooltip("Замедление времени после финального взрыва, доля.")]
         public float finaleSlowScale = 0.3f;
@@ -362,10 +371,10 @@ namespace CastleDestroyers.Core
         public float endHandSpeed = 8f;
         [Range(0f, 80f)]
         [Tooltip("Тряска экрана от приземлений, единицы канваса.")]
-        public float endImpactShake = 24f;
+        public float endImpactShake = 8f;
         [Range(1f, 30f)]
         [Tooltip("Затухание этой тряски, 1/с.")]
-        public float endImpactDecay = 8f;
+        public float endImpactDecay = 14f;
         [Range(10f, 120f)]
         [Tooltip("Частота этой тряски, рад/с.")]
         public float endShakeFrequency = 70f;
@@ -447,7 +456,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Непрозрачность последней точки пунктира, 0..255.")]
         public int aimDotAlphaEnd = 90;
         [Tooltip("Плашка POWER / ANGLE: смещение от центра замка игрока, метры.")]
-        public Vector2 aimPanelOffset = new Vector2(5f, 6.5f);
+        public Vector2 aimPanelOffset = new Vector2(5f, 5.3f);
         [Range(0f, 60f)]
         [Tooltip("Плашка POWER / ANGLE: наименьший зазор до полос здоровья, единицы канваса.")]
         public float aimPanelHudGap = 12f;
@@ -552,9 +561,9 @@ namespace CastleDestroyers.Core
         [Tooltip("Бустеры уровня: множитель и положение.")]
         public BoosterSpec[] boosters =
         {
-            new BoosterSpec(20, 0f, 33.6f),
-            new BoosterSpec(10, 0f, 19f),
-            new BoosterSpec(50, 0f, 13f)
+            new BoosterSpec(20, 0f, 34.4f),
+            new BoosterSpec(10, 0f, 20.8f),
+            new BoosterSpec(50, 0f, 14.8f)
         };
         [Range(0.5f, 3f)]
         public float boosterWidth = 1.875f;
@@ -877,7 +886,7 @@ namespace CastleDestroyers.Core
         public int castleChunkTextureSize = 128;
         [Range(0.016f, 0.3f)]
         [Tooltip("Минимальный интервал заливки текстуры замка, секунды.")]
-        public float castleUploadInterval = 0.05f;
+        public float castleUploadInterval = 0.08f;
         [Range(1, 200)]
         [Tooltip("Сколько ударов по платформе открывает следующую трещину-декаль.")]
         public int platformHitsPerCrack = 10;
@@ -939,12 +948,12 @@ namespace CastleDestroyers.Core
         public float playerCastleX = -33.75f;
         [Tooltip("X центра красного замка, метры.")]
         public float enemyCastleX = 33.75f;
-        [Range(0.1f, 1.5f)]
+        [Range(0.1f, 2f)]
         [Tooltip("Высота гусениц, метры.")]
-        public float trackHeight = 1.2f;
-        [Range(0.1f, 1.5f)]
+        public float trackHeight = 1.56f;
+        [Range(0.1f, 2f)]
         [Tooltip("Высота деревянной платформы, метры.")]
-        public float platformHeight = 0.8f;
+        public float platformHeight = 1.04f;
 
         [Header("Фон (ТЗ §3.10)")]
         [Tooltip("Параллакс слоёв от дальнего к ближнему: звёзды, луна, горы, лес, кусты. 0 — слой стоит на экране, 1 — движется с уровнем.")]
@@ -1053,7 +1062,7 @@ namespace CastleDestroyers.Core
         [Tooltip("Сценарии кнопок SHOT: угол и сила выстрела игрока (навес x20, тоннель x10, низ x50).")]
         public TurnHint[] debugBoosterShots =
         {
-            new TurnHint("shot x20", 20, false, 50f, 0.68f),
+            new TurnHint("shot x20", 20, false, 50f, 0.64f),
             new TurnHint("shot x10", 10, false, 32f, 0.55f),
             new TurnHint("shot x50", 50, false, 18f, 0.7f)
         };

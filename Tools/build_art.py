@@ -36,7 +36,9 @@ CASTLE_WIDTH = 512
 CASTLE_HEIGHT = 1024
 CASTLE_PPM = 58.0
 CASTLE_BASE_PX = 1016.0
-# Совпадают с GameConfig: platformHeight и trackHeight.
+# Замки в игре крупнее рисунка (D-077): пиксели те же, меняются только метры. Совпадает с CastleShapes.Scale.
+CASTLE_SCALE = 1.3
+# С учётом CASTLE_SCALE совпадают с GameConfig: platformHeight и trackHeight.
 PLATFORM_HEIGHT = 0.8
 TRACK_HEIGHT = 1.2
 TRACK_LENGTH = 2.7
@@ -81,6 +83,12 @@ def meters(min_x, min_y, max_x, max_y, ppm=SPRITE_PPM):
 def metric_sprite(name, min_x, min_y, max_x, max_y, draw, ppm=SPRITE_PPM):
     width, height, rect, wrap = meters(min_x, min_y, max_x, max_y, ppm)
     return Sprite(name, width, height, rect, wrap(draw))
+
+
+def chassis_sprite(name, min_x, min_y, max_x, max_y, draw):
+    """Шасси замка: рисунок в метрах эскиза, в игре он крупнее в CASTLE_SCALE раз."""
+    width, height, rect, wrap = meters(min_x, min_y, max_x, max_y, 56.0)
+    return Sprite(name, width, height, tuple(value * CASTLE_SCALE for value in rect), wrap(draw))
 
 
 def pixel_sprite(name, size, half_meters, draw):
@@ -210,9 +218,9 @@ def atlas_sprites(theme):
         metric_sprite("CannonBodyEnemy", -0.58, -0.37, 0.22, 0.37, draw_cannon_body("Enemy")),
         metric_sprite("CannonBarrelPlayer", -0.28, -0.13, 1.26, 0.13, draw_cannon_barrel("Player")),
         metric_sprite("CannonBarrelEnemy", -0.28, -0.13, 1.26, 0.13, draw_cannon_barrel("Enemy")),
-        metric_sprite("Track", -TRACK_LENGTH * 0.5 - 0.04, -0.22, TRACK_LENGTH * 0.5 + 0.04, TRACK_HEIGHT + 0.22, draw_track, 56.0),
-        metric_sprite("PlatformBlue", -3.89, -0.04, 3.89, PLATFORM_HEIGHT + 0.04, draw_platform(3.85), 56.0),
-        metric_sprite("PlatformRed", -4.39, -0.04, 4.39, PLATFORM_HEIGHT + 0.04, draw_platform(4.35), 56.0),
+        chassis_sprite("Track", -TRACK_LENGTH * 0.5 - 0.04, -0.22, TRACK_LENGTH * 0.5 + 0.04, TRACK_HEIGHT + 0.22, draw_track),
+        chassis_sprite("PlatformBlue", -3.89, -0.04, 3.89, PLATFORM_HEIGHT + 0.04, draw_platform(3.85)),
+        chassis_sprite("PlatformRed", -4.39, -0.04, 4.39, PLATFORM_HEIGHT + 0.04, draw_platform(4.35)),
         Sprite("Spruce", 1.5 * SPRITE_PPM, 2.6 * SPRITE_PPM, (-0.75, -0.1, 0.75, 2.5), lambda svg: scaled_y_down(svg, draw_spruce)),
         Sprite("Bush", 1.6 * SPRITE_PPM, 1.0 * SPRITE_PPM, (-0.8, -0.14, 0.8, 0.86), lambda svg: scaled_y_down(svg, draw_bush)),
         Sprite("Rock", 1.3 * SPRITE_PPM, 0.7 * SPRITE_PPM, (-0.65, -0.08, 0.65, 0.62), lambda svg: scaled_y_down(svg, draw_rock)),
@@ -697,10 +705,10 @@ namespace CastleDestroyers.Level
 {names}
         public const int GlyphPlus = Glyph10;
 
-        public const float CastleArtWidthMeters = {CASTLE_WIDTH / CASTLE_PPM:.5f}f;
-        public const float CastleArtHeightMeters = {CASTLE_HEIGHT / CASTLE_PPM:.5f}f;
+        public const float CastleArtWidthMeters = {CASTLE_WIDTH * CASTLE_SCALE / CASTLE_PPM:.5f}f;
+        public const float CastleArtHeightMeters = {CASTLE_HEIGHT * CASTLE_SCALE / CASTLE_PPM:.5f}f;
         /// <summary>Низ текстуры замка ниже низа стены на столько метров.</summary>
-        public const float CastleArtBaseMeters = {(CASTLE_HEIGHT - CASTLE_BASE_PX) / CASTLE_PPM:.5f}f;
+        public const float CastleArtBaseMeters = {(CASTLE_HEIGHT - CASTLE_BASE_PX) * CASTLE_SCALE / CASTLE_PPM:.5f}f;
 {bands}
 
         /// <summary>UV спрайта: minU, minV, maxU, maxV.</summary>

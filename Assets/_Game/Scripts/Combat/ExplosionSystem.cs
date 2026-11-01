@@ -36,6 +36,7 @@ namespace CastleDestroyers.Combat
         private float[] posY;
         private float[] age;
         private float[] strength;
+        private float[] span;
         private float[] turnCos;
         private float[] turnSin;
         private int[] frameSlots;
@@ -66,6 +67,7 @@ namespace CastleDestroyers.Combat
             posY = new float[capacity];
             age = new float[capacity];
             strength = new float[capacity];
+            span = new float[capacity];
             turnCos = new float[capacity];
             turnSin = new float[capacity];
             frameSlots = new int[capacity];
@@ -148,6 +150,7 @@ namespace CastleDestroyers.Combat
             posY[i] = y;
             age[i] = 0f;
             strength[i] = Mathf.Min(scale, config.explosionMaxStrength);
+            span[i] = config.explosionLife;
             float turn = rng.Range(0f, FullTurn);
             turnCos[i] = Mathf.Cos(turn);
             turnSin[i] = Mathf.Sin(turn);
@@ -163,6 +166,28 @@ namespace CastleDestroyers.Combat
             }
         }
 
+        /// <summary>
+        /// Один взрыв финала (D-077): сила и длительность заданы напрямую, он не сливается с другими и не теряется при полном пуле.
+        /// Кратер радиуса craterRadius с центром на craterY.
+        /// </summary>
+        public void Detonate(float x, float y, float power, float life, float craterY, float craterRadius)
+        {
+            if (terrain.Stamp(x, craterY, craterRadius))
+            {
+                fx.Dust(x, craterY, craterRadius, config.finaleDustPuffs);
+            }
+            int i = pool.Alloc();
+            i = i < 0 ? 0 : i;
+            posX[i] = x;
+            posY[i] = y;
+            age[i] = 0f;
+            strength[i] = power;
+            span[i] = life;
+            turnCos[i] = 1f;
+            turnSin[i] = 0f;
+            SpawnShards(x, y);
+        }
+
         public void Tick(float dt)
         {
             frameCount = 0;
@@ -170,7 +195,6 @@ namespace CastleDestroyers.Combat
             {
                 return;
             }
-            float life = config.explosionLife;
             float radius = config.explosionRadius;
             for (int i = 0; i < pool.Capacity; i++)
             {
@@ -179,6 +203,7 @@ namespace CastleDestroyers.Combat
                     continue;
                 }
                 float t = age[i] + dt;
+                float life = span[i];
                 age[i] = t;
                 if (t >= life)
                 {

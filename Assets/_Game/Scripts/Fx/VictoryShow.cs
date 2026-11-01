@@ -8,14 +8,12 @@ using CastleDestroyers.Platform;
 namespace CastleDestroyers.Fx
 {
     /// <summary>
-    /// Конец матча (ТЗ §3.11, D-075). Сначала замок проигравшего сгорает цепью взрывов сверху вниз, затем финальный взрыв уносит остатки,
-    /// платформу и гусеницы: вспышка, ударная волна, замедление. Когда камера перешла на победителя, его пушки подпрыгивают,
+    /// Конец матча (ТЗ §3.11, D-077). Один мощный взрыв уносит всё, что осталось от замка проигравшего, платформу и гусеницы,
+    /// и оставляет большой кратер: вспышка, ударная волна, замедление. Когда камера перешла на победителя, его пушки подпрыгивают,
     /// над замком залпы фейерверка, у победившего игрока ещё и хлопушки конфетти.
     /// </summary>
     public sealed class VictoryShow : ITickable
     {
-        private const float CenterShare = 0.5f;
-        private const float ChainTop = 1f;
 
         private GameConfig config;
         private SessionFlow flow;
@@ -29,7 +27,6 @@ namespace CastleDestroyers.Fx
         private bool playing;
         private Side celebrating;
         private Side burning;
-        private int blastsDone;
         private bool vaporized;
         private bool cheering;
         private int burstsLeft;
@@ -64,7 +61,11 @@ namespace CastleDestroyers.Fx
             {
                 return;
             }
-            TickBurning(flow.StateTime);
+            CastleBody body = castles.Body(burning);
+            if (!vaporized && body.State != CastleState.Gone && flow.StateTime >= config.finaleBlastDelay)
+            {
+                Vaporize(body);
+            }
             float time = flow.StateTime - config.victoryLoserHold;
             if (time <= 0f)
             {
@@ -84,54 +85,18 @@ namespace CastleDestroyers.Fx
             }
         }
 
-        private void TickBurning(float time)
-        {
-            CastleBody body = castles.Body(burning);
-            if (vaporized || body.State == CastleState.Gone)
-            {
-                return;
-            }
-            int blasts = config.finaleBlasts;
-            while (blastsDone < blasts && time >= blastsDone * config.finaleBlastInterval)
-            {
-                Blast(body, blastsDone);
-                blastsDone++;
-            }
-            if (blastsDone >= blasts && time >= blasts * config.finaleBlastInterval)
-            {
-                Vaporize(body);
-            }
-        }
-
-        /// <summary>Взрыв цепи: высота идёт сверху вниз, по ширине случайно.</summary>
-        private void Blast(CastleBody body, int index)
-        {
-            float localY = body.Height * (ChainTop - (index + CenterShare) / config.finaleBlasts);
-            float localX = rng.Range(-body.HalfWidth, body.HalfWidth);
-            float x = body.WorldX(localX, localY);
-            float y = body.WorldY(localX, localY);
-            castles.ScorchStone(burning, x, y, config.finaleBlastRadius);
-            explosions.Explode(x, y, false, config.finaleBlastWeight);
-        }
-
         private void Vaporize(CastleBody body)
         {
             vaporized = true;
-            float centerY = body.PivotY + body.Height * CenterShare;
             float groundY = body.PivotY - config.trackHeight;
-            float span = body.PlatformHalf * 2f;
             castles.Vaporize(burning);
-            for (int i = 0; i < config.finaleCraters; i++)
-            {
-                float x = body.CenterX - body.PlatformHalf + span * (i + CenterShare) / config.finaleCraters;
-                explosions.Explode(x, groundY, true, config.finaleCraterWeight);
-            }
-            explosions.Explode(body.CenterX, centerY, false, config.finaleBlastWeight);
-            fx.Wreckage(body.CenterX, body.PivotY, span, config.finaleDebrisPieces);
+            explosions.Detonate(body.CenterX, groundY + config.finaleBlastLift, config.finaleBlastPower, config.finaleBlastLife,
+                groundY + config.finaleCraterLift, config.finaleCraterRadius);
+            fx.Wreckage(body.CenterX, body.PivotY, body.PlatformHalf * 2f, config.finaleDebrisPieces);
             fx.Play(SoundId.Blast);
             finale.Flash();
-            finale.Shockwave(body.CenterX, centerY);
-            shake.Add(config.shakeMax);
+            finale.Shockwave(body.CenterX, groundY + config.finaleBlastLift);
+            shake.Add(config.finaleShake);
             StartSlowMotion();
         }
 
@@ -159,6 +124,7 @@ namespace CastleDestroyers.Fx
             }
             restoreScale = Loop.TimeScale;
             Loop.TimeScale = restoreScale * config.finaleSlowScale;
+            shake.Speed = 1f / config.finaleSlowScale;
             slowLeft = config.finaleSlowTime;
         }
 
@@ -181,6 +147,7 @@ namespace CastleDestroyers.Fx
             if (slowLeft != 0f && Loop != null)
             {
                 Loop.TimeScale = restoreScale;
+                shake.Speed = 1f;
             }
             slowLeft = 0f;
         }
@@ -192,7 +159,6 @@ namespace CastleDestroyers.Fx
             {
                 celebrating = flow.Winner;
                 burning = flow.Loser;
-                blastsDone = 0;
                 vaporized = false;
                 cheering = false;
                 burstsLeft = config.fireworkBursts;

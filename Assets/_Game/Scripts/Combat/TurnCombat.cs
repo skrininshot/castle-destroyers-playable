@@ -81,8 +81,12 @@ namespace CastleDestroyers.Combat
                 headPassed = false;
                 centerHold = 0f;
                 cannons.SetSalvoWeight(side, flow.IsFinisherTurn ? config.directorFinisherWeight : 1f);
-                bool spare = config.directorEnabled && !flow.IsFinisherTurn;
-                cannons.SparedEnemyCannons = spare ? config.directorEnemyKeepCannons : 0;
+                // Защита держится и в ответный ход врага: куски замка могут отвалиться уже после конца полёта.
+                if (side == Side.Player)
+                {
+                    bool spare = config.directorEnabled && flow.PlayerTurn <= config.directorEnemyKeepTurns && !flow.IsFinisherTurn;
+                    cannons.SparedEnemyCannons = spare ? config.directorEnemyKeepCannons : 0;
+                }
                 NudgeBoosters(side);
                 cannons.BeginSalvo(side);
             }

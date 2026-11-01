@@ -66,6 +66,8 @@ namespace CastleDestroyers.CastleRig
         public int PlatformHits { get; set; }
         /// <summary>Последний FirstHit пришёлся в платформу или гусеницы, а не в камень.</summary>
         public bool HitPlatform { get; private set; }
+        /// <summary>Подкоп сейчас не топит замок: Director бережёт врага в защищённый ход (D-077).</summary>
+        public bool Unsinkable { get; set; }
 
         public void Init(GameConfig gameConfig, DestructibleMask terrainMask, Side side, float centerX, float groundY, float halfWidth, DestructibleMask castleMask)
         {
@@ -220,7 +222,7 @@ namespace CastleDestroyers.CastleRig
             bool leftEmpty = SampleTrack(Left);
             bool rightEmpty = SampleTrack(Right);
             // Director не отдаёт замок игрока воде: матч решают пушки, а не случайный подкоп (ТЗ §3.1).
-            bool spared = config.directorEnabled && Side == Side.Player;
+            bool spared = Unsinkable || (config.directorEnabled && Side == Side.Player);
             if (leftEmpty && rightEmpty && !spared)
             {
                 State = CastleState.Sinking;

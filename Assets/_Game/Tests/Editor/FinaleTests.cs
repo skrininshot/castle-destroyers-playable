@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace CastleDestroyers.Tests
 {
-    /// <summary>Конец матча на настоящем уровне: замок проигравшего сгорает целиком, D-075.</summary>
+    /// <summary>Конец матча на настоящем уровне: один взрыв уносит замок проигравшего, D-077.</summary>
     public sealed class VictoryShowTests
     {
         private const float Step = 0.02f;
@@ -69,36 +69,62 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void ChainBurnsTheCastleDownBeforeTheFinalBlast()
+        public void NothingBlowsUpBeforeTheBlastDelay()
         {
             CastleBody red = rig.Castles.Body(Side.Enemy);
-            int solid = red.Mask.SolidCount;
             ToVictory();
-            Advance(rig.Config.finaleBlasts * rig.Config.finaleBlastInterval - Step * 2f);
-            Assert.Less(red.Mask.SolidCount, solid * 0.75f);
+            Advance(rig.Config.finaleBlastDelay - Step * 2f);
             Assert.AreEqual(CastleState.Standing, red.State);
             Assert.IsFalse(show.Vaporized);
         }
 
         [Test]
-        public void FinalBlastLeavesNothingAndCratersTheGround()
+        public void OneBlastLeavesNothingAndABigCrater()
         {
             CastleBody red = rig.Castles.Body(Side.Enemy);
             float ground = red.TrackY(0);
             ToVictory();
-            Advance(rig.Config.finaleBlasts * rig.Config.finaleBlastInterval + Step);
+            int explosions = rig.Explosions.ActiveCount;
+            Advance(rig.Config.finaleBlastDelay + Step);
             Assert.IsTrue(show.Vaporized);
             Assert.AreEqual(CastleState.Gone, red.State);
+            Assert.AreEqual(explosions + 1, rig.Explosions.ActiveCount);
             Assert.IsTrue(finale.RingActive);
             Assert.IsTrue(finale.FlashActive);
-            Assert.Less(rig.Mask.SurfaceHeight(red.CenterX), ground);
+            float depth = rig.Config.finaleCraterRadius - rig.Config.finaleCraterLift;
+            Assert.AreEqual(ground - depth, rig.Mask.SurfaceHeight(red.CenterX), 0.5f);
+            Assert.Less(rig.Mask.SurfaceHeight(red.CenterX - red.PlatformHalf), ground - 1f);
+            Assert.Less(rig.Mask.SurfaceHeight(red.CenterX + red.PlatformHalf), ground - 1f);
+        }
+
+        [Test]
+        public void FinalBlastOutlivesAnOrdinaryExplosion()
+        {
+            ToVictory();
+            Advance(rig.Config.finaleBlastDelay + Step);
+            Advance(rig.Config.explosionLife * 1.2f);
+            Assert.Greater(rig.Explosions.ActiveCount, 0);
+        }
+
+        [Test]
+        public void ShakeIsNotStretchedBySlowMotion()
+        {
+            ToVictory();
+            Advance(rig.Config.finaleBlastDelay + Step);
+            Assert.LessOrEqual(rig.Shake.Amplitude, rig.Config.finaleShake + 1e-3f);
+            for (int i = 0; i * Step < rig.Config.finaleSlowTime; i++)
+            {
+                rig.Shake.Tick(Step * loop.TimeScale);
+                show.Tick(Step * loop.TimeScale);
+            }
+            Assert.Less(rig.Shake.Amplitude, rig.Config.finaleShake * 0.3f);
         }
 
         [Test]
         public void SlowMotionEndsInRealTime()
         {
             ToVictory();
-            Advance(rig.Config.finaleBlasts * rig.Config.finaleBlastInterval + Step);
+            Advance(rig.Config.finaleBlastDelay + Step);
             Assert.Less(loop.TimeScale, 1f);
             for (int i = 0; i * Step < rig.Config.finaleSlowTime + Step * 2f; i++)
             {
@@ -115,18 +141,6 @@ namespace CastleDestroyers.Tests
             Assert.AreEqual(0, finale.ConfettiCount);
             Advance(Step * 8f);
             Assert.Greater(finale.ConfettiCount, 0);
-        }
-
-        [Test]
-        public void EnemyCanLoseEveryCannonOnAnyTurn()
-        {
-            Assert.AreEqual(0, rig.Config.directorEnemyKeepCannons);
-            int first = rig.Cannons.FirstCannon(Side.Enemy);
-            for (int c = first; c < first + rig.Cannons.CountOf(Side.Enemy); c++)
-            {
-                Assert.IsTrue(rig.Cannons.Detach(c, 0f, 0f, 0f));
-            }
-            Assert.IsTrue(rig.Match.IsEliminated(Side.Enemy));
         }
     }
 }

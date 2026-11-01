@@ -643,6 +643,7 @@ namespace CastleDestroyers.UI
         private bool wasPressed;
         private bool won;
         private float impact;
+        private float countPunch;
         private bool logoLanded;
         private bool castleLanded;
         private bool buttonLanded;
@@ -810,7 +811,7 @@ namespace CastleDestroyers.UI
                 if (i >= starsShown)
                 {
                     starsShown = i + 1;
-                    Impact(Platform.SoundId.Star);
+                    Play(Platform.SoundId.Star);
                     if (Finale != null)
                     {
                         Finale.ConfettiBurst(stars[i].anchorMin.x, stars[i].anchorMin.y);
@@ -838,10 +839,10 @@ namespace CastleDestroyers.UI
                 caption.text = percentTexts[percent];
                 if (percent == FullPercent)
                 {
-                    impact = 1f;
+                    countPunch = 1f;
                 }
             }
-            float scale = 1f + (percent == FullPercent ? impact * config.endCountPunch : 0f);
+            float scale = 1f + (percent == FullPercent ? countPunch * config.endCountPunch : 0f);
             caption.rectTransform.localScale = new Vector3(scale, scale, 1f);
         }
 
@@ -856,7 +857,7 @@ namespace CastleDestroyers.UI
             if (!buttonLanded)
             {
                 buttonLanded = true;
-                Impact(Platform.SoundId.Click);
+                Play(Platform.SoundId.Click);
             }
             float pulse = 1f + Mathf.Sin(time * config.ctaPulseSpeed) * config.ctaPulse;
             float scale = UiEase.OutBack(elapsed / config.uiPopTime) * pulse * fit;
@@ -887,14 +888,22 @@ namespace CastleDestroyers.UI
 
         private void Shake(float dt)
         {
-            impact *= Mathf.Exp(-config.endImpactDecay * dt);
+            float decay = Mathf.Exp(-config.endImpactDecay * dt);
+            impact *= decay;
+            countPunch *= decay;
             float amount = impact * config.endImpactShake;
             content.anchoredPosition = new Vector2(Mathf.Sin(time * config.endShakeFrequency) * amount, Mathf.Cos(time * config.endShakeFrequency * 1.3f) * amount);
         }
 
+        /// <summary>Приземление крупного предмета: короткий толчок экрана. Звёзды и кнопка экран не трясут, иначе он дрожит всю секунду.</summary>
         private void Impact(Platform.SoundId sound)
         {
             impact = 1f;
+            Play(sound);
+        }
+
+        private void Play(Platform.SoundId sound)
+        {
             if (Sounds != null)
             {
                 Sounds.Play(sound);
@@ -991,6 +1000,7 @@ namespace CastleDestroyers.UI
             time = 0f;
             wasPressed = true;
             impact = 0f;
+            countPunch = 0f;
             logoLanded = false;
             castleLanded = false;
             buttonLanded = false;

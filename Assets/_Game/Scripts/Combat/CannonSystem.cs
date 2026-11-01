@@ -72,7 +72,7 @@ namespace CastleDestroyers.Combat
         public bool Moved { get; private set; }
         public bool IsFiring { get { return firing[0] || firing[1]; } }
         public int FallingCount { get { return fallingCount; } }
-        /// <summary>Сколько пушек врага нельзя оторвать сейчас: Director бережёт ход до последнего залпа игрока.</summary>
+        /// <summary>Сколько пушек врага нельзя оторвать сейчас: Director не даёт снести врага с первого выстрела (D-077).</summary>
         public int SparedEnemyCannons { get; set; }
 
         public void Init(GameConfig gameConfig, LevelScene level, MatchState matchState, RocketSystem rocketSystem, FlatParticles flatParticles, LevelFx levelFx, Rng random)

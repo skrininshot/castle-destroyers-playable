@@ -190,15 +190,6 @@ namespace CastleDestroyers.CastleRig
             return count < MaxPlatformCracks ? count : MaxPlatformCracks;
         }
 
-        /// <summary>Взрыв финальной цепи по камню: радиус задан напрямую, кратер намного шире ракетного (D-075).</summary>
-        public void ScorchStone(Side target, float x, float y, float radius)
-        {
-            CastleBody body = bodies[(int)target];
-            Stamp(body, x, y, radius);
-            fx.StoneDust(x, y, radius, config.castleDustPuffs);
-            body.AddSway(x);
-        }
-
         /// <summary>Уничтожает замок целиком: камень, платформу и гусеницы. Новые куски от него больше не отваливаются (D-075).</summary>
         public void Vaporize(Side side)
         {
@@ -272,6 +263,7 @@ namespace CastleDestroyers.CastleRig
             }
             seenRevision[s] = mask.Revision;
 
+            body.Unsinkable = side == Side.Enemy && cannons.SparedEnemyCannons > 0;
             body.Tick(dt, terrainChanged);
             if (body.JustSank)
             {

@@ -1048,14 +1048,48 @@ namespace CastleDestroyers.Tests
         }
 
         [Test]
-        public void EnemyCannonsAreSparedUntilTheFinisher()
+        public void EnemyCannonsAreSparedOnlyOnTheFirstTurn()
         {
             AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.AreEqual(1, rig.Flow.PlayerTurn);
             Assert.AreEqual(rig.Config.directorEnemyKeepCannons, rig.Cannons.SparedEnemyCannons);
+            AdvanceTo(SessionState.Fire, Side.Enemy);
+            Assert.AreEqual(rig.Config.directorEnemyKeepCannons, rig.Cannons.SparedEnemyCannons);
+            AdvanceTo(SessionState.Fire, Side.Player);
+            Assert.AreEqual(2, rig.Flow.PlayerTurn);
+            Assert.AreEqual(0, rig.Cannons.SparedEnemyCannons);
             rig.Flow.Restart();
             rig.Config.maxPlayerTurns = 1;
             AdvanceTo(SessionState.Fire, Side.Player);
             Assert.AreEqual(0, rig.Cannons.SparedEnemyCannons);
+        }
+
+        [Test]
+        public void FirstTurnCannotDestroyTheWholeEnemy()
+        {
+            AdvanceTo(SessionState.Fire, Side.Player);
+            int first = rig.Cannons.FirstCannon(Side.Enemy);
+            for (int c = first; c < first + rig.Cannons.CountOf(Side.Enemy); c++)
+            {
+                rig.Cannons.Detach(c, 0f, 0f, 0f);
+            }
+            Assert.AreEqual(rig.Config.directorEnemyKeepCannons, rig.Match.EnemyAlive);
+            Assert.IsFalse(rig.Match.IsEliminated(Side.Enemy));
+        }
+
+        [Test]
+        public void SecondTurnCanDestroyTheWholeEnemyEvenOnThePlatform()
+        {
+            AdvanceTo(SessionState.Fire, Side.Player);
+            AdvanceTo(SessionState.Fire, Side.Enemy);
+            AdvanceTo(SessionState.Fire, Side.Player);
+            int first = rig.Cannons.FirstCannon(Side.Enemy);
+            rig.Cannons.DropToPlatform(first);
+            for (int c = first; c < first + rig.Cannons.CountOf(Side.Enemy); c++)
+            {
+                Assert.IsTrue(rig.Cannons.Detach(c, 0f, 0f, 0f));
+            }
+            Assert.IsTrue(rig.Match.IsEliminated(Side.Enemy));
         }
 
         [Test]

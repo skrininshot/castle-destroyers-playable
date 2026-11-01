@@ -8,56 +8,68 @@ namespace CastleDestroyers.Level
     /// </summary>
     public static class CastleShapes
     {
-        public const float BlueHalfWidth = 3.5f;
-        public const float BlueBodyHeight = 3.6f;
-        public const float BlueTowerWidth = 2.4f;
-        public const float BlueTowerTop = 6.6f;
-        public const float BlueRoofHeight = 2.5f;
-        public const float RedHalfWidth = 4f;
-        public const float RedTop = 11f;
-        public const float RedRoofHeight = 1.9f;
+        /// <summary>Во сколько раз замки крупнее эскиза (D-077). Пушки не масштабируются. Совпадает с CASTLE_SCALE в Tools/build_art.py.</summary>
+        public const float Scale = 1.3f;
 
-        private const float RedBodyHeight = 2.6f;
-        private const float RedMidHalfWidth = 1.7f;
-        private const float RedMidHeight = 6.2f;
+        public const float BlueHalfWidth = 3.5f * Scale;
+        public const float BlueBodyHeight = 3.6f * Scale;
+        public const float BlueTowerWidth = 2.4f * Scale;
+        public const float BlueTowerTop = 6.6f * Scale;
+        public const float BlueRoofHeight = 2.5f * Scale;
+        public const float RedHalfWidth = 4f * Scale;
+        public const float RedTop = 11f * Scale;
+        public const float RedRoofHeight = 1.9f * Scale;
 
-        private const float CollarOverhang = 0.2f;
-        private const float CollarHeight = 0.3f;
-        private const float CollarRadius = 0.1f;
-        private const float SpireHeight = 0.62f;
-        private const float SpireHalfWidth = 0.04f;
-        private const float FlagLength = 0.66f;
-        private const float FlagHeight = 0.44f;
+        private const float RedBodyHeight = 2.6f * Scale;
+        private const float RedMidHalfWidth = 1.7f * Scale;
+        private const float RedMidHeight = 6.2f * Scale;
 
-        private const float PlatformOverhang = 0.35f;
-        private const float TrackWidth = 2.7f;
-        private const float TrackInset = 0.1f;
+        private const float CollarOverhang = 0.2f * Scale;
+        private const float CollarHeight = 0.3f * Scale;
+        private const float CollarRadius = 0.1f * Scale;
+        private const float SpireHeight = 0.62f * Scale;
+        private const float SpireHalfWidth = 0.04f * Scale;
+        private const float FlagLength = 0.66f * Scale;
+        private const float FlagHeight = 0.44f * Scale;
+
+        private const float PlatformOverhang = 0.35f * Scale;
+        private const float TrackWidth = 2.7f * Scale;
+        private const float TrackInset = 0.1f * Scale;
         private const int CrackSegments = 3;
-        private const float CrackHalfWidth = 0.09f;
-        private const float CrackDrift = 0.18f;
+        private const float CrackHalfWidth = 0.09f * Scale;
+        private const float CrackDrift = 0.18f * Scale;
         private const float CrackTaper = 0.6f;
 
         /// <summary>Башни красного замка: смещение от центра, ширина, верх стены, высота крыши.</summary>
-        private static readonly float[] RedTowerOffset = { -3.55f, 3.55f, -2.45f, 2.45f, -1.15f, 1.15f, 0f };
-        private static readonly float[] RedTowerWidth = { 0.9f, 0.9f, 1f, 1f, 1.1f, 1.1f, 1.25f };
-        private static readonly float[] RedTowerTop = { 3.1f, 3.1f, 3.9f, 3.9f, 7f, 7f, RedTop };
-        private static readonly float[] RedTowerRoof = { 1.3f, 1.3f, 1.4f, 1.4f, 1.6f, 1.6f, RedRoofHeight };
+        private static readonly float[] RedTowerOffset = Scaled(new[] { -3.55f, 3.55f, -2.45f, 2.45f, -1.15f, 1.15f, 0f });
+        private static readonly float[] RedTowerWidth = Scaled(new[] { 0.9f, 0.9f, 1f, 1f, 1.1f, 1.1f, 1.25f });
+        private static readonly float[] RedTowerTop = Scaled(new[] { 3.1f, 3.1f, 3.9f, 3.9f, 7f, 7f, 11f });
+        private static readonly float[] RedTowerRoof = Scaled(new[] { 1.3f, 1.3f, 1.4f, 1.4f, 1.6f, 1.6f, 1.9f });
 
         /// <summary>
         /// Точки крепления пушек: пары (x от центра замка, y от основания стены). Пушки стоят на стенах,
         /// как в кадрах 1 и 4; первыми идут те, что остаются живыми дольше всех.
         /// </summary>
-        public static readonly float[] BlueMounts =
+        public static readonly float[] BlueMounts = Scaled(new[]
         {
             1.9f, 4.05f, 0.7f, 3.05f, -2.6f, 4.05f, 1.9f, 1f, -2.6f, 1f, 1.9f, 3.1f, -1f, 3.1f,
             -2.6f, 3.1f, 0.2f, 0.9f, -1f, 1.2f, 1.9f, 6.25f, -2.6f, 6.25f, 1f, 2f, -1.6f, 2.1f
-        };
+        });
 
-        public static readonly float[] RedMounts =
+        public static readonly float[] RedMounts = Scaled(new[]
         {
-            0.6f, 9f, 0.6f, 7.7f, 1.75f, 5.1f, -0.55f, 5.1f, 0.6f, 4f, -0.95f, 3.9f, 0.6f, 2.9f,
-            -1.45f, 2.1f, 2.7f, 2.1f, -2.9f, 1.1f, 0.6f, 1.1f, 3.7f, 1.1f, 1.75f, 3.8f, -3.7f, 2.2f
-        };
+            0.6f, 9f, 0.6f, 7.7f, 1.7f, 5.1f, -0.55f, 5.1f, 0.6f, 4f, -0.95f, 3.9f, 0.6f, 2.9f,
+            -1.45f, 2.1f, 2.7f, 2.1f, -2.9f, 1.1f, 0.6f, 1.1f, 3.7f, 1.1f, 1.7f, 3.8f, -3.7f, 2.2f
+        });
+
+        private static float[] Scaled(float[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] *= Scale;
+            }
+            return values;
+        }
 
         public static float RedTotalHeight()
         {
