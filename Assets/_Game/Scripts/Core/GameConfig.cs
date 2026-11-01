@@ -78,10 +78,13 @@ namespace CastleDestroyers.Core
         public float resolveDuration = 0.7f;
         [Range(0.5f, 6f)]
         [Tooltip("Victory: от победы до EndCard, секунды (ТЗ §3.11: ~2 с).")]
-        public float victoryDuration = 4.1f;
+        public float victoryDuration = 4.9f;
         [Range(0f, 3f)]
         [Tooltip("Victory/Defeat: сколько камера держит кадр на проигравшем замке, секунды.")]
         public float victoryLoserHold = 2f;
+        [Range(0f, 3f)]
+        [Tooltip("Сколько камера летит к победителю, секунды: конфетти, фейерверк и прыжки пушек ждут её прилёта.")]
+        public float victoryCheerDelay = 1.2f;
         [Range(0.5f, 6f)]
         [Tooltip("Defeat: от поражения до EndCard, секунды.")]
         public float defeatDuration = 2f;

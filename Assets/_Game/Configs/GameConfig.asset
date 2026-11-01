@@ -50,8 +50,9 @@ MonoBehaviour:
   flightDuration: 1
   flightMaxDuration: 12
   resolveDuration: 0.7
-  victoryDuration: 4.1
+  victoryDuration: 4.9
   victoryLoserHold: 2
+  victoryCheerDelay: 1.2
   defeatDuration: 2
   victoryFlightCap: 0.8
   aiPresets:

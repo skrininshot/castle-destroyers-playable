@@ -66,7 +66,7 @@ namespace CastleDestroyers.Fx
             {
                 Vaporize(body);
             }
-            float time = flow.StateTime - config.victoryLoserHold;
+            float time = flow.StateTime - config.victoryLoserHold - config.victoryCheerDelay;
             if (time <= 0f)
             {
                 return;

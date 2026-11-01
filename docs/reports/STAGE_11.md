@@ -78,7 +78,7 @@
 - `finaleCraterRadius`: 7.5, `finaleCraterLift`: 3.5 — ширина и глубина кратера.
 - `finaleShake`: 0.3 — тряска камеры от взрыва.
 - `endImpactShake`: 8, `endImpactDecay`: 14 — толчок EndCard.
-- `victoryLoserHold`: 2, `victoryDuration`: 4.1 — сколько камера смотрит на кратер и когда открывается EndCard.
+- `victoryLoserHold`: 2, `victoryCheerDelay`: 1.2, `victoryDuration`: 4.9 — сколько камера смотрит на кратер, сколько летит к победителю до конфетти и когда открывается EndCard.
 - `turnHints[0].handPower01`: 0.64 — сила подсказки хода 1. Меньше: первый залп разрушительнее, больше: перелёт.
 - `CastleShapes.Scale`: 1.3 — размер замков, вместе с `CASTLE_SCALE` в `Tools/build_art.py`, `trackHeight` и `platformHeight`.
 

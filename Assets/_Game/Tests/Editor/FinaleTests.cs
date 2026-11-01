@@ -137,7 +137,7 @@ namespace CastleDestroyers.Tests
         public void WinnerGetsConfettiAfterTheCameraTurns()
         {
             ToVictory();
-            Advance(rig.Config.victoryLoserHold - Step * 4f);
+            Advance(rig.Config.victoryLoserHold + rig.Config.victoryCheerDelay - Step * 4f);
             Assert.AreEqual(0, finale.ConfettiCount);
             Advance(Step * 8f);
             Assert.Greater(finale.ConfettiCount, 0);
